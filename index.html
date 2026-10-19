@@ -222,6 +222,9 @@
 .atk-b small{display:block;font-size:13.5px;line-height:1.3;color:#c8cce8}
 .atk .cost{flex:none;font:700 12px "Pixelify Sans",monospace;color:#66d9e8}
 .dodge-panel .rz{color:#ff6b6b}
+.dodge-panel .oz{color:#ff922b}
+.dodge-panel.strike .pxtitle{color:#ff922b}
+.dodge-panel.strike .pxbtn{background:#e8590c}
 .cls-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
 @media (max-width:460px){.cls-grid{grid-template-columns:1fr}}
 .cls{display:flex;gap:9px;align-items:flex-start;text-align:left;padding:8px;background:#2b3160;border:2px solid #5a62a0;border-radius:6px;color:#f4f1e8;cursor:pointer;font:inherit}
@@ -3368,7 +3371,7 @@ var CLASSES={
           {id:"frost",n:"Frost Shard",c:2,lv:1,d:"Hit + FREEZE: the next dodge is slow and wide.",m:.8,freeze:1,fx:"bolt",col:"#74c0fc"},
           {id:"arcane",n:"Arcane Blast",c:3,lv:3,d:"Magic explosion: 2× damage.",m:2,fx:"burst",col:"#d0bfff"},
           {id:"storm",n:"Thunderstorm",c:5,lv:5,d:"Lightning from the sky: 3.5× damage.",m:3.5,fx:"storm",col:"#ffe066"}]},
-  rogue:{n:"Rogue",tag:"Crits and dodges",pass:"Crits at a 2 combo, wider dodge zone",hp:0,dmg:.9,crit:2,dodge:1.4,fast:7000,col:"#69db7c",wpn:"dagger",
+  rogue:{n:"Rogue",tag:"Crits and dodges",pass:"Bigger crit zone, wider dodge zone",hp:0,dmg:.9,crit:2,dodge:1.4,fast:7000,col:"#69db7c",wpn:"dagger",
     pal:{h:"#2b2d42",H:"#1a1b2e"},hat:["................","................",".......kk.......","......khhk......"],
     atks:[{id:"stab",n:"Quick Stab",c:0,lv:1,d:"Fast dagger hit.",m:1,fx:"slash",col:"#c3fae8"},
           {id:"poison",n:"Poison Blade",c:2,lv:1,d:"Hit + POISON: extra damage every question.",m:.6,poison:3,fx:"poison",col:"#69db7c"},
@@ -3397,7 +3400,7 @@ var ITEMS={
   w_steel:{n:"Steel Edge",t:"w",r:"rare",ic:"sword",d:"+7 damage.",dmg:7,p:120},
   w_ember:{n:"Ember Fang",t:"w",r:"epic",ic:"sword",d:"+10 damage. 25% chance to BURN for +50%.",dmg:10,burn:.25,p:260},
   w_vamp:{n:"Vampire Edge",t:"w",r:"epic",ic:"sword",d:"+8 damage. Heal 1 heart on every right answer.",dmg:8,leech:1,p:280},
-  w_star:{n:"Starfall",t:"w",r:"legendary",ic:"sword",d:"+16 damage. Crits at a 2 combo.",dmg:16,crit2:1},
+  w_star:{n:"Starfall",t:"w",r:"legendary",ic:"sword",d:"+16 damage. Crit zone 50% bigger.",dmg:16,crit2:1},
   a_leather:{n:"Leather Vest",t:"a",r:"common",ic:"shield",d:"+2 max hearts.",hp:2,p:40},
   a_chain:{n:"Chain Mail",t:"a",r:"rare",ic:"shield",d:"+4 max hearts.",hp:4,p:120},
   a_thorn:{n:"Thorn Mail",t:"a",r:"epic",ic:"shield",d:"+4 max hearts. Monsters that hit you get hurt.",hp:4,thorn:1,p:260},
@@ -3407,7 +3410,7 @@ var ITEMS={
   c_owl:{n:"Owl Eye",t:"c",r:"rare",ic:"eye",d:"Mimic chests show red eyes, and pits show on your minimap.",owl:1,p:140},
   c_boots:{n:"Iron Boots",t:"c",r:"rare",ic:"boots",d:"Spike traps can’t hurt you.",iron:1,p:110},
   c_swift:{n:"Swift Boots",t:"c",r:"common",ic:"boots",d:"Walk 30% faster.",swift:1,p:60},
-  c_hour:{n:"Hourglass",t:"c",r:"epic",ic:"hourglass",d:"The dodge marker moves 35% slower.",slow:1,p:240},
+  c_hour:{n:"Hourglass",t:"c",r:"epic",ic:"hourglass",d:"Dodge and strike markers move 35% slower.",slow:1,p:240},
   c_crystal:{n:"Power Crystal",t:"c",r:"epic",ic:"gem",d:"Start every battle with +2 POWER.",pw:2,p:220},
   c_quill:{n:"Scholar’s Quill",t:"c",r:"rare",ic:"quill",d:"+50% XP from everything.",xp:.5,p:160},
   c_locket:{n:"Heart Locket",t:"c",r:"legendary",ic:"charm",d:"+3 max hearts. Heal 3 hearts after every win.",hp:3,regen:3},
@@ -3876,7 +3879,7 @@ function qwMaxHp(s){ return Math.max(3,Math.min(30,6+(s.lvl-1)+s.armor+(CLASSES[
 function qwDmg(s){ return Math.round((10+3*(s.lvl-1)+6*s.sword+gsum(s,"dmg"))*clsOf(s).dmg); }
 function qwNeed(l){ return 30+20*l; }
 function qwBadges(s){ return LANDS.filter(function(L){ return s.badges[L.id]; }).length; }
-var ACH={first:"First Victory",combo10:"On Fire: 10 combo",combo25:"Legendary: 25 combo",lv5:"Reached level 5",lv10:"Reached level 10",chests:"Treasure Hunter",badge1:"First Badge",badges:"Badge Master",flawless:"Flawless Boss",ninja:"Ninja: perfect dodge",explorer:"Explorer: every waystone in a land",questor:"Hero for Hire: 5 side quests",geared:"Collector: 8 gear items",trapped:"Oops: fell for a trap",mimic:"Mimic Slayer"};
+var ACH={first:"First Victory",combo10:"On Fire: 10 combo",combo25:"Legendary: 25 combo",lv5:"Reached level 5",lv10:"Reached level 10",chests:"Treasure Hunter",badge1:"First Badge",badges:"Badge Master",flawless:"Flawless Boss",ninja:"Ninja: perfect dodge",explorer:"Explorer: every waystone in a land",questor:"Hero for Hire: 5 side quests",geared:"Collector: 8 gear items",trapped:"Oops: fell for a trap",mimic:"Mimic Slayer",supercrit:"Bullseye: super crit"};
 function qwAch(id){ var s=QS(); if(s.ach[id]) return; s.ach[id]=Date.now(); save(); addStars(2); setTimeout(function(){ toast("🏆 Achievement: "+ACH[id]+" (+2 ⭐)"); sfx("streak"); },700); }
 /* ---------- engine ---------- */
 var MAPS={}, MAP=null, QP=null, QMODE="walk", SC=3, QDPR=1, qwCv=null, qwCx=null, qwRAF=0, qwLastT=0, qwCam={x:0,y:0,ix:0,iy:0}, qwDirs=[], qwPad=null, qwParts=[], qwFloat=[], qwAmb=[], qwMiniOn=true, qwSteps=0, qwBannerT=0, qwFade=null, KILLS_FOR_BOSS=3, RESPAWN_MS=150000, qwShift=false, qwRun=false, qwShakeT=-9e9;
@@ -4188,7 +4191,7 @@ function qwNpc(n){
   var s=QS(), face=portraitOf(n);
   if(n.id==="elder"){
     if(!s.met){ s.met=true; save(); return qwSay(n.name,face,["Ah, "+s.name+" the "+clsOf(s).n+"! Welcome to the Hidden Village.","Each portal up north leads to a HUGE land for one of your classes. Explore, do side quests and find gear!",
-      "Bump into monsters to battle. A right answer charges POWER, then you pick an attack. Big attacks cost more power!","Miss a question and the monster hits you for 3 HEARTS. Press SPACE when the marker is in the green zone to dodge!",
+      "Bump into monsters to battle. A right answer charges POWER. Pick an attack, then time your STRIKE in the green zone for a CRIT!","Miss a question and the monster hits you for 3 HEARTS. Press SPACE when the marker is in the green zone to dodge!",
       "Out there, watch your step: spike traps, hidden pits, and chests that bite back.","Beat "+KILLS_FOR_BOSS+" monsters in a land to wake its boss. Press B for your bag. Mo sells potions and gear. Now go, hero!"]); }
     return qwSay(n.name,face,[qwNextGoal()]);
   }
@@ -4531,11 +4534,11 @@ function bsDrawFx(now){
   });
 }
 function qbBar(){ var s=QS(), max=qwMaxHp(s), b=$(".qb2-bar"); if(!b||!QB) return;
-  var dis=QB.done||QB.dodging, inv=s.inv||{};
+  var dis=QB.done||QB.dodging||QB.striking, inv=s.inv||{};
   b.innerHTML=[["potion","Potion",s.potions,s.hp>=max],["mega","Mega",inv.mega||0,s.hp>=max],["gem","Gem",inv.gem||0,(s.pw||0)>=PW_MAX],["smoke","Smoke",inv.smoke||0,!!QB.smoke]].filter(function(x){ return x[0]==="potion"||x[2]>0; })
     .map(function(x){ return '<button class="pxbtn" data-bitem="'+x[0]+'"'+(dis||!x[2]||x[3]?' disabled':'')+'>'+icon(ITEMS[x[0]].ic)+' '+x[1]+' ('+x[2]+')</button>'; }).join("")+
     (QB.boss||QB.elite?'':'<button class="pxbtn" id="bs-run"'+(QB.done?' disabled':'')+'>Run away</button>'); }
-function qbItem(id){ var s=QS(), now=performance.now(); if(!QB||QB.done||QB.dodging) return;
+function qbItem(id){ var s=QS(), now=performance.now(); if(!QB||QB.done||QB.dodging||QB.striking) return;
   if(id==="potion"){ if(qwDrink(true)){ BS.heal=now; bsFx("heal"); bsCall("+3 HEARTS","#69db7c"); } }
   else if(id==="mega"&&s.inv.mega&&s.hp<qwMaxHp(s)){ s.inv.mega--; s.hp=qwMaxHp(s); BS.heal=now; bsFx("heal"); bsCall("FULL HEAL!","#69db7c"); sfx("streak"); }
   else if(id==="gem"&&s.inv.gem&&(s.pw||0)<PW_MAX){ s.inv.gem--; s.pw=Math.min(PW_MAX,(s.pw||0)+3); bsCall("+3 POWER","#66d9e8"); sfx("streak"); }
@@ -4548,6 +4551,7 @@ function pips(n,count){ var h=''; for(var i=0;i<count;i++) h+='<i class="pip'+(i
 function qbDraw(){
   var q=QB.pool.qs[QB.cur], done=QB.pick!==null, ok=done&&QB.opts[QB.pick]===q.right, s=QS();
   if(QB.dodging){ $("#bs-q").innerHTML='<div class="dodge-panel"><p class="pxtitle red">INCOMING ATTACK!</p><p>Wrong answer, so '+esc(QB.def[2])+' attacks for <b class="rz">'+(ghas(s,"tough")?2:HIT)+' hearts</b>! Press <b>SPACE</b> or tap <b>DODGE</b> when the white marker is in the <b class="gz">green zone</b>. Hit the <b class="yz">yellow center</b> to counterattack!</p><button class="pxbtn go big" id="bs-dodge">DODGE!</button></div>'; return; }
+  if(QB.striking){ $("#bs-q").innerHTML='<div class="dodge-panel strike"><p class="pxtitle">'+esc(QB.striking.n).toUpperCase()+'!</p><p>Press <b>SPACE</b> or tap <b>STRIKE</b> when the white marker is in the <b class="gz">green zone</b> for a <b class="oz">CRIT</b>. Hit the <b class="yz">yellow center</b> for a <b class="yz">SUPER CRIT</b>!'+(s.combo>=3?' <b class="oz">Combo bonus: bigger zone!</b>':'')+'</p><button class="pxbtn go big" id="bs-strike">STRIKE!</button></div>'; return; }
   if(QB.choosing){ var A=atkList(s);
     $("#bs-q").innerHTML='<div class="atk-top"><span class="pxlabel okc">✓ Correct!'+(QB.fast?' ⚡ Fast: +2 power':' +1 power')+'</span><span class="pw-meter">POWER '+pips(s.pw||0,PW_MAX)+'</span></div>'+
       (q.why?'<p class="bsfb ok">'+q.why+'</p>':'')+'<p class="pxlabel">Choose your attack</p><div class="atk-grid">'+A.map(function(a,i){ var dis=a.locked||(s.pw||0)<a.c;
@@ -4564,7 +4568,7 @@ function qbDraw(){
   if(done&&!ok){ var g=$("#bs-go"); if(g) g.focus({preventScroll:true}); }
 }
 function qbAnswer(k){
-  if(!QB||QB.pick!==null||QB.done||QB.cur<0||QB.dodging) return;
+  if(!QB||QB.pick!==null||QB.done||QB.cur<0||QB.dodging||QB.striking) return;
   var q=QB.pool.qs[QB.cur], s=QS(), now=performance.now(); QB.pick=k; QB.lastAtk=null;
   var ok=QB.opts[k]===q.right, fast=now-QB.t0<clsOf(s).fast;
   if(ok){
@@ -4593,8 +4597,27 @@ function qbAttack(i){
   if(!QB||!QB.choosing||QB.done) return; var s=QS(), A=atkList(s)[i], now=performance.now();
   if(!A||A.locked||(s.pw||0)<A.c||now-QB.chooseT<160) return;
   QB.choosing=false; s.pw-=A.c; QB.lastAtk=A.n;
-  var base=qwDmg(s), critAt=ghas(s,"crit2")?2:clsOf(s).crit, crit=!!A.crit||s.combo>=critAt, d=0, burn=false;
-  if(A.m){ d=(base*(crit?2:1)+(QB.fast?base*.5:0))*A.m; if(QB.mark){ d*=2; QB.mark=0; } var bw=gsum(s,"burn"); if(bw&&Math.random()<bw){ d*=1.5; burn=true; } d=Math.round(d); }
+  if(A.m) qbStrikeStart(A); else qbAttackHit(A,"none");
+}
+/* ---------- strike: time it in the green zone for a CRIT, yellow center for a SUPER CRIT ---------- */
+function qbStrikeStart(A){
+  var s=QS(), now=performance.now(), hard=QB.final?2:QB.boss||QB.elite?1:0, dur=[950,850,760][hard], w=[.15,.12,.1][hard];
+  if(s.cls==="rogue") w*=1.35; if(ghas(s,"crit2")) w*=1.5; if(s.combo>=3) w*=1.25; if(ghas(s,"slow")) dur*=1.35;
+  w=Math.min(.34,w); var a=.42+Math.random()*Math.max(0,.94-w-.42);
+  QB.striking=A; BS.calls=[]; BS.dodge={kind:"strike",shown:now,t0:now+550,dur:dur,zone:[a,a+w],perf:[a+w*.33,a+w*.67],done:false};
+  snd(520,0,.08,"square",.03); snd(780,.08,.08,"square",.03);
+  $("#bs-live").textContent="Strike! Press space or tap Strike when the marker is in the green zone for a critical hit.";
+  qbDraw(); qbBar();
+}
+function qbStrikePress(){ if(!QB||!QB.striking||!BS||!BS.dodge||BS.dodge.done) return; var now=performance.now(), D=BS.dodge; if(now-D.shown<200) return;
+  var p=(now-D.t0)/D.dur; qbStrikeResolve(p>=D.zone[0]&&p<=D.zone[1]?(p>=D.perf[0]&&p<=D.perf[1]?"super":"crit"):"miss",p); }
+function qbStrikeResolve(res,p){ var D=BS.dodge, A=QB.striking; if(!A) return; D.done=true; D.res=res; D.pAt=Math.max(0,Math.min(1,p)); D.tEnd=performance.now(); QB.striking=null;
+  if(res==="super") qwAch("supercrit"); qbAttackHit(A,res); }
+function qbTimingPress(){ if(QB&&QB.striking) qbStrikePress(); else qbDodgePress(); }
+function qbAttackHit(A,res){
+  var s=QS(), now=performance.now(), base=qwDmg(s), cm=res==="super"?2.5:res==="crit"?2:1; if(A.crit) cm=Math.max(cm,2);
+  var crit=cm>1, d=0, burn=false;
+  if(A.m){ d=(base*cm+(QB.fast?base*.5:0))*A.m; if(QB.mark){ d*=2; QB.mark=0; } var bw=gsum(s,"burn"); if(bw&&Math.random()<bw){ d*=1.5; burn=true; } d=Math.round(d); }
   if(A.mark) QB.mark=1; if(A.guard) QB.guard=1; if(A.freeze) QB.freeze=1; if(A.poison){ QB.poison=A.poison; QB.pdmg=Math.max(1,Math.round(base*.45)); }
   var delay={bolt:300,arrow:250,rain:420,storm:240,burst:160,whirl:240,shadow:260,bash:150,slash:150,poison:200,heal:0}[A.fx]; if(delay==null) delay=150;
   if(A.heal){ var before=s.hp; s.hp=Math.min(qwMaxHp(s),s.hp+A.heal); BS.heal=now; setTimeout(function(){ if(!BS) return; bsFloat("+"+(s.hp-before)+" HEARTS","#69db7c"); var f=BS.floats[BS.floats.length-1]; f.x=62; f.y=70; },120); }
@@ -4602,12 +4625,12 @@ function qbAttack(i){
   bsFx(A.fx,A.col); if(A.fx==="heal") bsFx("heal");
   if(["slash","bash","whirl","shadow"].indexOf(A.fx)>=0){ BS.atk=now; BS.slashCol=A.col; }
   if(d){ QB.hp=Math.max(0,QB.hp-d); BS.hit=now+delay; setTimeout(function(){ if(!BS) return; bsFloat("-"+d,crit?"#ffd43b":burn?"#ff922b":"#ffffff",crit||A.c>=5); if(crit||A.c>=5){ BS.shake=performance.now(); bsBurst(176,40,["#ffd43b","#ffffff",A.col],18); } },delay); }
-  bsCall(A.n.toUpperCase()+(crit&&d?" · CRIT!":"")+(burn?" · BURN!":""),A.col==="#ffffff"?"#ffd43b":A.col);
+  bsCall(res==="super"?"SUPER CRIT!":res==="crit"?"CRITICAL HIT!":A.n.toUpperCase()+(crit&&d?" · CRIT!":"")+(burn?" · BURN!":""),res==="super"?"#ffd43b":res==="crit"?"#ff922b":A.col==="#ffffff"?"#ffd43b":A.col);
   var f0=A.c>=5?220:A.c?330:440; snd(f0*2,0,.1,"square",.05); snd(f0*3,.07,.14,"square",.05); if(A.c>=5){ snd(f0*4,.14,.2,"triangle",.05); snd(70,.2,.2,"square",.06); } snd(120,delay/1000,.08,"square",.05);
-  $("#bs-live").textContent=A.n+(d?" hits for "+d+".":".");
+  $("#bs-live").textContent=A.n+(d?" hits for "+d+(crit?", a critical hit":"")+".":".");
   qbDraw(); qwHud(); qbBar(); save();
   if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,700+delay); }
-  else setTimeout(function(){ if(QB&&!QB.done&&QB.pick!==null&&!QB.choosing&&!QB.dodging) qbNext(); },1150+delay);
+  else setTimeout(function(){ if(QB&&!QB.done&&QB.pick!==null&&!QB.choosing&&!QB.dodging&&!QB.striking) qbNext(); },1150+delay);
 }
 function qbDodgeStart(){
   var s=QS(), now=performance.now(), hard=QB.final?2:QB.boss||QB.elite?1:0, dur=[900,760,640][hard], w=[.12,.09,.075][hard];
@@ -4688,7 +4711,7 @@ function qbDone(){
 function qbRun(){ if(!QB||QB.boss||QB.elite||QB.done) return; QB.foe.stun=performance.now()+4000; QS().combo=0; qbClose(); toast("You got away!"); }
 $("#qw-battle").addEventListener("click",function(e){
   var t;
-  if(e.target.closest("#bs-dodge")||(QB&&QB.dodging&&e.target.closest("#bs-wrap"))){ qbDodgePress(); return; }
+  if(e.target.closest("#bs-dodge")||e.target.closest("#bs-strike")||(QB&&(QB.dodging||QB.striking)&&e.target.closest("#bs-wrap"))){ qbTimingPress(); return; }
   if((t=e.target.closest("[data-atk]"))&&!t.disabled){ qbAttack(+t.dataset.atk); return; }
   if((t=e.target.closest("[data-bk]"))){ qbAnswer(+t.dataset.bk); return; }
   if((t=e.target.closest("[data-bitem]"))&&!t.disabled){ qbItem(t.dataset.bitem); return; }
@@ -4697,7 +4720,7 @@ $("#qw-battle").addEventListener("click",function(e){
   if(e.target.closest("#bs-wake")){ qbWake(); return; }
   if(e.target.closest("#bs-run")){ qbRun(); return; }
 });
-function bsKey(e){ if(!QB) return; if(QB.dodging&&(e.code==='Space'||e.code==='Enter'||e.code==='KeyD')){ e.preventDefault(); qbDodgePress(); return; }
+function bsKey(e){ if(!QB) return; if((QB.dodging||QB.striking)&&(e.code==='Space'||e.code==='Enter'||e.code==='KeyD')){ e.preventDefault(); qbTimingPress(); return; } if(QB.striking) return;
   var n=parseInt(e.key,10);
   if(QB.choosing&&n>=1&&n<=4){ e.preventDefault(); qbAttack(n-1); return; }
   if(n>=1&&n<=QB.opts.length&&QB.pick===null&&!QB.done&&QB.cur>=0){ e.preventDefault(); qbAnswer(n-1); } }
@@ -4767,12 +4790,14 @@ function bsDraw(now){
   BS.floats=BS.floats.filter(function(f){ return now-f.t0<1000; });
   BS.floats.forEach(function(f){ var a=(now-f.t0)/1000; c.globalAlpha=1-Math.max(0,a-.6)/.4; bsText(f.t,f.x,f.y-a*16,f.big?14:10,f.col,"center"); c.globalAlpha=1; });
   if(BS.dodge&&(!BS.dodge.done||now-BS.dodge.tEnd<900)){ var D=BS.dodge, x0=45, y0=46, w=150, h=10, pc=D.done?D.pAt:Math.max(0,Math.min(1,(now-D.t0)/D.dur));
-    if(!D.done&&now>=D.t0+D.dur){ qbDodgeResolve("hit",1.01); pc=1; }
+    if(!D.done&&now>=D.t0+D.dur){ if(D.kind==="strike") qbStrikeResolve("miss",1.01); else qbDodgeResolve("hit",1.01); pc=1; }
     bsWin(x0-7,y0-15,w+14,h+22);
-    bsText(D.done?(D.res==="hit"?"HIT!":D.res==="perfect"?"PERFECT!":"DODGED!"):now<D.t0?"GET READY…":"DODGE! [SPACE]",120,y0-5,8,D.done?(D.res==="hit"?"#ff6b6b":D.res==="perfect"?"#74c0fc":"#69db7c"):now<D.t0?"#c8cce8":"#ffd43b","center",false);
+    var SK=D.kind==="strike", tl=D.done?(SK?({miss:"NO CRIT",crit:"CRIT!",super:"SUPER CRIT!"})[D.res]:D.res==="hit"?"HIT!":D.res==="perfect"?"PERFECT!":"DODGED!"):now<D.t0?"GET READY…":SK?"STRIKE! [SPACE]":"DODGE! [SPACE]";
+    var tc=D.done?(SK?({miss:"#c8cce8",crit:"#ff922b",super:"#ffd43b"})[D.res]:D.res==="hit"?"#ff6b6b":D.res==="perfect"?"#74c0fc":"#69db7c"):now<D.t0?"#c8cce8":SK?"#ff922b":"#ffd43b";
+    bsText(tl,120,y0-5,8,tc,"center",false);
     bsPx(x0,y0,w,h,"#3a3f5c"); bsPx(x0+D.zone[0]*w,y0,(D.zone[1]-D.zone[0])*w,h,"#2f9e44"); bsPx(x0+D.perf[0]*w,y0,(D.perf[1]-D.perf[0])*w,h,"#ffd43b");
     for(var tk2=1;tk2<10;tk2++) bsPx(x0+tk2*w/10,y0+h-2,1,2,"#5a62a0");
-    var cxm=x0+pc*w; bsPx(cxm-2,y0-3,4,h+6,"#1a1c2c"); bsPx(cxm-1,y0-2,2,h+4,D.done&&D.res==="hit"?"#ff6b6b":"#ffffff"); }
+    var cxm=x0+pc*w; bsPx(cxm-2,y0-3,4,h+6,"#1a1c2c"); bsPx(cxm-1,y0-2,2,h+4,D.done&&(D.res==="hit"||D.res==="miss")?"#ff6b6b":"#ffffff"); }
   BS.calls=BS.calls.filter(function(f){ return now-f.t0<1300; });
   BS.calls.forEach(function(f){ var a=(now-f.t0)/1300, sc=a<.15?.4+a/.15*.8:a<.25?1.2-(a-.15)*2:1; c.save(); c.globalAlpha=a>.8?1-(a-.8)/.2:1; c.translate(120,50); c.scale(sc,sc); bsText(f.t,0,0,f.t.length>16?11:15,f.col,"center"); c.restore(); });
 }
@@ -4827,7 +4852,7 @@ function qwMusic(song){
   },S.ms);
 }
 if(/[?&]qa=1/.test(location.search)) window.QWQA={state:QS,map:function(){ return MAP; },maps:function(){ return MAPS; },get:getMap,tp:function(x,y){ QP.x=QP.tx=x; QP.y=QP.ty=y; QP.moving=false; },go:function(id){ qwEnterMap(id,null,true); },
-  fight:function(i,boss){ var f=boss?MAP.boss:MAP.mons[i]; qwBattle(f,!!boss); },mode:function(){ return QMODE; },answer:function(){ return QB&&QB.cur>=0?QB.pool.qs[QB.cur].right:null; },dodge:function(){ return BS&&BS.dodge?{wait:BS.dodge.t0-performance.now(),dur:BS.dodge.dur,zone:BS.dodge.zone,perf:BS.dodge.perf,done:BS.dodge.done,res:BS.dodge.res}:null; },hp:function(){ return QB?QB.hp:null; },sethp:function(n){ QS().hp=n; },opts:function(){ return QB?QB.opts:null; },attack:function(i){ qbAttack(i); },choosing:function(){ return !!(QB&&QB.choosing); },give:function(id,n){ var r=giveItem(id,n); save(); return r; },bag:function(t){ qwBag(t); },cls:function(c){ var st=QS(); st.cls=c; st.look.c=c; save(); },hurt:function(n){ qwHurt(n,"Test"); },hud:function(){ qwHud(); },trap:function(){ return MAP.trap; }};
+  fight:function(i,boss){ var f=boss?MAP.boss:MAP.mons[i]; qwBattle(f,!!boss); },mode:function(){ return QMODE; },answer:function(){ return QB&&QB.cur>=0?QB.pool.qs[QB.cur].right:null; },dodge:function(){ return BS&&BS.dodge?{wait:BS.dodge.t0-performance.now(),dur:BS.dodge.dur,zone:BS.dodge.zone,perf:BS.dodge.perf,done:BS.dodge.done,res:BS.dodge.res}:null; },hp:function(){ return QB?QB.hp:null; },sethp:function(n){ QS().hp=n; },opts:function(){ return QB?QB.opts:null; },attack:function(i){ qbAttack(i); },choosing:function(){ return !!(QB&&QB.choosing); },give:function(id,n){ var r=giveItem(id,n); save(); return r; },bag:function(t){ qwBag(t); },cls:function(c){ var st=QS(); st.cls=c; st.look.c=c; save(); },hurt:function(n){ qwHurt(n,"Test"); },hud:function(){ qwHud(); },strike:function(){ return BS&&BS.dodge&&BS.dodge.kind==="strike"&&!BS.dodge.done?{wait:BS.dodge.t0-performance.now(),dur:BS.dodge.dur,zone:BS.dodge.zone,perf:BS.dodge.perf}:null; },trap:function(){ return MAP.trap; }};
 
 document.addEventListener("click",function(e){ if(e.target.closest("[data-open-quest]")){ sfx("blip"); openQuest(); } });
 
