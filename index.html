@@ -3319,6 +3319,7 @@ Object.assign(SPR,{
   quill:["....kk.","...kwk.","..kwk..",".kwk...",".kk....","kb.....","k......"],
   compass:[".kkkkk.","kwwrwwk","kwrrrwk","kwwkwwk","kwwbwwk",".kkkkk."],
   key:[".kk....","kyyk...","kyyk...",".kyyyyk",".k..kyk","......k"],
+  warn:["....k....","...kyk...","...kkk...","..kykyk..","..kykyk..",".kyyyyyk.",".kyykyyk.","kkkkkkkkk"],
   bag:["..kkk..",".k...k.","kkkkkkk","kbbbbbk","kbbybbk","kbbbbbk",".kkkkk."],
   way:["....kkkk....","...kwggGk...","...kgggGk...","..kgggggGk..","..kggrrgGk..","..kgrggrGk..","..kggrrgGk..","..kgrggrGk..","..kggrrgGk..","..kgggggGk..","..kgggggGk..",".kkkkkkkkkk.",".kGGGGGGGGk.","kkkkkkkkkkkk"],
   lore:["..kkkkkkkk..",".kggggggggk.","kgwgggggggGk","kgrrgrrgrgGk","kggggggggGGk","kgrgrrgrrgGk","kggggggggGGk","kgrrgrgrrgGk","kggggggggGGk",".kGGGGGGGGk.","kkkkkkkkkkkk"],
@@ -3328,7 +3329,7 @@ Object.assign(SPR,{
 Object.assign(SPAL,{
   mega:{b:"#8b5a2b",w:"#fff3bf",p:"#ffd43b",P:"#e09a00"}, gem:{w:"#e3fafc",c:"#66d9e8",C:"#1098ad"}, smoke:{d:"#4a4458",w:"#a8a2b8",y:"#ffd43b"},
   feather:{r:"#ff6b35",R:"#ffd43b"}, scroll:{b:"#c9a227",w:"#f2e2c0",d:"#8a6a3a"}, charm:{y:"#ffd43b",r:"#e8484d"}, eye:{w:"#f4f4f4",b:"#4dabf7"},
-  boots:{b:"#8a8f9e"}, hourglass:{y:"#ffe066"}, quill:{w:"#f4f4f4",b:"#1a1c2c"}, compass:{w:"#f4f1e8",r:"#e8484d",b:"#4dabf7"}, key:{y:"#ffd43b"}, bag:{b:"#b5651d",y:"#ffd43b"},
+  boots:{b:"#8a8f9e"}, hourglass:{y:"#ffe066"}, quill:{w:"#f4f4f4",b:"#1a1c2c"}, compass:{w:"#f4f1e8",r:"#e8484d",b:"#4dabf7"}, key:{y:"#ffd43b"}, warn:{y:"#ffd43b"}, bag:{b:"#b5651d",y:"#ffd43b"},
   wayOn:{g:"#9a9eab",G:"#6b6f7d",w:"#c9ccd6",r:"#3bc9db"}, wayOff:{g:"#8a8e9b",G:"#5b5f6d",w:"#b9bcc6",r:"#4a4458"},
   loreOn:{g:"#7a8a7a",G:"#4f5f4f",w:"#a8b8a8",r:"#ffd43b"}, loreOff:{g:"#6a7a6a",G:"#4f5f4f",w:"#98a898",r:"#4a5a4a"},
   shrine:{g:"#c3c6ce",G:"#8a8f9e",w:"#ffffff",c:"#ff8fab",C:"#e64980"},
@@ -3391,7 +3392,7 @@ var ITEMS={
   gem:{n:"Power Gem",t:"use",r:"rare",ic:"gem",d:"+3 POWER for special attacks.",p:30},
   smoke:{n:"Smoke Bomb",t:"use",r:"rare",ic:"smoke",d:"Battle only: the next attack misses you.",p:25},
   feather:{n:"Phoenix Feather",t:"use",r:"epic",ic:"feather",d:"Automatic: if you would faint, you revive with half your hearts.",p:90},
-  scroll:{n:"Trap Scroll",t:"use",r:"rare",ic:"scroll",d:"Reveal every pit and mimic in this land.",p:20},
+  scroll:{n:"Trap Scroll",t:"use",r:"rare",ic:"scroll",d:"Mark every pit and mimic in this land on your minimap.",p:20},
   w_rusty:{n:"Rusty Blade",t:"w",r:"common",ic:"sword",d:"+3 damage.",dmg:3,p:40},
   w_steel:{n:"Steel Edge",t:"w",r:"rare",ic:"sword",d:"+7 damage.",dmg:7,p:120},
   w_ember:{n:"Ember Fang",t:"w",r:"epic",ic:"sword",d:"+10 damage. 25% chance to BURN for +50%.",dmg:10,burn:.25,p:260},
@@ -3403,7 +3404,7 @@ var ITEMS={
   a_plate:{n:"Knight Plate",t:"a",r:"epic",ic:"shield",d:"+7 max hearts.",hp:7,p:300},
   a_dragon:{n:"Dragon Scale",t:"a",r:"legendary",ic:"shield",d:"+9 max hearts. Hits and traps cost only 2 hearts.",hp:9,tough:1},
   c_coin:{n:"Lucky Coin",t:"c",r:"rare",ic:"coin",d:"+50% coins from everything.",coin:.5,p:150},
-  c_owl:{n:"Owl Eye",t:"c",r:"rare",ic:"eye",d:"See hidden pits and mimic chests.",owl:1,p:140},
+  c_owl:{n:"Owl Eye",t:"c",r:"rare",ic:"eye",d:"Mimic chests show red eyes, and pits show on your minimap.",owl:1,p:140},
   c_boots:{n:"Iron Boots",t:"c",r:"rare",ic:"boots",d:"Spike traps can’t hurt you.",iron:1,p:110},
   c_swift:{n:"Swift Boots",t:"c",r:"common",ic:"boots",d:"Walk 30% faster.",swift:1,p:60},
   c_hour:{n:"Hourglass",t:"c",r:"epic",ic:"hourglass",d:"The dodge marker moves 35% slower.",slow:1,p:240},
@@ -4034,7 +4035,7 @@ function qwDraw(now){
     });
   });
   MAP.portals.forEach(function(p){ add(p.y*16+15,function(){ drawPortal(p,now,s); }); });
-  MAP.chests.forEach(function(ch){ if(s.chests[ch.id]) return; add(ch.y*16+15,function(){ var cs=bake("chest",SPR.chest,SPAL.chest); shadow(ch.x*16+8,ch.y*16+15,7); var bob=Math.sin(now/300+ch.x)>0.9?-1:0; drawSpr(cs,ch.x*16,ch.y*16+5+bob); if(ch.mimic&&(ghas(s,"owl")||s.scroll[MAP.id])){ wrect(ch.x*16+4,ch.y*16+8+bob,2,2,"#ff2d2d"); wrect(ch.x*16+10,ch.y*16+8+bob,2,2,"#ff2d2d"); } if(ch.min==="legendary"&&Math.random()<.15) qwParts.push({x:ch.x*16+2+Math.random()*12,y:ch.y*16+4,vx:0,vy:-.3,life:600,max:600,s:1,col:"#ffa94d"});
+  MAP.chests.forEach(function(ch){ if(s.chests[ch.id]) return; add(ch.y*16+15,function(){ var cs=bake("chest",SPR.chest,SPAL.chest); shadow(ch.x*16+8,ch.y*16+15,7); var bob=Math.sin(now/300+ch.x)>0.9?-1:0; var jig=ch.mimic&&((now+ch.x*311)%3400)<260?(Math.floor(now/45)%2?1:-1):0; drawSpr(cs,ch.x*16+jig,ch.y*16+5+bob); if(ch.mimic&&(ghas(s,"owl")||s.scroll[MAP.id])){ wrect(ch.x*16+4,ch.y*16+8+bob,2,2,"#ff2d2d"); wrect(ch.x*16+10,ch.y*16+8+bob,2,2,"#ff2d2d"); } if(ch.min==="legendary"&&Math.random()<.15) qwParts.push({x:ch.x*16+2+Math.random()*12,y:ch.y*16+4,vx:0,vy:-.3,life:600,max:600,s:1,col:"#ffa94d"});
     if(Math.floor(now/180+ch.x)%9===0) wrect(ch.x*16+12,ch.y*16+3,1,1,"#fff8c0"); }); });
   MAP.npcs.forEach(function(n){ var nx=(n.moving?lerp(n.x,n.tx,n.t):n.x)*16, ny=(n.moving?lerp(n.y,n.ty,n.t):n.y)*16;
     add(ny+15,function(){ shadow(nx+8,ny+15,6); var sp;
@@ -4058,6 +4059,7 @@ function qwDraw(now){
     shadow(hx+8,hy+15,6); drawSpr(sp,hx,hy-hoy-(QP.moving&&QP.frame%2?1:0));
     if(s.combo>=5){ for(var k=0;k<3;k++){ var a=now/200+k*2.1; wrect(hx+8+Math.cos(a)*8,hy+8+Math.sin(a)*5,1,1,"#ffd43b"); } } });
   list.sort(function(a,b){ return a[0]-b[0]; }).forEach(function(it){ it[1](); });
+  if(MAP.big) qwWarn.forEach(function(p){ var b=Math.round(Math.sin(now/180+p.x)*1.5), ws=bake("warn",SPR.warn,SPAL.warn); qwCx.globalAlpha=.75+Math.sin(now/160)*.25; drawSpr(ws,p.x*16+8-ws.width*.6,p.y*16-9+b,1.2); qwCx.globalAlpha=1; });
   qwParts.forEach(function(p){ qwCx.globalAlpha=Math.max(0,p.life/p.max); wrect(p.x,p.y,p.s,p.s,p.col); }); qwCx.globalAlpha=1;
   qwFloat.forEach(function(f){ qwCx.globalAlpha=Math.min(1,f.life/300); label(f.t,f.x,f.y,f.col); }); qwCx.globalAlpha=1;
   /* lamps glow */
@@ -4065,15 +4067,19 @@ function qwDraw(now){
   qwAtmos(now,vw,vh);
   if(qwMiniOn) qwMiniDot(now);
 }
+var qwWarn=[];
 function qwDrawGround(now,vw,vh){
+  qwWarn=[];
   var s=QS(), x0=qwCam.x-16, x1=qwCam.x+vw+16, y0=qwCam.y-16, y1=qwCam.y+vh+16;
   function vis(t){ var X=t.x*16, Y=t.y*16; return X>x0&&X<x1&&Y>y0&&Y<y1; }
   MAP.pits.forEach(function(p){ if(!vis(p)) return; var X=p.x*16, Y=p.y*16;
-    if(trapSeen(p)){ wrect(X+1,Y+2,14,12,"#1a1c2c"); wrect(X+2,Y+3,12,10,"#05060c"); wrect(X+2,Y+3,12,2,"#2a2440"); if(!s.pitSeen[p.id]){ var rc="rgba(255,90,90,"+(.5+Math.sin(now/200)*.3)+")"; wrect(X,Y,16,1,rc); wrect(X,Y+15,16,1,rc); wrect(X,Y,1,16,rc); wrect(X+15,Y,1,16,rc); } }
-    else { var h=hstr(p.id); wrect(X+4+(h%4),Y+6,5,1,"rgba(30,20,10,.3)"); wrect(X+7+(h%3),Y+7,1,3,"rgba(30,20,10,.3)"); wrect(X+5,Y+10+(h%2),4,1,"rgba(30,20,10,.22)"); } });
+    var cr="rgba(25,16,8,.62)"; wrect(X+2,Y+3,12,10,"rgba(25,16,8,.45)"); wrect(X+4,Y+5,8,6,"#0b0a10"); wrect(X+5,Y+5,6,1,"#2a2440");
+    wrect(X+1,Y+7,3,1,cr); wrect(X,Y+8,1,1,cr); wrect(X+12,Y+6,3,1,cr); wrect(X+15,Y+5,1,1,cr); wrect(X+7,Y+1,1,3,cr); wrect(X+8,Y,1,1,cr); wrect(X+8,Y+12,1,3,cr); wrect(X+9,Y+15,1,1,cr);
+    if(s.pitSeen[p.id]){ wrect(X+3,Y+4,10,8,"#05060c"); } });
   MAP.spikes.forEach(function(t){ if(!vis(t)) return; var X=t.x*16, Y=t.y*16, up=spikeUp(t,now), warn=!up&&((now+t.off)%2600)>2150;
     wrect(X+1,Y+1,14,14,"#5a5468"); wrect(X+2,Y+2,12,12,"#3a3448");
     for(var i=0;i<3;i++) for(var j=0;j<3;j++){ var px=X+3+i*4, py=Y+3+j*4; if(up){ wrect(px,py-2,2,4,"#e9ecef"); wrect(px,py-3,2,1,"#ffffff"); wrect(px,py+2,2,1,"#868e96"); } else wrect(px,py+1,2,1,warn?"#ff6b6b":"#1a1c2c"); } });
+  MAP.pits.forEach(function(p){ if(!vis(p)) return; var d=Math.abs(QP.x-p.x)+Math.abs(QP.y-p.y); if(d>6) return; qwWarn.push(p); });
   (MAP.items||[]).forEach(function(it){ if(s.found[it.id]||!vis(it)) return; var X=it.x*16, Y=it.y*16, b=Math.round(Math.sin(now/300)*1.5);
     shadow(X+8,Y+14,4); drawSpr(bake("icon-key",SPR.key,SPAL.key),X+3,Y+5+b,1.4); if(Math.floor(now/140)%4===0) wrect(X+2+((now/37)%12|0),Y+2+b,1,1,"#ffffff"); wrect(X+12,Y+3+b,1,1,Math.floor(now/250)%2?"#fff8c0":"#ff8fab"); });
 }
@@ -4124,6 +4130,7 @@ function qwMiniDot(now){ var mc=$("#qw-mini"); if(!mc||mc.hidden||!qwMiniBase) r
   if(MAP.ways) MAP.ways.forEach(function(w){ dot(w.x,w.y,s.ways[w.id]?"#3bc9db":"#868e96",3); });
   if(MAP.boss&&!(MAP.boss.final?s.champ:s.badges[MAP.boss.land])) dot(MAP.boss.x,MAP.boss.y,"#ff3b5c",5);
   if(!MAP.big||ghas(s,"compass")) MAP.chests.forEach(function(c){ if(!s.chests[c.id]) dot(c.x,c.y,"#ffd43b",3); });
+  if(MAP.big&&(ghas(s,"owl")||s.scroll[MAP.id])){ MAP.pits.forEach(function(p){ dot(p.x,p.y,"#c92a2a",2); }); MAP.chests.forEach(function(c){ if(c.mimic&&!s.chests[c.id]) dot(c.x,c.y,"#ff2d2d",3); }); }
   MAP.mons.forEach(function(mn){ if(qwAlive(mn)) dot(mn.x,mn.y,mn.elite?"#ff3b5c":"#ff8787",mn.elite?4:2); });
   if(MAP.big){ MAP.npcs.forEach(function(n){ var b=qBubble(n); if(b==="!"||b==="?") dot(n.x,n.y,b==="?"?"#4dabf7":"#ffd43b",4); });
     (MAP.items||[]).forEach(function(it){ var q=(MAP.quests||[]).filter(function(x){ return x.type==="fetch"; })[0]; if(!s.found[it.id]&&q&&qActive(q)) dot(it.x,it.y,"#ff8fab",3); }); }
@@ -4291,7 +4298,7 @@ function qwTurnIn(q){
   qwBurst(QP.x,QP.y,["#ffd43b","#ffffff","#74c0fc"],40);
   qwPanel('<div class="loot-card epic"><div class="lc-ico"><img src="'+bake("chestOpen",SPR.chestOpen,SPAL.chest).toDataURL()+'" alt=""></div><p class="pxlabel">Quest complete</p><h2>'+esc(q.title)+'</h2><ul class="loot-lines">'+lines.map(function(l){ return '<li>'+l[0]+' '+l[1]+'</li>'; }).join("")+'</ul><button class="pxbtn go" data-close>▶ Awesome!</button></div>');
 }
-var SCOUT_TIPS=["This land is HUGE. Light the waystones so you can teleport around.","Cracked ground is a hidden pit. Fall in and you lose 3 hearts and get sent back to your last waystone.","Spike traps pop up and down. Wait for them to drop, then go!","Some chests are MIMICS. If a chest looks at you funny… careful.","Monsters up north are way stronger. Gear up at the outpost first.","An Elite lives in the den. Beat it for epic gear."];
+var SCOUT_TIPS=["This land is HUGE. Light the waystones so you can teleport around.","Cracked ground with a warning sign is a pit. Fall in and you lose 3 hearts and get sent back to your last waystone.","Spike traps pop up and down. Wait for them to drop, then go!","Some chests are MIMICS. If a chest twitches when nobody’s touching it… careful.","Monsters up north are way stronger. Gear up at the outpost first.","An Elite lives in the den. Beat it for epic gear."];
 function qwLandNpc(n){
   var s=QS(), face=portraitOf(n), q=npcQuest(n);
   if(n.id==="gshop") return qwTrader();
@@ -4367,7 +4374,7 @@ function qwUse(id){ var s=QS(); if(!canUse(id)) return;
   if(id==="potion") qwDrink(false);
   if(id==="mega"){ s.inv.mega--; s.hp=qwMaxHp(s); qwBurst(QP.x,QP.y,["#ffd43b","#ffffff"],24); qwText(QP.x,QP.y,"FULL HEAL","#ffd43b"); }
   if(id==="gem"){ s.inv.gem--; s.pw=Math.min(PW_MAX,(s.pw||0)+3); qwText(QP.x,QP.y,"+3 POWER","#66d9e8"); }
-  if(id==="scroll"){ s.inv.scroll--; s.scroll[MAP.id]=1; qwText(QP.x,QP.y,"TRAPS REVEALED","#ff8787"); }
+  if(id==="scroll"){ s.inv.scroll--; s.scroll[MAP.id]=1; qwText(QP.x,QP.y,"TRAPS MARKED ON MAP","#ff8787"); }
   save(); sfx("streak"); qwHud(); qwBag(); }
 function qwEquip(id){ var s=QS(), it=ITEMS[id], e=s.eq, cur=Object.keys(e).filter(function(k){ return e[k]===id; })[0];
   if(cur) e[cur]=null; else if(it.t==="w"||it.t==="a") e[it.t]=id; else { if(!e.c1) e.c1=id; else if(!e.c2) e.c2=id; else e.c2=id; }
@@ -4391,12 +4398,12 @@ var SHOPKIND="mo";
 function shopRows(list){ var s=QS(); return '<div class="shop-list">'+list.map(function(it){ var dis=s.coins<it[4]||it[5]; return '<button class="si" data-buy="'+it[0]+'" data-price="'+it[4]+'"'+(dis?' disabled':'')+'>'+it[1]+'<span><b>'+it[2]+'</b><span>'+it[3]+'</span></span><span class="price">'+(it[5]&&it[6]?it[6]:icon("coin")+' '+it[4])+'</span></button>'; }).join("")+'</div>'; }
 function qwShop(){ SHOPKIND="mo"; var s=QS();
   var list=[["potion",itemIcon("potion","big"),"Potion","Heals 3 hearts",15],["mega",itemIcon("mega","big"),"Mega Potion","Heals ALL hearts",45],["gem",itemIcon("gem","big"),"Power Gem","+3 POWER",30],
-    ["smoke",itemIcon("smoke","big"),"Smoke Bomb","The next attack misses you",25],["scroll",itemIcon("scroll","big"),"Trap Scroll","Reveal pits and mimics in a land",20],["feather",itemIcon("feather","big"),"Phoenix Feather","Auto-revive when you faint",90],
+    ["smoke",itemIcon("smoke","big"),"Smoke Bomb","The next attack misses you",25],["scroll",itemIcon("scroll","big"),"Trap Scroll","Mark pits and mimics on your minimap",20],["feather",itemIcon("feather","big"),"Phoenix Feather","Auto-revive when you faint",90],
     ["sword",icon("sword","big"),"Sword Lv "+(s.sword+1),"+6 damage on every hit",40*(s.sword+1)],["armor",icon("shield","big"),"Armor Lv "+(s.armor+1),"+1 max heart",50*(s.armor+1),qwMaxHp(s)>=30,"MAX"],["stars",icon("star","big"),"Star pack","+5 stars for themes",60]];
   qwPanel('<div class="shop-head"><img class="pxport" src="'+bake("merchant",SPR.merchant,SPAL.merchant).toDataURL()+'" alt=""><div><p class="pxlabel">Mo the Merchant</p><h2>“What’ll it be?”</h2><p class="pxsmall">'+icon("coin")+' '+s.coins+' coins</p></div></div>'+shopRows(list)+'<button class="pxbtn go" data-close>▶ Bye!</button>'); }
 function qwTrader(){ SHOPKIND="zed"; var s=QS(), r=rng(hstr(MAP.id+"trader")), pool=LOOT.common.concat(LOOT.rare,LOOT.epic).filter(function(id){ return ITEMS[id].p&&ITEMS[id].r!=="common"; }), picks=[];
   while(picks.length<4){ var id=pool[Math.floor(r()*pool.length)]; if(picks.indexOf(id)<0) picks.push(id); }
-  var list=picks.map(function(id){ var it=ITEMS[id]; return [id,itemIcon(id,"big"),it.n+' <em class="r-'+it.r+'">'+it.r+'</em>',it.d,it.p,!!s.inv[id],"OWNED"]; }).concat([["potion",itemIcon("potion","big"),"Potion","Heals 3 hearts",18],["mega",itemIcon("mega","big"),"Mega Potion","Heals ALL hearts",50],["scroll",itemIcon("scroll","big"),"Trap Scroll","Reveal pits and mimics here",20]]);
+  var list=picks.map(function(id){ var it=ITEMS[id]; return [id,itemIcon(id,"big"),it.n+' <em class="r-'+it.r+'">'+it.r+'</em>',it.d,it.p,!!s.inv[id],"OWNED"]; }).concat([["potion",itemIcon("potion","big"),"Potion","Heals 3 hearts",18],["mega",itemIcon("mega","big"),"Mega Potion","Heals ALL hearts",50],["scroll",itemIcon("scroll","big"),"Trap Scroll","Mark pits and mimics on your minimap",20]]);
   qwPanel('<div class="shop-head"><img class="pxport" src="'+bake("merchant-b",SPR.merchant,SPAL.merchantBlue).toDataURL()+'" alt=""><div><p class="pxlabel">Trader Zed</p><h2>“Rare stuff. Fair prices.”</h2><p class="pxsmall">'+icon("coin")+' '+s.coins+' coins</p></div></div>'+shopRows(list)+'<button class="pxbtn go" data-close>▶ Bye!</button>'); }
 function qwBuy(id,price){ var s=QS(); if(s.coins<price) return; s.coins-=price; var msg;
   if(id==="sword"){ s.sword++; msg="Sword upgraded!"; } else if(id==="armor"){ s.armor++; s.hp=Math.min(qwMaxHp(s),s.hp+1); msg="Armor upgraded! +1 max heart"; } else if(id==="stars"){ addStars(5); msg="+5 stars"; }
