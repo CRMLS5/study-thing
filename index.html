@@ -186,6 +186,113 @@
 @keyframes btdrain{to{transform:scaleX(0)}}
 @media (prefers-reduced-motion:reduce){.dmg,.fx.appear,.fx.hit,.fx.lunge,.fx.lunge-r,.fx.hurt,.arena.flash::after,.speed i{animation:none}.fx.poof{animation:none;opacity:.2}}
 
+/* ---------- Study Quest (RPG world) ---------- */
+.qw-stage [hidden],.qw-battle[hidden],.qw-battle [hidden]{display:none!important}
+.bt-banner.quest{background:linear-gradient(135deg,#17603f,#2743c2 60%,#6b3fb5);color:#fff;padding:20px 18px}
+.bt-banner.quest .big{font-size:48px;animation:qwfloat 3s ease-in-out infinite}
+@keyframes qwfloat{50%{transform:translateY(-4px) rotate(-4deg)}}
+.qw-stage{position:relative;height:min(70vh,640px);min-height:390px;margin-top:12px;border-radius:18px;overflow:hidden;background:#2e5d34;box-shadow:0 18px 40px -24px var(--shadow);touch-action:none;user-select:none;-webkit-user-select:none}
+#qw-canvas{display:block}
+.qw-hud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:2}
+.qh-left{display:flex;gap:8px;align-items:center;background:rgba(10,14,30,.74);color:#fff;border-radius:14px;padding:6px 10px 6px 6px}
+.qh-av{font-size:30px;line-height:1}
+.qh-name{font-size:13px;font-weight:700;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.qh-name b{color:#ffd43b}
+.qh-xp{position:relative;width:124px;height:11px;margin:3px 0;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden}
+.qh-xp i{display:block;height:100%;background:linear-gradient(90deg,#69db7c,#3bc9db);transition:width .6s ease}
+.qh-xp span{position:absolute;inset:0;font:700 8px/11px var(--font-mono);text-align:center;color:#fff;text-shadow:0 1px 1px #000}
+.qh-hearts{font-size:11px;line-height:1.25;max-width:132px}
+.qh-right{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;max-width:58%}
+.qh-pill{font:700 13px/1 var(--font-body);color:#fff;background:rgba(10,14,30,.74);border:0;border-radius:99px;padding:7px 10px;white-space:nowrap;pointer-events:auto}
+button.qh-pill{cursor:pointer}
+button.qh-pill:disabled{opacity:.5;cursor:default}
+.qh-pill.hot{background:#ff922b;color:#1a1000}
+.qw-mini{position:absolute;right:8px;bottom:8px;width:128px;height:96px;border:2px solid rgba(255,255,255,.85);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.35);image-rendering:pixelated;pointer-events:none;z-index:1}
+.qw-banner{position:absolute;left:50%;top:30%;transform:translateX(-50%);z-index:2;width:max-content;max-width:92%;text-align:center;color:#fff;pointer-events:none}
+.qw-banner b{display:block;font-family:var(--font-display);font-weight:800;font-size:clamp(26px,6vw,40px);line-height:1.1;text-shadow:0 3px 0 rgba(0,0,0,.45),0 0 22px rgba(0,0,0,.45)}
+.qw-banner span{display:inline-block;margin-top:6px;padding:4px 11px;border-radius:99px;background:rgba(10,14,30,.74);font-size:14px;font-weight:700}
+.qw-banner.show{animation:qwban 2.6s ease forwards}
+@keyframes qwban{0%{opacity:0;transform:translate(-50%,12px) scale(.9)}12%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0}}
+.qw-pad{position:absolute;left:10px;bottom:10px;z-index:2;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:3px}
+.qw-pad button{font-size:22px;color:#fff;background:rgba(10,14,30,.55);border:1px solid rgba(255,255,255,.4);border-radius:12px;touch-action:none;cursor:pointer}
+.qw-pad button:active{background:rgba(255,255,255,.3)}
+.qw-pad [data-pad="up"]{grid-area:1/2}.qw-pad [data-pad="left"]{grid-area:2/1}.qw-pad [data-pad="right"]{grid-area:2/3}.qw-pad [data-pad="down"]{grid-area:3/2}
+.qw-dialog{position:absolute;left:10px;right:10px;bottom:10px;z-index:3;display:flex;gap:12px;align-items:flex-start;background:var(--sheet);color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:pointer;animation:qwpop .25s ease-out}
+.qd-face{font-size:44px;line-height:1}
+.qd-body{flex:1;min-width:0}
+.qd-who{font-family:var(--font-display);font-size:18px}
+.qd-text{margin:4px 0 8px;min-height:3em;font-size:17px}
+.qd-opts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.qd-opts .btn{min-height:42px;padding:9px 14px}
+.qw-panel{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:12px;overflow:auto;background:rgba(5,8,20,.55)}
+.qp-in{width:min(520px,100%);max-height:100%;overflow:auto;background:var(--sheet);color:var(--ink);border-radius:18px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.45);animation:qwpop .35s cubic-bezier(.2,1.4,.4,1)}
+.qp-in h2{font-family:var(--font-display);font-weight:800;font-size:26px;line-height:1.15;margin:2px 0 10px}
+.qp-in h3{font-family:var(--font-display);margin:14px 0 8px}
+@keyframes qwpop{from{opacity:0;transform:scale(.75)}}
+.av-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.av{font-size:28px;padding:6px 0;background:var(--paper);border:2px solid var(--rule);border-radius:12px;cursor:pointer}
+.av.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent)}
+.nm{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;font-weight:700}
+.nm input{font:inherit;padding:10px 12px;color:var(--ink);background:var(--paper);border:1.5px solid var(--rule);border-radius:10px}
+.shop-list{display:grid;gap:8px;margin:10px 0 14px}
+.si{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--rule);border-radius:12px}
+.si-ico{font-size:30px}
+.si div{flex:1;min-width:0;display:flex;flex-direction:column}
+.si div span{font-size:14px;color:var(--ink-soft)}
+.si .btn{min-height:40px;padding:8px 12px;white-space:nowrap}
+.qlog{list-style:none;padding:0;margin:10px 0;display:grid;gap:8px}
+.qlog li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--rule);border-radius:12px}
+.ql-ico{font-size:28px}
+.qlog div{display:flex;flex-direction:column}
+.qlog div span{font-size:14px;color:var(--ink-soft)}
+.qlog-goal{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--hi);color:var(--hi-ink)}
+.ach{display:flex;flex-wrap:wrap;gap:6px}
+.ach span{font-size:13px;font-weight:700;padding:5px 9px;color:var(--ink-soft);border:1px solid var(--rule);border-radius:99px}
+.ach span.on{color:var(--good);background:var(--good-bg);border-color:var(--good)}
+.loot-card{text-align:center}
+.loot-card p{margin:0 0 14px}
+.lc-ico{font-size:66px;line-height:1.1;animation:qwbounce .7s cubic-bezier(.2,1.6,.4,1)}
+.loot-card.rare .lc-ico{filter:drop-shadow(0 0 14px #74c0fc)}
+.loot-card.epic .lc-ico{filter:drop-shadow(0 0 16px #b197fc)}
+.loot-card.legendary .lc-ico{filter:drop-shadow(0 0 22px #ffd43b)}
+.loot-card .eyebrow{font-weight:700}
+.loot-card.rare .eyebrow{color:#1c7ed6}.loot-card.epic .eyebrow{color:#9061f9}.loot-card.legendary .eyebrow{color:#e67700}
+@keyframes qwbounce{0%{transform:scale(.2) rotate(-20deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}
+.qw-help{margin-top:8px}
+.qw-battle{position:fixed;inset:0;z-index:40;overflow:auto;padding:16px;background:radial-gradient(circle at 50% 0%,#2b2f6b,#0b0d1f 70%)}
+.qw-battle.boss{background:radial-gradient(circle at 50% 0%,#6b1f2f,#12060c 70%)}
+.qw-battle.final{background:radial-gradient(circle at 50% 0%,#6b5a1f,#120d03 70%)}
+.qw-battle.enter{animation:qwenter .55s ease-out}
+@keyframes qwenter{0%{clip-path:circle(0% at 50% 50%);filter:brightness(3)}100%{clip-path:circle(150% at 50% 50%);filter:none}}
+.qw-battle.shake,.arena.shake{animation:qwshake .4s}
+@keyframes qwshake{0%,100%{transform:none}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+.qb-in{max-width:720px;margin:0 auto}
+.qb-in .arena{margin-top:0}
+.qb-card{margin-top:12px;padding:16px;background:var(--paper);color:var(--ink);border-radius:18px}
+.qb-card .opt .kn{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:6px;font:700 12px/1 var(--font-mono);color:var(--ink-soft);border:1px solid var(--rule);vertical-align:1px}
+.qb-actions{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.qb-actions .chipbtn{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35)}
+.qb-actions .chipbtn:disabled{opacity:.45;cursor:default}
+.qb-call{position:absolute;left:50%;top:40%;z-index:3;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:800;font-size:28px;color:#ffd43b;text-shadow:0 3px 0 rgba(0,0,0,.5);white-space:nowrap;opacity:0;pointer-events:none}
+.qb-call.big{font-size:clamp(28px,8vw,46px)}
+.qb-call.go{animation:qwcall 1.1s ease-out}
+@keyframes qwcall{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-62%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%)}}
+.qb-win{text-align:center}
+.qb-win h2{font-family:var(--font-display);font-weight:800;font-size:clamp(28px,7vw,40px);margin:4px 0}
+.qw-big{font-size:66px;line-height:1.1;animation:qwbounce .7s cubic-bezier(.2,1.6,.4,1)}
+.loot{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:14px 0}
+.lt{font-family:var(--font-display);font-weight:800;font-size:20px;padding:8px 14px;background:var(--sheet);border:2px solid var(--rule);border-radius:12px;opacity:0;animation:qwloot .45s cubic-bezier(.2,1.5,.4,1) forwards}
+.lt:nth-child(1){animation-delay:.25s}.lt:nth-child(2){animation-delay:.43s}.lt:nth-child(3){animation-delay:.61s}.lt:nth-child(4){animation-delay:.79s}.lt:nth-child(5){animation-delay:.97s}
+.lt.xp{border-color:#37b24d}.lt.coin{border-color:#f59f00}.lt.star{border-color:#fcc419}.lt.rare{border-color:#1c7ed6;box-shadow:0 0 14px #74c0fc}.lt.epic{border-color:#9061f9;box-shadow:0 0 14px #b197fc}
+@keyframes qwloot{from{opacity:0;transform:translateY(16px) scale(.6)}to{opacity:1;transform:none}}
+.qb-xp{display:flex;align-items:center;gap:8px;max-width:420px;margin:6px auto 14px;font:700 13px var(--font-mono)}
+.qb-xp .bar{flex:1;height:14px;border-radius:99px;background:var(--rule);overflow:hidden}
+.qb-xp .bar i{display:block;height:100%;background:linear-gradient(90deg,#69db7c,#3bc9db);transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.qb-miss{margin:0 0 14px;text-align:left}
+.qb-miss summary{font-weight:700;cursor:pointer}
+@media (max-width:520px){.qh-right{max-width:50%}.qh-xp{width:96px}.qw-mini{width:96px;height:72px}.qw-pad{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px)}}
+@media (prefers-reduced-motion:reduce){.qw-battle.enter,.qw-battle.shake,.arena.shake,.qw-big,.lc-ico,.qp-in,.qw-dialog,.qw-banner.show,.bt-banner.quest .big{animation:none!important}.lt{animation:none;opacity:1}.qb-call{display:none}}
+
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.5;padding-inline:16px;padding-block:0 48px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:880px;margin-inline:auto}
@@ -433,6 +540,7 @@ h2:first-child{margin-top:0}
 
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="toast" id="toast" role="status" hidden></div>
+<div class="qw-battle" id="qw-battle" role="dialog" aria-label="Battle" hidden></div>
 <div class="player" id="player" hidden>
   <div class="player-in">
     <span class="eyebrow" id="pl-label">Reading aloud</span>
@@ -452,8 +560,27 @@ h2:first-child{margin-top:0}
       <h1>Study Guide Maker <mark>2000</mark></h1>
       <p class="lede">Pick a study guide. Earn stars. Beat your high score.</p>
     </header>
-    <button class="bt-banner" data-open-battle=""><span class="big" aria-hidden="true">⚔️</span><span><b>Boss Battle</b><span class="s">Turn your study guides into a game. Beat the monsters, then beat the boss.</span></span></button>
+    <button class="bt-banner quest" data-open-quest><span class="big" aria-hidden="true">🗺️</span><span><b>Study Quest</b><span class="s">Explore an RPG world. Battle monsters with your study questions, level up, find loot and beat the bosses.</span></span></button>
+    <p style="margin:0 0 8px"><button class="link" data-open-battle="">⚔️ Or play a quick Boss Battle</button></p>
     <div class="gallery" id="guide-list"></div>
+  </section>
+
+  <!-- Study Quest -->
+  <section id="quest" hidden>
+    <div class="guide-bar">
+      <button class="link" id="quest-back">← All study guides</button>
+      <div class="bar-right"><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
+    </div>
+    <div class="qw-stage" id="qw-stage">
+      <canvas id="qw-canvas" role="img" aria-label="Study Quest map"></canvas>
+      <div class="qw-hud" id="qw-hud"></div>
+      <canvas class="qw-mini" id="qw-mini" aria-hidden="true"></canvas>
+      <div class="qw-banner" id="qw-banner" hidden></div>
+      <div class="qw-pad" id="qw-pad" hidden><button data-pad="up" aria-label="Walk up">▲</button><button data-pad="left" aria-label="Walk left">◀</button><button data-pad="right" aria-label="Walk right">▶</button><button data-pad="down" aria-label="Walk down">▼</button></div>
+      <div class="qw-dialog" id="qw-dialog" hidden></div>
+      <div class="qw-panel" id="qw-panel" hidden></div>
+    </div>
+    <p class="small qw-help">Move with the arrow keys or WASD. Walk into monsters to fight, and into people, signs and chests to use them. M = map · Q = quest log · P = potion</p>
   </section>
 
   <!-- Boss Battle -->
@@ -1643,6 +1770,7 @@ var SFX={
   wrong:function(P){ tone(196*P.k,0,.18,"square",.035); tone(147*P.k,.12,.22,"square",.035); },
   streak:function(P){ [523,659,784,1047].forEach(function(f,i){ tone(f*P.k,i*.07,.16,P.type,.08*P.v); }); },
   blip:function(P){ tone(880*P.k,0,.09,P.type,.08*P.v); },
+  encounter:function(P){ [392,523,659,784,1047].forEach(function(f,i){ tone(f*P.k,i*.05,.1,"square",.05*P.v); }); },
   boss:function(P){ [196,175,147].forEach(function(f,i){ tone(f*P.k,i*.16,.24,"sawtooth",.045*P.v); }); },
   fanfare:function(P){ [523,659,784].forEach(function(f,i){ tone(f*P.k,i*.1,.18,P.type,.08*P.v); }); tone(1047*P.k,.32,.5,P.type,.1*P.v); }
 };
@@ -1714,7 +1842,7 @@ function renderGallery(){
 $("#guide-list").addEventListener("click",function(e){ var b=e.target.closest("[data-guide]"); if(b){ sfx("blip"); openGuide(b.dataset.guide); } });
 $("#back").addEventListener("click",goHome);
 
-function showView(v){ ["home","shop","guide","battle"].forEach(function(id){ document.getElementById(id).hidden=id!==v; }); }
+function showView(v){ ["home","shop","guide","battle","quest"].forEach(function(id){ document.getElementById(id).hidden=id!==v; }); }
 function goHome(){
   stopMatch(); stopSpeak(); G=null; GUIDE=null; showView("home"); renderGallery(); setHash(""); window.scrollTo(0,0);
 }
@@ -2615,10 +2743,688 @@ document.addEventListener("keydown",function(e){
 document.addEventListener("click",function(e){ if(e.target.closest("[data-open-battle]")){ sfx("blip"); openBattle(e.target.closest("[data-open-battle]").dataset.openBattle||""); } });
 $("#g-battle").addEventListener("click",function(){ sfx("blip"); openBattle(GUIDE&&GUIDE.id); });
 
+/* ================= STUDY QUEST: a walk-around RPG world built from the study guides ================= */
+function snd(f,a,d,t,v){ if(ST.sound) tone(f,a,d,t,v); }
+var QW_W=64, QW_H=48, QV=[32,27], QSPAWN=[32,29];
+/* ground */ var GR={GRASS:0,PATH:1,WATER:3,SAND:5,STONE:6,WALL:7,BRIDGE:9,SWAMP:10,DRY:11,FOREST:12,LAIR:22};
+/* objects */ var OB={TREE:2,ROCK:4,FLOWER:8,CACTUS:13,MUSH:14,HOUSE:15,FOUNTAIN:16,PINE:18,PALM:19,SIGN:20,DOOR:21,TROPHY:23};
+var OB_GLYPH={2:"🌳",4:"🪨",8:"🌼",13:"🌵",14:"🍄",15:"🏠",16:"⛲",18:"🌲",19:"🌴",20:"🪧",21:"🚪",23:"🏆"};
+var OB_SIZE={2:1.25,18:1.3,19:1.25,15:1.35,16:1.15,13:1.05,4:.9,8:.55,14:.6,20:.85,21:1,23:.9};
+var OB_WALK={8:1,14:1};
+var GROUND_COL={0:["#7cc66a","#74bd62"],1:["#dcbc80","#d4b276"],5:["#f1d99a","#e9cf8b"],6:["#c3c6ce","#b9bcc5"],7:["#5d6170","#535664"],9:["#a8763f","#9a6a36"],
+  10:["#5e9c6d","#569365"],11:["#cdb86e","#c4ad62"],12:["#4f8f4a","#478342"],22:["#6d6788","#635d7e"]};
+var QREG={
+  "grammar-1-2":{ground:12,obs:[[18,.15],[4,.02]],decor:[[8,.03]],lair:[6,7],path:[[32,27],[20,27],[20,18],[12,18],[12,7],[6,7]],sign:[19,23],dir:"↖ northwest"},
+  "spanish2":{ground:5,obs:[[13,.07],[4,.04]],decor:[],lair:[57,7],path:[[32,27],[44,27],[44,16],[52,16],[52,7],[57,7]],sign:[46,23],dir:"↗ northeast"},
+  "bio-energy-3":{ground:10,obs:[[2,.07]],decor:[[14,.05]],ponds:8,lair:[6,42],path:[[32,27],[24,27],[24,36],[14,36],[14,42],[6,42]],sign:[23,31],dir:"↙ southwest"},
+  "born-a-crime-5-6":{ground:11,obs:[[19,.05],[4,.04]],decor:[[8,.015]],lair:[57,42],path:[[32,27],[40,27],[40,38],[50,38],[50,42],[57,42]],sign:[42,31],dir:"↘ southeast"}
+};
+var QREG_IDS=Object.keys(QREG), KILLS_FOR_BOSS=3, RESPAWN_MS=150000;
+var AVATARS=["🧙","🥷","🦸","🧝","🧛","🤖","🐱","🐸","🦊","👸","🤴","🧑‍🚀"];
+var ACH={first:"First Victory",combo10:"On Fire: 10 combo",combo25:"Legendary: 25 combo",lv5:"Reached level 5",lv10:"Reached level 10",
+  chests:"Treasure Hunter: every chest",badge1:"First Badge",badges:"Badge Master: all 4",flawless:"Flawless Boss",champ:"Study Quest Champion"};
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; var t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function qwRegion(x,y){
+  if(x>=25&&x<=39&&y<=10) return "all";
+  var dx=x-QV[0], dy=y-QV[1]; if(dx*dx+dy*dy<=49) return "village";
+  if(y<QV[1]) return x<QV[0]?"grammar-1-2":"spanish2";
+  return x<QV[0]?"bio-energy-3":"born-a-crime-5-6";
+}
+function regionName(r){ return r==="village"?"Study Village":r==="all"?"Final Exam Tower":worldOf(r).name; }
+function regionIcon(r){ return r==="village"?"🏡":worldOf(r).icon; }
+function qwBuild(){
+  var W=QW_W,H=QW_H,G=new Uint8Array(W*H),O=new Uint8Array(W*H),R=new Array(W*H),rnd=rng(2000),x,y,i;
+  for(y=0;y<H;y++) for(x=0;x<W;x++){ i=y*W+x; var r=qwRegion(x,y); R[i]=r; G[i]=r==="village"?GR.GRASS:r==="all"?GR.STONE:QREG[r].ground; }
+  /* swamp ponds */
+  for(var k=0;k<8;k++){ var cx=4+rnd()*22|0, cy=31+rnd()*14|0, rad=1.4+rnd()*1.8;
+    for(y=Math.floor(cy-rad);y<=cy+rad;y++) for(x=Math.floor(cx-rad);x<=cx+rad;x++){ if(x<0||y<0||x>=W||y>=H) continue; i=y*W+x; if(R[i]==="bio-energy-3"&&(x-cx)*(x-cx)+(y-cy)*(y-cy)<=rad*rad) G[i]=GR.WATER; } }
+  /* trees, rocks, cacti, flowers */
+  for(y=0;y<H;y++) for(x=0;x<W;x++){ i=y*W+x; var reg=QREG[R[i]]; if(!reg||G[i]===GR.WATER) continue;
+    var dv=Math.hypot(x-QV[0],y-QV[1]); if(dv<9) continue;
+    var roll=rnd(), acc=0, put=0; reg.obs.concat(reg.decor).forEach(function(o){ if(!put&&roll<(acc+=o[1])) put=o[0]; }); O[i]=put; }
+  /* borders */
+  for(y=0;y<H;y++) for(x=0;x<W;x++){ if(x>1&&y>1&&x<W-2&&y<H-2) continue; i=y*W+x; var rr=R[i];
+    if(rr==="all"){ G[i]=GR.WALL; O[i]=0; } else if(QREG[rr]){ G[i]=QREG[rr].ground; O[i]=QREG[rr].obs[0][0]; } }
+  /* tower */
+  for(y=0;y<=10;y++) for(x=25;x<=39;x++){ i=y*W+x; O[i]=0; G[i]=(x===25||x===39||y===10||y<2)?GR.WALL:GR.STONE; }
+  O[10*W+32]=OB.DOOR; G[10*W+32]=GR.STONE;
+  /* paths (2 wide, bridges over water) */
+  function carve(px,py){ if(px<0||py<0||px>=W||py>=H) return; var j=py*W+px; if(G[j]===GR.WALL) return; O[j]=0; G[j]=G[j]===GR.WATER?GR.BRIDGE:GR.PATH; }
+  function line(pts){ for(var s=0;s<pts.length-1;s++){ var a=pts[s],b=pts[s+1],dx=Math.sign(b[0]-a[0]),dy=Math.sign(b[1]-a[1]),px=a[0],py=a[1];
+    while(true){ carve(px,py); if(dy===0) carve(px,py+1); else carve(px+1,py); if(px===b[0]&&py===b[1]) break; px+=dx; py+=dy; } } }
+  QREG_IDS.forEach(function(r){ line(QREG[r].path); });
+  line([[32,27],[32,11]]);
+  /* village */
+  for(y=QV[1]-8;y<=QV[1]+8;y++) for(x=QV[0]-8;x<=QV[0]+8;x++){ i=y*W+x; var d=Math.hypot(x-QV[0],y-QV[1]);
+    if(d<=4.6){ G[i]=GR.STONE; O[i]=0; } else if(d<=7&&G[i]!==GR.PATH){ G[i]=GR.GRASS; O[i]=rnd()<.14?OB.FLOWER:0; } }
+  [[28,23],[36,23],[28,32],[37,31]].forEach(function(p){ O[p[1]*W+p[0]]=OB.HOUSE; });
+  O[30*W+32]=OB.FOUNTAIN;
+  QREG_IDS.forEach(function(r){ var s=QREG[r].sign; O[s[1]*W+s[0]]=OB.SIGN; });
+  O[14*W+34]=OB.SIGN;
+  /* boss lairs */
+  QREG_IDS.forEach(function(r){ var L=QREG[r].lair; for(y=L[1]-2;y<=L[1]+2;y++) for(x=L[0]-2;x<=L[0]+2;x++){ if(x<1||y<1||x>=W-1||y>=H-1) continue; i=y*W+x; G[i]=GR.LAIR; O[i]=0; } });
+  var world={G:G,O:O,R:R,mons:[],chests:[],npcs:[],bosses:[]};
+  /* reachability + distance to the nearest path */
+  var reach=new Uint8Array(W*H), q=[QSPAWN[1]*W+QSPAWN[0]]; reach[q[0]]=1;
+  function walk(j){ var gg=G[j], oo=O[j]; return gg!==GR.WATER&&gg!==GR.WALL&&(!oo||OB_WALK[oo]); }
+  while(q.length){ var c=q.shift(), cx2=c%W, cy2=(c-cx2)/W; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var nx=cx2+d[0],ny=cy2+d[1]; if(nx<0||ny<0||nx>=W||ny>=H) return; var j=ny*W+nx; if(!reach[j]&&walk(j)){ reach[j]=1; q.push(j); } }); }
+  var pd=new Int16Array(W*H).fill(-1); q=[]; for(i=0;i<W*H;i++) if(G[i]===GR.PATH||G[i]===GR.BRIDGE){ pd[i]=0; q.push(i); }
+  while(q.length){ var c2=q.shift(), x3=c2%W, y3=(c2-x3)/W; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var nx=x3+d[0],ny=y3+d[1]; if(nx<0||ny<0||nx>=W||ny>=H) return; var j=ny*W+nx; if(pd[j]<0&&reach[j]){ pd[j]=pd[c2]+1; q.push(j); } }); }
+  function pick(r,minPd,maxPd,count,gap,avoid){
+    var cand=[]; for(var j=0;j<W*H;j++){ var xx=j%W, yy=(j-xx)/W; if(R[j]!==r||!reach[j]||O[j]&&!OB_WALK[O[j]]||G[j]===GR.PATH||G[j]===GR.BRIDGE||G[j]===GR.LAIR) continue;
+      if(pd[j]<minPd||pd[j]>maxPd||Math.hypot(xx-QV[0],yy-QV[1])<10) continue; cand.push([xx,yy]); }
+    cand=cand.map(function(v){ return [v,rnd()]; }).sort(function(a,b){ return a[1]-b[1]; }).map(function(v){ return v[0]; });
+    var out=[]; cand.forEach(function(p){ if(out.length>=count) return; var L=QREG[r].lair;
+      if(Math.max(Math.abs(p[0]-L[0]),Math.abs(p[1]-L[1]))<4) return;
+      if(out.some(function(o){ return Math.max(Math.abs(o[0]-p[0]),Math.abs(o[1]-p[1]))<gap; })) return;
+      if((avoid||[]).some(function(o){ return Math.max(Math.abs(o[0]-p[0]),Math.abs(o[1]-p[1]))<3; })) return; out.push(p); });
+    return out;
+  }
+  QREG_IDS.forEach(function(r){
+    var W2=worldOf(r), spots=pick(r,1,4,6,5);
+    spots.forEach(function(p,n){ var t=W2.mobs[n%W2.mobs.length]; world.mons.push({id:"m-"+r+"-"+n,region:r,x:p[0],y:p[1],hx:p[0],hy:p[1],tx:p[0],ty:p[1],t:1,moving:false,e:t[0],name:t[1],next:0,stun:0}); });
+    pick(r,1,8,3,6,spots).forEach(function(p,n){ world.chests.push({id:"c-"+r+"-"+n,region:r,x:p[0],y:p[1]}); });
+    var L=QREG[r].lair; world.bosses.push({id:"b-"+r,region:r,x:L[0],y:L[1],e:W2.boss[0],name:W2.boss[1]});
+  });
+  world.bosses.push({id:"b-all",region:"all",x:32,y:4,e:WORLDS.all.boss[0],name:WORLDS.all.boss[1],final:true});
+  world.npcs.push({id:"elder",x:30,y:25,e:"🦉",name:"Professor Hoot"},{id:"shop",x:35,y:25,e:"🦊",name:"Fox the Merchant"});
+  return world;
+}
+/* ---------- saved progress ---------- */
+function QS(){
+  if(!ST.quest||typeof ST.quest!=="object") ST.quest={};
+  var s=ST.quest, d={name:"Hero",av:"🧙",lvl:1,xp:0,coins:0,potions:2,sword:0,armor:0,kills:{},badges:{},chests:{},dead:{},ach:{},combo:0,bestCombo:0,x:QSPAWN[0],y:QSPAWN[1],music:true,created:false,met:false,wins:0};
+  Object.keys(d).forEach(function(k){ if(s[k]==null) s[k]=d[k]; });
+  if(s.hp==null) s.hp=qwMaxHp(s);
+  return s;
+}
+function qwMaxHp(s){ return Math.min(15,5+(s.lvl-1)+s.armor); }
+function qwDmg(s){ return 10+3*(s.lvl-1)+6*s.sword; }
+function qwNeed(l){ return 30+20*l; }
+function qwBadges(s){ return QREG_IDS.filter(function(r){ return s.badges[r]; }).length; }
+function qwAch(id){ var s=QS(); if(s.ach[id]) return; s.ach[id]=Date.now(); save(); addStars(2); setTimeout(function(){ toast("🏆 Achievement: "+ACH[id]+" (+2 ⭐)"); sfx("streak"); },600); }
+/* ---------- engine state ---------- */
+var QFONT="800 18px sans-serif", QWD=null, QP=null, QMODE="walk", QTS=44, QDPR=1, qwCv=null, qwCx=null, qwRAF=0, qwLastT=0, qwCam={x:0,y:0}, qwDirs=[], qwPad=null, qwParts=[], qwFloat=[], qwMini=null, qwMiniOn=true, qwGly={}, qwRegionNow="", qwSteps=0, qwBannerT=0;
+function qwAlive(m){ var t=QS().dead[m.id]; return !t||Date.now()-t>RESPAWN_MS; }
+function qwBlocked(x,y){
+  if(x<0||y<0||x>=QW_W||y>=QW_H) return true;
+  var i=y*QW_W+x, g=QWD.G[i], o=QWD.O[i];
+  return g===GR.WATER||g===GR.WALL||(o&&!OB_WALK[o]);
+}
+function glyph(e,px){
+  var k=e+"|"+px; if(qwGly[k]) return qwGly[k];
+  var c=document.createElement("canvas"), s=Math.ceil(px*QDPR*1.25); c.width=c.height=s;
+  var x=c.getContext("2d"); x.textAlign="center"; x.textBaseline="middle";
+  x.font=Math.round(px*QDPR*.92)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  x.fillText(e,s/2,s/2+px*QDPR*.06); qwGly[k]=c; return c;
+}
+function drawGlyph(e,cx,bottom,px,flip){
+  var g=glyph(e,px), s=g.width/QDPR;
+  if(flip){ qwCx.save(); qwCx.translate(cx,0); qwCx.scale(-1,1); qwCx.drawImage(g,-s/2,bottom-s*.92,s,s); qwCx.restore(); }
+  else qwCx.drawImage(g,cx-s/2,bottom-s*.92,s,s);
+}
+function openQuest(){
+  stopMatch(); stopSpeak(); G=null; GUIDE=null; showView("quest"); setHash("quest"); window.scrollTo(0,0);
+  if(!QWD) QWD=qwBuild();
+  var s=QS(); if(qwBadges(s)===4) QWD.O[10*QW_W+32]=0;
+  QWD.bosses.forEach(function(b){ if(!b.final&&s.badges[b.region]) QWD.O[b.y*QW_W+b.x]=0; });
+  if(qwBlocked(s.x,s.y)){ s.x=QSPAWN[0]; s.y=QSPAWN[1]; }
+  QP={x:s.x,y:s.y,tx:s.x,ty:s.y,t:1,moving:false,face:1,safe:0};
+  qwRegionNow=qwRegion(s.x,s.y); qwDirs=[]; qwPad=null;
+  QFONT="800 18px "+((getComputedStyle(document.body).getPropertyValue("--font-display")||"").trim()||"sans-serif"); qwCv=$("#qw-canvas"); qwCx=qwCv.getContext("2d"); qwResize(); qwMiniDraw(true); qwHud();
+  QMODE="walk"; $("#qw-dialog").hidden=true; $("#qw-panel").hidden=true;
+  cancelAnimationFrame(qwRAF); qwLastT=performance.now(); qwRAF=requestAnimationFrame(qwLoop);
+  if(!s.created) qwCreator(); else { qwBanner(qwRegionNow); qwMusic("walk"); }
+}
+function qwResize(){
+  if(!qwCv) return; var st=$("#qw-stage"), w=st.clientWidth, h=st.clientHeight;
+  QDPR=Math.min(2,window.devicePixelRatio||1); QTS=w<560?36:44; qwGly={};
+  qwCv.width=Math.round(w*QDPR); qwCv.height=Math.round(h*QDPR); qwCv.style.width=w+"px"; qwCv.style.height=h+"px";
+  var touch=window.matchMedia&&window.matchMedia("(pointer:coarse)").matches; $("#qw-pad").hidden=!(touch||w<700);
+}
+window.addEventListener("resize",function(){ if(!$("#quest").hidden){ qwResize(); qwMiniDraw(true); } });
+/* ---------- main loop ---------- */
+function qwLoop(now){
+  if($("#quest").hidden){ qwMusic(null); return; }
+  var dt=Math.min(50,now-qwLastT); qwLastT=now;
+  qwUpdate(dt,now); qwDraw(now);
+  qwRAF=requestAnimationFrame(qwLoop);
+}
+function ease(t){ return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; }
+function qwDir(){
+  if(qwPad) return qwPad;
+  return qwDirs.length?qwDirs[qwDirs.length-1]:null;
+}
+var DIRV={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+function qwOcc(x,y,except){
+  for(var i=0;i<QWD.mons.length;i++){ var m=QWD.mons[i]; if(m===except||!qwAlive(m)) continue; if((m.x===x&&m.y===y)||(m.tx===x&&m.ty===y)) return m; }
+  return null;
+}
+function qwThingAt(x,y){
+  var m=qwOcc(x,y); if(m) return {k:"mon",v:m};
+  var s=QS(), j;
+  for(j=0;j<QWD.bosses.length;j++){ var b=QWD.bosses[j]; if(b.x===x&&b.y===y&&!(s.badges[b.region]&&!b.final)) return {k:"boss",v:b}; }
+  for(j=0;j<QWD.chests.length;j++){ var c=QWD.chests[j]; if(c.x===x&&c.y===y&&!s.chests[c.id]) return {k:"chest",v:c}; }
+  for(j=0;j<QWD.npcs.length;j++){ var n=QWD.npcs[j]; if(n.x===x&&n.y===y) return {k:"npc",v:n}; }
+  if(x<0||y<0||x>=QW_W||y>=QW_H) return null;
+  var o=QWD.O[y*QW_W+x]; if(o===OB.SIGN) return {k:"sign",v:[x,y]}; if(o===OB.FOUNTAIN) return {k:"fountain"}; if(o===OB.DOOR) return {k:"door"};
+  return null;
+}
+function qwUpdate(dt,now){
+  if(QP.moving){ QP.t+=dt/135; if(QP.t>=1){ QP.moving=false; QP.t=1; QP.x=QP.tx; QP.y=QP.ty; qwArrive(); } }
+  if(!QP.moving&&QMODE==="walk"){ var d=qwDir(); if(d) qwStep(DIRV[d]); }
+  var s=QS();
+  QWD.mons.forEach(function(m){
+    if(!qwAlive(m)) return;
+    if(m.moving){ m.t+=dt/330; if(m.t>=1){ m.moving=false; m.t=1; m.x=m.tx; m.y=m.ty; } return; }
+    if(QMODE!=="walk"||now<m.next||now<m.stun) return;
+    m.next=now+700+Math.random()*1300;
+    var px=QP.moving?QP.tx:QP.x, py=QP.moving?QP.ty:QP.y, near=Math.abs(px-m.x)+Math.abs(py-m.y);
+    var dirs=[[1,0],[-1,0],[0,1],[0,-1]], d2;
+    if(near<=4&&Math.random()<.65){ d2=Math.abs(px-m.x)>Math.abs(py-m.y)?[Math.sign(px-m.x),0]:[0,Math.sign(py-m.y)]; if(!d2[0]&&!d2[1]) return; }
+    else d2=dirs[Math.random()*4|0];
+    var nx=m.x+d2[0], ny=m.y+d2[1];
+    if(nx===px&&ny===py){ if(now>QP.safe) qwEncounter(m); return; }
+    if(qwBlocked(nx,ny)||qwOcc(nx,ny,m)||qwRegion(nx,ny)!==m.region||Math.abs(nx-m.hx)>5||Math.abs(ny-m.hy)>5) return;
+    var th=qwThingAt(nx,ny); if(th&&th.k!=="mon") return;
+    var gi=QWD.G[ny*QW_W+nx]; if(gi===GR.LAIR) return;
+    m.tx=nx; m.ty=ny; m.t=0; m.moving=true;
+  });
+  qwParts=qwParts.filter(function(p){ p.life-=dt; p.x+=p.vx*dt/16; p.y+=p.vy*dt/16; p.vy+=p.g*dt/16; return p.life>0; });
+  qwFloat=qwFloat.filter(function(f){ f.life-=dt; f.y-=dt*.035; return f.life>0; });
+}
+function qwStep(v){
+  if(v[0]) QP.face=v[0]<0?-1:1;
+  var tx=QP.x+v[0], ty=QP.y+v[1], th=qwThingAt(tx,ty);
+  if(th){
+    if(th.k==="mon"){ if(performance.now()>QP.safe) qwEncounter(th.v); return; }
+    qwDirs=[]; qwPad=null;
+    if(th.k==="boss") return qwBossTalk(th.v);
+    if(th.k==="chest") return qwChest(th.v);
+    if(th.k==="npc") return qwNpc(th.v);
+    if(th.k==="sign") return qwSign(th.v);
+    if(th.k==="fountain") return qwFountain();
+    if(th.k==="door") return qwDoor();
+  }
+  if(qwBlocked(tx,ty)) return;
+  QP.tx=tx; QP.ty=ty; QP.t=0; QP.moving=true;
+}
+function qwArrive(){
+  var s=QS(); s.x=QP.x; s.y=QP.y; qwSteps++;
+  if(qwSteps%8===0) save();
+  var r=qwRegion(QP.x,QP.y); if(r!==qwRegionNow){ qwRegionNow=r; qwBanner(r); }
+  if(qwSteps%4===0) qwMiniDraw(false);
+}
+/* ---------- drawing ---------- */
+function hash(x,y){ var h=x*374761393+y*668265263; h=(h^(h>>13))*1274126177; return (h^(h>>16))>>>0; }
+function qwDraw(now){
+  var c=qwCx, ts=QTS, w=qwCv.width/QDPR, h=qwCv.height/QDPR;
+  var e=ease(QP.t), ppx=(QP.x+(QP.tx-QP.x)*(QP.moving?e:1))*ts, ppy=(QP.y+(QP.ty-QP.y)*(QP.moving?e:1))*ts;
+  if(!QP.moving){ ppx=QP.x*ts; ppy=QP.y*ts; }
+  var mw=QW_W*ts, mh=QW_H*ts;
+  qwCam.x=mw<=w?(mw-w)/2:Math.max(0,Math.min(mw-w,ppx+ts/2-w/2));
+  qwCam.y=mh<=h?(mh-h)/2:Math.max(0,Math.min(mh-h,ppy+ts/2-h/2));
+  c.setTransform(QDPR,0,0,QDPR,0,0); c.fillStyle="#2e5d34"; c.fillRect(0,0,w,h);
+  c.translate(-Math.round(qwCam.x),-Math.round(qwCam.y));
+  var x0=Math.max(0,Math.floor(qwCam.x/ts)-1), x1=Math.min(QW_W-1,Math.ceil((qwCam.x+w)/ts)+1), y0=Math.max(0,Math.floor(qwCam.y/ts)-1), y1=Math.min(QW_H-1,Math.ceil((qwCam.y+h)/ts)+1), x,y,i;
+  for(y=y0;y<=y1;y++) for(x=x0;x<=x1;x++){
+    i=y*QW_W+x; var g=QWD.G[i], sx=x*ts, sy=y*ts, hh=hash(x,y);
+    if(g===GR.WATER){
+      c.fillStyle="#3b8ad3"; c.fillRect(sx,sy,ts+1,ts+1);
+      c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=2; c.beginPath();
+      var ph=now/600+x*.9+y*.6; c.moveTo(sx+ts*.15,sy+ts*.45+Math.sin(ph)*3); c.quadraticCurveTo(sx+ts*.35,sy+ts*.3+Math.sin(ph)*3,sx+ts*.55,sy+ts*.45+Math.sin(ph)*3); c.stroke();
+      continue;
+    }
+    var cols=GROUND_COL[g]||GROUND_COL[0]; c.fillStyle=cols[hh%5===0?1:0]; c.fillRect(sx,sy,ts+1,ts+1);
+    if(g===GR.STONE||g===GR.LAIR){ c.strokeStyle="rgba(0,0,0,.08)"; c.lineWidth=1; c.strokeRect(sx+.5,sy+.5,ts-1,ts-1); }
+    else if(g===GR.WALL){ c.fillStyle="rgba(255,255,255,.07)"; c.fillRect(sx+2,sy+2,ts/2-3,ts/2-3); c.fillRect(sx+ts/2+1,sy+ts/2+1,ts/2-3,ts/2-3); }
+    else if(g===GR.BRIDGE){ c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=1; for(var k=1;k<4;k++){ c.beginPath(); c.moveTo(sx,sy+k*ts/4); c.lineTo(sx+ts,sy+k*ts/4); c.stroke(); } }
+    else if(g===GR.PATH){ if(hh%7===0){ c.fillStyle="rgba(120,90,50,.35)"; c.beginPath(); c.arc(sx+(hh%30)+6,sy+(hh>>5)%28+6,2.2,0,7); c.fill(); } }
+    else if(hh%6===0){ c.strokeStyle="rgba(0,0,0,.14)"; c.lineWidth=1.5; var gx=sx+(hh%26)+8, gy=sy+((hh>>4)%22)+12; c.beginPath(); c.moveTo(gx,gy); c.lineTo(gx-3,gy-6); c.moveTo(gx+3,gy); c.lineTo(gx+5,gy-6); c.stroke(); }
+  }
+  /* things that stand up: draw row by row so things lower on screen overlap things above */
+  var s=QS(), byRow={};
+  function add(row,fn){ (byRow[row]=byRow[row]||[]).push(fn); }
+  QWD.chests.forEach(function(ch){ if(!s.chests[ch.id]) add(ch.y,function(){ var b=Math.sin(now/300+ch.x)*1.5; qwShadow(ch.x*ts+ts/2,ch.y*ts+ts*.92,ts*.32); drawGlyph("🎁",ch.x*ts+ts/2,ch.y*ts+ts*.98+b,ts*.82);
+    if(hash(ch.x,ch.y+Math.floor(now/700))%4===0) qwSpark(ch.x*ts+ts*.75,ch.y*ts+ts*.2); }); });
+  QWD.npcs.forEach(function(n){ add(n.y,function(){ qwShadow(n.x*ts+ts/2,n.y*ts+ts*.92,ts*.32); drawGlyph(n.e,n.x*ts+ts/2,n.y*ts+ts+Math.sin(now/500)*1.5,ts);
+    if(n.id==="elder"&&!s.met||n.id==="shop"){ drawGlyph(n.id==="shop"?"🛒":"💬",n.x*ts+ts*.8,n.y*ts+ts*.15+Math.sin(now/250)*2,ts*.5); } }); });
+  QWD.bosses.forEach(function(b){ if(!b.final&&s.badges[b.region]){ add(b.y,function(){ drawGlyph("🏆",b.x*ts+ts/2,b.y*ts+ts,ts*.9); }); return; }
+    if(b.final&&s.champ) return;
+    add(b.y,function(){ var cx=b.x*ts+ts/2, cy=b.y*ts+ts/2, pulse=1+Math.sin(now/400)*.08;
+      var grd=c.createRadialGradient(cx,cy,2,cx,cy,ts*1.4*pulse); grd.addColorStop(0,"rgba(255,60,90,.45)"); grd.addColorStop(1,"rgba(255,60,90,0)"); c.fillStyle=grd; c.beginPath(); c.arc(cx,cy,ts*1.4*pulse,0,7); c.fill();
+      qwShadow(cx,b.y*ts+ts*.95,ts*.55); drawGlyph(b.e,cx,b.y*ts+ts*1.05+Math.sin(now/350)*2,ts*1.75); }); });
+  QWD.mons.forEach(function(m){ if(!qwAlive(m)) return; var me=m.moving?ease(m.t):1, mx=(m.x+(m.tx-m.x)*(m.moving?me:0))*ts, my=(m.y+(m.ty-m.y)*(m.moving?me:0))*ts;
+    if(!m.moving){ mx=m.x*ts; my=m.y*ts; }
+    add(Math.round(my/ts),function(){ var hop=Math.abs(Math.sin(now/220+m.hx))*3; qwShadow(mx+ts/2,my+ts*.92,ts*.3); drawGlyph(m.e,mx+ts/2,my+ts-hop,ts*.95,m.tx<m.x);
+      var px=QP.moving?QP.tx:QP.x, py=QP.moving?QP.ty:QP.y; if(Math.abs(px-m.x)+Math.abs(py-m.y)<=3&&now>m.stun) drawGlyph("❗",mx+ts*.72,my+ts*.1+Math.sin(now/120)*2,ts*.45);
+      if(now<m.stun) drawGlyph("💫",mx+ts/2,my+ts*.15,ts*.45); }); });
+  add(Math.round(ppy/ts),function(){ var bob=QP.moving?Math.abs(Math.sin(QP.t*Math.PI))*4:Math.sin(now/400)*1; qwShadow(ppx+ts/2,ppy+ts*.94,ts*.34);
+    drawGlyph(s.av,ppx+ts/2,ppy+ts-bob,ts*1.05,QP.face>0); });
+  for(y=y0;y<=y1+1;y++){
+    if(y<=y1) for(x=x0;x<=x1;x++){ var o=QWD.O[y*QW_W+x]; if(!o) continue; var sz=ts*(OB_SIZE[o]||1);
+      if(OB_WALK[o]) drawGlyph(OB_GLYPH[o],x*ts+ts/2,y*ts+ts*.8,sz); else { if(o!==OB.SIGN&&o!==OB.DOOR) qwShadow(x*ts+ts/2,y*ts+ts*.9,ts*.36); drawGlyph(OB_GLYPH[o],x*ts+ts/2,y*ts+ts,sz); } }
+    (byRow[y]||[]).forEach(function(fn){ fn(); });
+  }
+  /* particles and floating text */
+  qwParts.forEach(function(p){ c.globalAlpha=Math.max(0,p.life/p.max); c.fillStyle=p.col; c.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s); }); c.globalAlpha=1;
+  c.textAlign="center"; c.font=QFONT;
+  qwFloat.forEach(function(f){ c.globalAlpha=Math.min(1,f.life/400); c.lineWidth=4; c.strokeStyle="rgba(0,0,0,.55)"; c.strokeText(f.t,f.x,f.y); c.fillStyle=f.col; c.fillText(f.t,f.x,f.y); }); c.globalAlpha=1;
+  if(qwMiniOn) qwMiniDot(now);
+}
+function qwShadow(x,y,r){ qwCx.fillStyle="rgba(0,0,0,.18)"; qwCx.beginPath(); qwCx.ellipse(x,y,r,r*.38,0,0,7); qwCx.fill(); }
+function qwSpark(x,y){ qwParts.push({x:x,y:y,vx:(Math.random()-.5)*.6,vy:-.4,g:0,life:600,max:600,s:3,col:"#fff7a8"}); }
+function qwBurst(tx,ty,cols,n){ var ts=QTS; for(var i=0;i<(n||24);i++){ var a=Math.random()*6.28, sp=1+Math.random()*3.2; qwParts.push({x:tx*ts+ts/2,y:ty*ts+ts/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,g:.12,life:900,max:900,s:3+Math.random()*4,col:cols[i%cols.length]}); } }
+function qwText(tx,ty,t,col){ qwFloat.push({x:tx*QTS+QTS/2,y:ty*QTS,t:t,col:col||"#fff",life:1300}); }
+/* ---------- minimap ---------- */
+var qwMiniBase=null;
+function qwMiniDraw(full){
+  var mc=$("#qw-mini"); if(!mc) return; mc.hidden=!qwMiniOn; if(!qwMiniOn) return;
+  var sc=2; mc.width=QW_W*sc; mc.height=QW_H*sc;
+  if(full||!qwMiniBase){ qwMiniBase=document.createElement("canvas"); qwMiniBase.width=mc.width; qwMiniBase.height=mc.height; var b=qwMiniBase.getContext("2d");
+    for(var i=0;i<QW_W*QW_H;i++){ var x=i%QW_W, y=(i-x)/QW_W, g=QWD.G[i], o=QWD.O[i];
+      b.fillStyle=g===GR.WATER?"#3b8ad3":(o&&!OB_WALK[o]&&o!==OB.SIGN)?"#2b5a2f":(GROUND_COL[g]||GROUND_COL[0])[0]; b.fillRect(x*sc,y*sc,sc,sc); } }
+}
+function qwMiniDot(now){
+  if(Math.floor(now/120)%2) return; var mc=$("#qw-mini"); if(!mc||mc.hidden) return; var m=mc.getContext("2d"), sc=2, s=QS();
+  m.drawImage(qwMiniBase,0,0);
+  QWD.bosses.forEach(function(b){ if(b.final?s.champ:s.badges[b.region]) return; m.fillStyle="#ff3b5c"; m.fillRect(b.x*sc-2,b.y*sc-2,6,6); });
+  QWD.chests.forEach(function(c){ if(s.chests[c.id]) return; m.fillStyle="#ffd43b"; m.fillRect(c.x*sc-1,c.y*sc-1,4,4); });
+  m.fillStyle="#fff"; m.fillRect(QP.x*sc-2,QP.y*sc-2,6,6); m.strokeStyle="#000"; m.strokeRect(QP.x*sc-2.5,QP.y*sc-2.5,7,7);
+}
+/* ---------- HUD, banner ---------- */
+function qwHud(){
+  var s=QS(), max=qwMaxHp(s), hearts="";
+  for(var i=0;i<max;i++) hearts+=i<s.hp?"❤️":"🖤";
+  var need=qwNeed(s.lvl);
+  $("#qw-hud").innerHTML=
+    '<div class="qh-left"><span class="qh-av" aria-hidden="true">'+s.av+'</span><div><div class="qh-name">'+esc(s.name)+' <b>Lv '+s.lvl+'</b></div>'+
+      '<div class="qh-xp" title="XP"><i style="width:'+Math.min(100,s.xp/need*100)+'%"></i><span>'+s.xp+' / '+need+' XP</span></div>'+
+      '<div class="qh-hearts" aria-label="'+s.hp+' of '+max+' hearts">'+hearts+'</div></div></div>'+
+    '<div class="qh-right"><span class="qh-pill">🪙 <b id="qh-coins">'+s.coins+'</b></span>'+
+      '<button class="qh-pill" id="qh-potion" '+(s.potions&&s.hp<max?'':'disabled')+' aria-label="Drink a potion">🧪 '+s.potions+'</button>'+
+      '<span class="qh-pill">🏅 '+qwBadges(s)+'/4</span>'+
+      (s.combo>=2?'<span class="qh-pill hot">🔥 '+s.combo+'</span>':'')+
+      '<button class="qh-pill" id="qh-log" aria-label="Quest log">📜</button>'+
+      '<button class="qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'" aria-label="Map">🗺️</button>'+
+      '<button class="qh-pill" id="qh-music" aria-pressed="'+(s.music&&ST.sound)+'" aria-label="Music">'+(s.music&&ST.sound?'🎵':'🔇')+'</button></div>';
+}
+function qwBanner(r){
+  var b=$("#qw-banner"), s=QS(), sub="";
+  if(QREG[r]){ var g=guideById(r), k=s.kills[r]||0; sub=(g?g.title+' · '+g.sub+' · ':'')+(s.badges[r]?'🏅 Badge earned':k>=KILLS_FOR_BOSS?'⚠️ Boss lair open':'Monsters beaten: '+k+'/'+KILLS_FOR_BOSS); }
+  else if(r==="all") sub="Every subject · The final boss waits inside";
+  else sub="Safe zone · Heal at the fountain ⛲";
+  b.innerHTML='<b>'+regionIcon(r)+' '+regionName(r)+'</b><span>'+sub+'</span>'; b.hidden=false;
+  b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+  clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },2600);
+}
+/* ---------- dialog ---------- */
+var QD=null;
+function qwSay(who,face,pages,opts,onEnd){
+  QMODE="dialog"; qwDirs=[]; qwPad=null;
+  QD={who:who,face:face,pages:pages,i:0,opts:opts||null,onEnd:onEnd||null,typing:false,timer:0};
+  $("#qw-dialog").hidden=false; qwPage();
+}
+function qwPage(){
+  var d=$("#qw-dialog"), t=QD.pages[QD.i], n=0;
+  d.innerHTML='<div class="qd-face" aria-hidden="true">'+QD.face+'</div><div class="qd-body"><b class="qd-who">'+QD.who+'</b><p class="qd-text" id="qd-text" aria-live="polite"></p><div class="qd-opts" id="qd-opts"></div></div>';
+  var p=$("#qd-text"); QD.typing=true; clearInterval(QD.timer);
+  QD.timer=setInterval(function(){ n+=2; p.textContent=t.slice(0,n); if(n%6===0) snd(520+Math.random()*80,0,.03,"square",.012); if(n>=t.length){ clearInterval(QD.timer); QD.typing=false; qwPageDone(); } },22);
+}
+function qwPageDone(){
+  $("#qd-text").textContent=QD.pages[QD.i];
+  var last=QD.i===QD.pages.length-1, o=$("#qd-opts");
+  if(last&&QD.opts) o.innerHTML=QD.opts.map(function(x,k){ return '<button class="btn'+(k===0?' primary':'')+'" data-qd="'+k+'">'+x[0]+'</button>'; }).join("");
+  else o.innerHTML='<button class="btn primary" data-qd="next">'+(last?'OK':'Next ▸')+'</button>';
+  var f=o.querySelector("button"); if(f) f.focus({preventScroll:true});
+}
+function qwDialogNext(){
+  if(!QD) return;
+  if(QD.typing){ clearInterval(QD.timer); QD.typing=false; qwPageDone(); return; }
+  if(QD.i<QD.pages.length-1){ QD.i++; qwPage(); return; }
+  if(!QD.opts) qwDialogClose();
+}
+function qwDialogClose(choice){
+  var d=QD; clearInterval(d&&d.timer); QD=null; $("#qw-dialog").hidden=true; QMODE="walk"; qwDirs=[]; qwPad=null;
+  if(d&&d.onEnd) d.onEnd(choice); if(d&&d.opts&&choice!=null&&d.opts[choice][1]) d.opts[choice][1]();
+}
+$("#qw-dialog").addEventListener("click",function(e){
+  var b=e.target.closest("[data-qd]"); if(!b){ qwDialogNext(); return; }
+  if(b.dataset.qd==="next") qwDialogNext(); else qwDialogClose(+b.dataset.qd);
+});
+/* ---------- things you bump into ---------- */
+function qwNextGoal(){
+  var s=QS(), todo=QREG_IDS.filter(function(r){ return !s.badges[r]; });
+  if(!todo.length) return s.champ?"You beat the Final Exam! Keep training to max your level, or hunt chests.":"All 4 badges! The Final Exam Tower to the north is open. Go beat the Final Exam!";
+  var r=todo[0], k=s.kills[r]||0;
+  return k<KILLS_FOR_BOSS?"Head "+QREG[r].dir+" to "+worldOf(r).name+". Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" there to open the boss lair.":
+    "The boss lair in "+worldOf(r).name+" is open ("+QREG[r].dir+"). Follow the path to the end and challenge "+worldOf(r).boss[1]+"!";
+}
+function qwNpc(n){
+  var s=QS();
+  if(n.id==="elder"){
+    if(!s.met){ s.met=true; save(); return qwSay(n.name,n.e,["Hoo! Welcome to Study Island, "+s.name+"!","Monsters have taken over the four lands. Each one is powered by a subject you’re studying.",
+      "Walk into a monster to battle it. Right answers are attacks. Wrong answers cost a heart. Get 3 in a row for critical hits!",
+      "Beat "+KILLS_FOR_BOSS+" monsters in a land to open its boss lair. Beat all 4 bosses to unlock the Final Exam Tower.","Chests 🎁 hide loot. Fox sells potions and gear. The fountain ⛲ heals you. Good luck, hero!"]); }
+    return qwSay(n.name,n.e,[["Hoo hoo! ","Keep it up, "+s.name+"! ","You’re getting stronger! "][Math.random()*3|0]+qwNextGoal()]);
+  }
+  if(n.id==="shop") return qwShop();
+}
+function qwSign(p){
+  var x=p[0],y=p[1], r=QREG_IDS.filter(function(k){ var s=QREG[k].sign; return s[0]===x&&s[1]===y; })[0];
+  if(r){ var g=guideById(r); return qwSay("Sign","🪧",[worldOf(r).icon+" "+worldOf(r).name+". Monsters here quiz you on "+(g?g.title+" ("+g.sub+")":"this subject")+"."]); }
+  qwSay("Sign","🪧",["🏰 Final Exam Tower. The door only opens for a hero with all 4 badges. Questions from every subject!"]);
+}
+function qwFountain(){
+  var s=QS(), max=qwMaxHp(s);
+  if(s.hp>=max) return qwSay("Fountain","⛲",["The water sparkles. Your hearts are already full!"]);
+  s.hp=max; save(); qwHud(); sfx("streak"); qwBurst(32,30,["#7fd3ff","#ffffff","#b8f1ff"],30); qwText(32,29,"Fully healed! ❤️","#ff9fb2");
+  qwSay("Fountain","⛲",["You drink from the fountain. All your hearts are restored! ❤️"]);
+}
+function qwDoor(){
+  var s=QS(), n=qwBadges(s);
+  if(n<4) return qwSay("Tower door","🚪",["The door is sealed with 4 badge slots. You have "+n+"/4 badges. Beat the boss of each land!"]);
+  QWD.O[10*QW_W+32]=0; sfx("fanfare"); qwBurst(32,10,["#ffd43b","#ffffff","#ff8fab"],40); qwMiniDraw(true);
+  qwSay("Tower door","🚪",["Your 4 badges glow… the door swings open! The Final Exam waits inside."]);
+}
+function qwBossTalk(b){
+  var s=QS();
+  if(b.final){ if(s.champ) return; return qwSay(b.name,b.e,["So, "+s.name+"… you collected every badge. But can you answer questions from EVERY subject?","I am the Final Exam. Prepare yourself!"],[["⚔️ Fight!",function(){ qwBattle(b,true); }],["Not yet",null]]); }
+  var k=s.kills[b.region]||0;
+  if(k<KILLS_FOR_BOSS) return qwSay(b.name,b.e,["Hah! You’re not ready. Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" in "+worldOf(b.region).name+" first ("+k+"/"+KILLS_FOR_BOSS+")."]);
+  qwSay(b.name,b.e,["You dare enter my lair? I am "+b.name+"! Let’s see what you really know."],[["⚔️ Fight!",function(){ qwBattle(b,true); }],["Not yet",null]]);
+}
+function qwRoll(){ var r=Math.random(); return r<.5?"common":r<.8?"rare":r<.95?"epic":"legendary"; }
+function qwChest(c){
+  var s=QS(), rar=qwRoll(), lines=[], coins=0;
+  s.chests[c.id]=1;
+  if(rar==="common"){ coins=15+Math.random()*16|0; lines.push("+"+coins+" 🪙"); }
+  if(rar==="rare"){ coins=10; s.potions++; lines.push("🧪 Potion!","+10 🪙"); }
+  if(rar==="epic"){ coins=25; addStars(3); lines.push("+3 ⭐","+25 🪙"); }
+  if(rar==="legendary"){ s.sword++; addStars(10); lines.push("⚔️ Legendary sword upgrade!","+10 ⭐"); }
+  s.coins+=coins; save(); qwHud();
+  var col={common:["#ffffff","#ffd43b"],rare:["#74c0fc","#ffffff"],epic:["#b197fc","#e599f7"],legendary:["#ffd43b","#ff922b","#ffffff"]}[rar];
+  qwBurst(c.x,c.y,col,rar==="legendary"?60:30); qwText(c.x,c.y,lines[0],col[0]);
+  sfx(rar==="common"?"right":rar==="rare"?"streak":"fanfare"); if(rar==="legendary") confetti(160);
+  qwPanel('<div class="loot-card '+rar+'"><div class="lc-ico">🎁</div><p class="eyebrow">'+rar+' chest</p><h2>'+lines.join(" · ")+'</h2>'+
+    '<button class="btn primary" data-close>Awesome!</button></div>');
+  if(QWD.chests.every(function(x){ return s.chests[x.id]; })) qwAch("chests");
+}
+/* ---------- panels: creator, shop, quest log ---------- */
+function qwPanel(html){ QMODE="panel"; qwDirs=[]; qwPad=null; var p=$("#qw-panel"); p.innerHTML='<div class="qp-in">'+html+'</div>'; p.hidden=false; var f=p.querySelector("button,input"); if(f) f.focus({preventScroll:true}); }
+function qwPanelClose(){ $("#qw-panel").hidden=true; QMODE="walk"; qwDirs=[]; qwPad=null; qwHud(); }
+function qwCreator(){
+  var s=QS();
+  qwPanel('<p class="eyebrow">New adventure</p><h2>Create your hero</h2><div class="av-grid">'+AVATARS.map(function(a){ return '<button class="av'+(a===s.av?' on':'')+'" data-av="'+a+'" aria-label="Hero '+a+'">'+a+'</button>'; }).join("")+'</div>'+
+    '<label class="nm">Hero name <input id="qw-name" maxlength="14" value="'+esc(s.name)+'" autocomplete="off"></label>'+
+    '<button class="btn primary" id="qw-start">⚔️ Start adventure</button>');
+}
+function qwShop(){
+  var s=QS(), items=[
+    ["potion","🧪","Potion","Heals 3 hearts in battle or on the map",15],
+    ["sword","⚔️","Sword upgrade (level "+(s.sword+1)+")","+6 damage on every hit",40*(s.sword+1)],
+    ["armor","🛡️","Armor upgrade (level "+(s.armor+1)+")","+1 max heart",50*(s.armor+1)],
+    ["stars","⭐","Star pack","+5 stars for the Star Shop (themes!)",60]];
+  qwPanel('<p class="eyebrow">Fox the Merchant 🦊</p><h2>“What’ll it be?”</h2><p class="small">You have 🪙 '+s.coins+'</p><div class="shop-list">'+
+    items.map(function(it){ return '<div class="si"><span class="si-ico">'+it[1]+'</span><div><b>'+it[2]+'</b><span>'+it[3]+'</span></div><button class="btn" data-buy="'+it[0]+'" data-price="'+it[4]+'"'+(s.coins<it[4]||(it[0]==="armor"&&qwMaxHp(s)>=15)?' disabled':'')+'>🪙 '+it[4]+'</button></div>'; }).join("")+
+    '</div><button class="btn primary" data-close>Bye!</button>');
+}
+function qwBuy(id,price){
+  var s=QS(); if(s.coins<price) return; s.coins-=price;
+  if(id==="potion") s.potions++; if(id==="sword") s.sword++; if(id==="armor"){ s.armor++; s.hp=Math.min(qwMaxHp(s),s.hp+1); } if(id==="stars") addStars(5);
+  save(); sfx("fanfare"); qwHud(); qwShop(); toast({potion:"🧪 Bought a potion",sword:"⚔️ Sword upgraded!",armor:"🛡️ Armor upgraded! +1 max heart",stars:"⭐ +5 stars"}[id]);
+}
+function qwLog(){
+  var s=QS();
+  qwPanel('<p class="eyebrow">Quest log</p><h2>'+esc(s.name)+' · Lv '+s.lvl+'</h2>'+
+    '<p class="small">⚔️ '+qwDmg(s)+' damage · ❤️ '+qwMaxHp(s)+' max hearts · 🔥 best combo '+s.bestCombo+' · 🏆 '+s.wins+' battles won</p>'+
+    '<p class="qlog-goal"><b>Next:</b> '+qwNextGoal()+'</p><ul class="qlog">'+
+    QREG_IDS.map(function(r){ var k=s.kills[r]||0, ch=QWD.chests.filter(function(c){ return c.region===r; }), op=ch.filter(function(c){ return s.chests[c.id]; }).length;
+      return '<li><span class="ql-ico">'+worldOf(r).icon+'</span><div><b>'+worldOf(r).name+'</b><span>'+(s.badges[r]?'🏅 Badge earned':'Monsters '+Math.min(k,KILLS_FOR_BOSS)+'/'+KILLS_FOR_BOSS+(k>=KILLS_FOR_BOSS?' · ⚠️ Boss lair open':''))+' · 🎁 '+op+'/'+ch.length+'</span></div></li>'; }).join("")+
+    '<li><span class="ql-ico">🏰</span><div><b>Final Exam Tower</b><span>'+(s.champ?'👑 Beaten!':qwBadges(s)===4?'Open! Go north':'Needs 4 badges')+'</span></div></li></ul>'+
+    '<h3>Achievements</h3><div class="ach">'+Object.keys(ACH).map(function(a){ return '<span class="'+(s.ach[a]?'on':'')+'">'+(s.ach[a]?'🏆':'🔒')+' '+ACH[a]+'</span>'; }).join("")+'</div>'+
+    '<div class="row-btns"><button class="btn primary" data-close>Back to the map</button><button class="btn" id="qw-edit">✏️ Change hero</button></div>');
+}
+$("#qw-panel").addEventListener("click",function(e){
+  var t;
+  if((t=e.target.closest("[data-av]"))){ QS().av=t.dataset.av; Array.prototype.forEach.call(document.querySelectorAll("#qw-panel .av"),function(b){ b.classList.toggle("on",b===t); }); sfx("blip"); return; }
+  if(e.target.closest("#qw-start")){ var s=QS(), n=($("#qw-name").value||"").trim(); s.name=n||"Hero"; var first=!s.created; s.created=true; save(); qwPanelClose(); qwHud(); sfx("fanfare"); qwMusic("walk");
+    if(first) setTimeout(function(){ qwNpc(QWD.npcs[0]); },300); else qwBanner(qwRegionNow); return; }
+  if((t=e.target.closest("[data-buy]"))&&!t.disabled){ qwBuy(t.dataset.buy,+t.dataset.price); return; }
+  if(e.target.closest("#qw-edit")){ qwCreator(); return; }
+  if(e.target.closest("[data-close]")){ qwPanelClose(); return; }
+});
+$("#qw-hud").addEventListener("click",function(e){
+  if(e.target.closest("#qh-log")&&QMODE==="walk"){ sfx("blip"); qwLog(); }
+  if(e.target.closest("#qh-map")){ qwMiniOn=!qwMiniOn; qwMiniDraw(true); qwHud(); }
+  if(e.target.closest("#qh-music")){ var s=QS(); if(!ST.sound){ ST.sound=true; s.music=true; } else s.music=!s.music; save(); qwHud(); qwMusic(s.music?"walk":null); }
+  if(e.target.closest("#qh-potion")) qwDrink(false);
+});
+function qwDrink(inBattle){
+  var s=QS(), max=qwMaxHp(s); if(!s.potions||s.hp>=max) return false;
+  s.potions--; s.hp=Math.min(max,s.hp+3); save(); sfx("streak"); qwHud();
+  if(!inBattle){ qwBurst(QP.x,QP.y,["#ff8fab","#ffffff"],20); qwText(QP.x,QP.y,"+3 ❤️","#ff9fb2"); }
+  return true;
+}
+/* ---------- input ---------- */
+var KEYDIR={ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right"};
+document.addEventListener("keydown",function(e){
+  if($("#quest").hidden||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(!$("#qw-battle").hidden){ qbKey(e); return; }
+  if(e.target&&e.target.tagName==="INPUT") return;
+  var d=KEYDIR[e.code];
+  if(d){ e.preventDefault(); if(QMODE==="walk"){ if(qwDirs.indexOf(d)<0) qwDirs.push(d); if(!e.repeat&&!QP.moving) qwStep(DIRV[d]); } return; }
+  if(e.code==="Space"||e.code==="Enter"){ if(QMODE==="dialog"){ if(e.target&&e.target.closest&&e.target.closest("#qw-dialog button")) return; e.preventDefault(); if(!$("#qd-opts button[data-qd]:not([data-qd='next'])")) qwDialogNext(); } return; }
+  if(e.code==="Escape"&&QMODE==="panel"&&QS().created){ qwPanelClose(); return; }
+  if(QMODE!=="walk") return;
+  if(e.code==="KeyM"){ qwMiniOn=!qwMiniOn; qwMiniDraw(true); qwHud(); }
+  if(e.code==="KeyQ"||e.code==="KeyL"){ qwLog(); }
+  if(e.code==="KeyP"){ qwDrink(false); }
+});
+document.addEventListener("keyup",function(e){ var d=KEYDIR[e.code]; if(d){ var i=qwDirs.indexOf(d); if(i>=0) qwDirs.splice(i,1); } });
+window.addEventListener("blur",function(){ qwDirs=[]; qwPad=null; });
+(function(){
+  var pad=$("#qw-pad");
+  function stop(){ qwPad=null; }
+  pad.addEventListener("pointerdown",function(e){ var b=e.target.closest("[data-pad]"); if(!b) return; e.preventDefault(); if(QMODE==="dialog"){ qwDialogNext(); return; } qwPad=b.dataset.pad; try{ b.setPointerCapture(e.pointerId); }catch(_){} });
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){ pad.addEventListener(ev,stop); });
+  pad.addEventListener("contextmenu",function(e){ e.preventDefault(); });
+})();
+$("#quest-back").addEventListener("click",function(){ qwMusic(null); save(); goHome(); });
+/* ================= RPG battle (full screen) ================= */
+var QB=null, QBQ={};
+function qbQuestions(region){
+  if(!QBQ[region]) QBQ[region]={qs:worldQuestions(region),queue:[]};
+  return QBQ[region];
+}
+function qbNextIndex(pool){ if(!pool.queue.length) pool.queue=shuffle(pool.qs.map(function(_,i){ return i; })); return pool.queue.shift(); }
+function qwEncounter(m){
+  if(QMODE!=="walk"||QB) return;
+  qwBattle(m,false);
+}
+function qwBattle(foe,boss){
+  var s=QS(), pool=qbQuestions(foe.region), dmg=qwDmg(s), hp=foe.final?dmg*16:boss?dmg*10:dmg*4;
+  QMODE="battle"; qwDirs=[]; qwPad=null;
+  QB={foe:foe,boss:boss,final:!!foe.final,pool:pool,hp:hp,max:hp,cur:-1,opts:[],pick:null,t0:0,hits:0,misses:0,lost:false,lvl0:s.lvl,xp0:s.xp,done:false,missed:[]};
+  var o=$("#qw-battle"); o.hidden=false; o.className="qw-battle enter"+(boss?" boss":"")+(QB.final?" final":"");
+  document.body.style.overflow="hidden";
+  o.innerHTML='<div class="qb-in"><div class="arena'+(boss?' boss':'')+'" id="qb-arena">'+
+      '<div class="bt-top"><span>'+regionIcon(foe.region)+' '+regionName(foe.region)+'</span><span>'+(QB.final?'👑 Final boss':boss?'⚠️ Boss battle':'Wild monster')+'</span></div>'+
+      '<div class="bt-field"><div class="fighter hero"><div class="fx" id="qb-hero" aria-hidden="true">'+s.av+'</div><div class="hearts" id="qb-hearts"></div><div class="buffs" id="qb-buffs"></div></div>'+
+      '<div class="vs" aria-hidden="true">VS</div>'+
+      '<div class="fighter mob"><div class="fx appear" id="qb-mob" aria-hidden="true">'+foe.e+'</div><div class="mname">'+foe.name+'</div>'+
+      '<div class="hpbar" role="progressbar" aria-label="Enemy health" aria-valuemin="0" aria-valuemax="'+hp+'" id="qb-hpbar"><i id="qb-hp"></i></div><div class="hptext" id="qb-hptext"></div></div></div>'+
+      '<div class="qb-call" id="qb-call" aria-hidden="true"></div>'+
+      '<p class="bt-log" id="qb-log" aria-live="polite">'+(boss?foe.name+' attacks!':'A wild '+foe.name+' blocks your path!')+'</p></div>'+
+    '<div class="qb-card" id="qb-card"></div>'+
+    '<div class="qb-actions"><button class="chipbtn" id="qb-potion">🧪 Potion</button>'+(boss?'':'<button class="chipbtn" id="qb-run">🏃 Run away</button>')+'</div></div>';
+  sfx(boss?"boss":"encounter"); qwMusic(boss?"boss":"battle");
+  qbUpdate(); qbNext();
+}
+function qbUpdate(){
+  var s=QS(), max=qwMaxHp(s), h=""; for(var i=0;i<max;i++) h+=i<s.hp?"❤️":"🖤";
+  $("#qb-hearts").textContent=h; $("#qb-hearts").setAttribute("aria-label",s.hp+" of "+max+" hearts");
+  $("#qb-buffs").innerHTML='<span>Lv '+s.lvl+'</span><span>⚔️ '+qwDmg(s)+'</span>'+(s.combo>=3?'<span class="hot">🔥 Combo '+s.combo+'</span>':s.combo?'<span>🔥 '+s.combo+'/3</span>':'');
+  $("#qb-hp").style.width=(QB.hp/QB.max*100)+"%"; $("#qb-hpbar").setAttribute("aria-valuenow",QB.hp); $("#qb-hptext").textContent=QB.hp+" / "+QB.max+" HP";
+  var pb=$("#qb-potion"); if(pb){ pb.textContent="🧪 Potion ("+s.potions+")"; pb.disabled=!s.potions||s.hp>=max||QB.done; }
+}
+function qbNext(){
+  if(!QB||QB.done) return;
+  QB.cur=qbNextIndex(QB.pool); QB.pick=null; QB.opts=shuffle(QB.pool.qs[QB.cur].opts); QB.t0=performance.now(); qbDraw();
+}
+function qbDraw(){
+  var q=QB.pool.qs[QB.cur], done=QB.pick!==null, ok=done&&QB.opts[QB.pick]===q.right, s=QS();
+  $("#qb-card").innerHTML=(done?'':'<div class="speed" aria-hidden="true"><i></i></div>')+
+    '<h3 class="q">'+q.q+'</h3>'+(q.en?'<p class="en"><span>EN</span>'+q.en+'</p>':'')+
+    '<div class="opts">'+QB.opts.map(function(o,k){ var cls="opt", m="";
+      if(done){ if(o===q.right){ cls+=" right"; m='<span class="mark">✓</span>'; } else if(k===QB.pick){ cls+=" wrong"; m='<span class="mark">✗</span>'; } else cls+=" dim"; }
+      return '<button class="'+cls+'" data-qb="'+k+'"'+(done?' disabled':'')+'>'+m+'<span class="kn" aria-hidden="true">'+(k+1)+'</span>'+o+'</button>'; }).join("")+'</div>'+
+    (done&&!ok?'<p class="fb no" role="status"><b>'+(s.hp>0?'Ouch!':'You’re out of hearts!')+'</b> '+q.why+'</p><button class="btn primary next" id="qb-go">'+(s.hp>0?'Keep fighting ▸':'Continue')+'</button>':'')+
+    (done&&ok?'<p class="fb ok" role="status"><b>Hit!</b> '+q.why+'</p>':'');
+  if(done&&!ok){ var g=$("#qb-go"); if(g) g.focus({preventScroll:true}); }
+}
+function qbPop(text,cls){
+  var a=$("#qb-arena"), m=$("#qb-mob"); if(!a||!m) return;
+  var r=m.getBoundingClientRect(), ar=a.getBoundingClientRect(), d=document.createElement("span");
+  d.className="dmg"+(cls?" "+cls:""); d.textContent=text; d.style.left=(r.left-ar.left+r.width/2-24)+"px"; d.style.top=(r.top-ar.top)+"px";
+  a.appendChild(d); setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },950);
+}
+function qbCall(t,big){ var c=$("#qb-call"); if(!c) return; c.textContent=t; c.className="qb-call"+(big?" big":""); void c.offsetWidth; c.classList.add("go"); }
+var CALLS={5:"NICE! ×5",10:"ON FIRE! ×10 🔥",15:"UNSTOPPABLE! ×15",20:"GODLIKE! ×20 ⚡",25:"LEGENDARY! ×25 👑",30:"STUDY MACHINE! ×30 🤖"};
+function qbAnswer(k){
+  if(!QB||QB.pick!==null||QB.done) return;
+  var q=QB.pool.qs[QB.cur], s=QS(); QB.pick=k;
+  var ok=QB.opts[k]===q.right, fast=performance.now()-QB.t0<7000;
+  if(ok){
+    QB.hits++; s.combo++; s.bestCombo=Math.max(s.bestCombo,s.combo);
+    var base=qwDmg(s), crit=s.combo>=3, d=Math.round(base*(crit?2:1)+(fast?base*.5:0));
+    QB.hp=Math.max(0,QB.hp-d);
+    anim("qb-hero","lunge-r"); setTimeout(function(){ anim("qb-mob","hit"); qbPop("-"+d,crit?"crit":""); if(crit) anim("qb-arena","shake"); },160);
+    var f=660*(1+Math.min(s.combo,14)*.05); snd(f,0,.1,"square",.05); snd(f*1.5,.07,.14,"square",.05); if(crit) snd(f*2,.14,.16,"triangle",.05);
+    $("#qb-log").textContent=(crit?"🔥 CRITICAL! ":"")+(fast?"⚡ Quick! ":"")+"You hit for "+d+"!";
+    if(CALLS[s.combo]){ qbCall(CALLS[s.combo],true); sfx("streak"); s.coins+=s.combo; toast("🔥 Combo "+s.combo+"! +"+s.combo+" 🪙"); }
+    else if(crit) qbCall("CRIT!"); else if(fast) qbCall("QUICK!");
+    if(s.combo===10) qwAch("combo10"); if(s.combo===25) qwAch("combo25");
+    qbUpdate(); qbDraw(); qwHud();
+    if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,750); }
+    else setTimeout(function(){ if(QB&&QB.pick!==null&&!QB.done) qbNext(); },q.why?1500:900);
+  } else {
+    QB.misses++; s.combo=0; QB.lost=true;
+    if(QB.missed.indexOf(QB.cur)<0) QB.missed.push(QB.cur);
+    QB.pool.queue.splice(Math.min(4,QB.pool.queue.length),0,QB.cur);
+    s.hp=Math.max(0,s.hp-1);
+    anim("qb-mob","lunge"); setTimeout(function(){ anim("qb-arena","flash"); anim("qb-hero","hurt"); anim("qw-battle","shake"); },180);
+    sfx("wrong"); $("#qb-log").textContent=QB.foe.name+" hits you! −1 ❤️";
+    qbUpdate(); qbDraw(); qwHud(); save();
+  }
+}
+function qbGo(){ var s=QS(); if(s.hp<=0){ QB.done=true; qbFaint(); } else qbNext(); }
+function qbWin(){
+  var s=QS(), f=QB.foe, xp=QB.final?250:QB.boss?90:16+Math.floor(Math.random()*6), coins=QB.final?250:QB.boss?60:6+Math.floor(Math.random()*9), stars=QB.final?20:QB.boss?5:1, potion=!QB.boss&&Math.random()<.22;
+  if(QB.boss&&!QB.lost){ stars+=5; }
+  anim("qb-mob","poof"); sfx("fanfare");
+  s.coins+=coins; if(potion) s.potions++; addStars(stars); s.wins++;
+  if(!QB.boss){ s.dead[f.id]=Date.now(); s.kills[f.region]=(s.kills[f.region]||0)+1; }
+  var lvlBefore=s.lvl, xpBefore=s.xp; s.xp+=xp; var ups=0; while(s.xp>=qwNeed(s.lvl)){ s.xp-=qwNeed(s.lvl); s.lvl++; ups++; }
+  if(ups){ s.hp=qwMaxHp(s); }
+  save(); qwAch("first"); if(s.lvl>=5) qwAch("lv5"); if(s.lvl>=10) qwAch("lv10");
+  var loot=['<div class="lt xp">+'+xp+' XP</div>','<div class="lt coin">+'+coins+' 🪙</div>','<div class="lt star">+'+stars+' ⭐</div>'];
+  if(potion) loot.push('<div class="lt rare">🧪 Potion dropped!</div>');
+  if(QB.boss&&!QB.lost) loot.push('<div class="lt epic">💎 Flawless bonus!</div>');
+  var pct0=lvlBefore===s.lvl?xpBefore/qwNeed(s.lvl)*100:0, pct1=s.xp/qwNeed(s.lvl)*100;
+  setTimeout(function(){
+    $("#qb-card").innerHTML='<div class="qb-win"><div class="qw-big" aria-hidden="true">'+(QB.boss?'👑':'🎉')+'</div><h2>'+(QB.boss?'BOSS DEFEATED!':'VICTORY!')+'</h2><p class="small">'+f.name+' · '+QB.hits+' hits · '+QB.misses+' misses</p>'+
+      '<div class="loot">'+loot.join("")+'</div>'+
+      '<div class="qb-xp"><span>Lv '+s.lvl+'</span><div class="bar"><i id="qb-xpfill" style="width:'+pct0+'%"></i></div><span>'+s.xp+'/'+qwNeed(s.lvl)+'</span></div>'+
+      (QB.missed.length?'<details class="qb-miss"><summary>Review what you missed ('+QB.missed.length+')</summary><ul class="review">'+QB.missed.map(function(i){ var q=QB.pool.qs[i]; return '<li><span class="rq">'+q.q+'</span><span class="ra">✓ '+q.right+'</span></li>'; }).join("")+'</ul></details>':'')+
+      '<button class="btn primary next" id="qb-done">Continue ▸</button></div>';
+    $(".qb-actions").hidden=true;
+    [0,1,2,3,4].forEach(function(i){ setTimeout(function(){ snd(880+i*120,0,.06,"square",.035); },250+i*180); });
+    setTimeout(function(){ var x=$("#qb-xpfill"); if(x) x.style.width=pct1+"%"; },500);
+    confetti(QB.boss?220:70); var d=$("#qb-done"); if(d) d.focus({preventScroll:true});
+    QB.ups=ups;
+  },650);
+}
+function qbClose(){
+  var o=$("#qw-battle"); o.hidden=true; o.innerHTML=""; document.body.style.overflow="";
+  var fin=QB; QB=null; QMODE="walk"; qwDirs=[]; qwPad=null; QP.safe=performance.now()+1500;
+  qwHud(); qwMiniDraw(false); qwMusic("walk");
+  return fin;
+}
+function qbDone(){
+  var fin=qbClose(), s=QS();
+  if(!fin) return;
+  var after=function(){
+    if(fin.boss&&!fin.final){ s.badges[fin.foe.region]=true; QWD.O[fin.foe.y*QW_W+fin.foe.x]=0; save(); qwAch("badge1"); if(!fin.lost) qwAch("flawless"); if(qwBadges(s)===4) qwAch("badges");
+      confetti(260); sfx("fanfare"); qwBurst(fin.foe.x,fin.foe.y,["#ffd43b","#ff922b","#ffffff","#74c0fc"],70);
+      qwPanel('<div class="loot-card legendary"><div class="lc-ico">🏅</div><p class="eyebrow">Badge earned</p><h2>'+worldOf(fin.foe.region).name+' Badge!</h2><p>'+qwBadges(s)+' of 4 badges. '+(qwBadges(s)===4?'The Final Exam Tower is now open! Head north from the village.':'Next: '+qwNextGoal())+'</p><button class="btn primary" data-close>Let’s go!</button></div>'); return; }
+    if(fin.final){ s.champ=true; save(); qwAch("champ"); confetti(400); sfx("fanfare");
+      qwPanel('<div class="loot-card legendary"><div class="lc-ico">👑</div><p class="eyebrow">Study Quest complete</p><h2>You beat the Final Exam!</h2><p>'+esc(s.name)+' is the champion of Study Island. Level '+s.lvl+', best combo '+s.bestCombo+'. Keep exploring to level up and find every chest!</p><button class="btn primary" data-close>👑 Victory lap</button></div>'); return; }
+  };
+  if(fin.ups){ sfx("streak"); confetti(140); qwBurst(QP.x,QP.y,["#ffd43b","#ffffff","#69db7c"],50); qwText(QP.x,QP.y,"LEVEL UP!","#ffd43b");
+    qwPanel('<div class="loot-card epic lvup"><div class="lc-ico">⬆️</div><p class="eyebrow">Level up!</p><h2>Level '+s.lvl+'</h2><p>❤️ Max hearts: '+qwMaxHp(s)+' · ⚔️ Damage: '+qwDmg(s)+' · Hearts fully healed!</p><button class="btn primary" data-close id="lv-ok">Nice!</button></div>');
+    var ok=$("#lv-ok"); if(ok) ok.addEventListener("click",function(){ setTimeout(after,50); },{once:true});
+  } else after();
+}
+function qbFaint(){
+  var s=QS(), lost=Math.floor(s.coins*.25);
+  s.coins-=lost; s.combo=0; save();
+  $("#qb-card").innerHTML='<div class="qb-win"><div class="qw-big" aria-hidden="true">💫</div><h2>You fainted…</h2><p>'+QB.foe.name+' was too strong this time. You wake up by the village fountain with full hearts'+(lost?' but dropped '+lost+' 🪙':'')+'.</p>'+
+    (QB.missed.length?'<details class="qb-miss" open><summary>Study these before you go back</summary><ul class="review">'+QB.missed.map(function(i){ var q=QB.pool.qs[i]; return '<li><span class="rq">'+q.q+'</span><span class="ra">✓ '+q.right+'</span>'+(q.why?'<span class="small">'+q.why+'</span>':'')+'</li>'; }).join("")+'</ul></details>':'')+
+    '<button class="btn primary next" id="qb-wake">Wake up ▸</button></div>';
+  $(".qb-actions").hidden=true; qwMusic(null);
+}
+function qbWake(){
+  var s=QS(); qbClose(); s.hp=qwMaxHp(s); s.x=QSPAWN[0]; s.y=QSPAWN[1]; QP.x=QP.tx=s.x; QP.y=QP.ty=s.y; QP.moving=false; save(); qwHud();
+  qwRegionNow="village"; qwBanner("village");
+}
+function qbRun(){
+  if(!QB||QB.boss||QB.done) return;
+  var m=QB.foe; m.stun=performance.now()+4000; QS().combo=0; qbClose(); toast("🏃 You got away!");
+}
+$("#qw-battle").addEventListener("click",function(e){
+  var t;
+  if((t=e.target.closest("[data-qb]"))){ qbAnswer(+t.dataset.qb); return; }
+  if(e.target.closest("#qb-go")){ qbGo(); return; }
+  if(e.target.closest("#qb-done")){ qbDone(); return; }
+  if(e.target.closest("#qb-wake")){ qbWake(); return; }
+  if(e.target.closest("#qb-run")){ qbRun(); return; }
+  if(e.target.closest("#qb-potion")){ if(qwDrink(true)){ qbUpdate(); $("#qb-log").textContent="🧪 You drink a potion. +3 ❤️"; anim("qb-hero","appear"); } return; }
+});
+function qbKey(e){
+  if(!QB) return; var n=parseInt(e.key,10);
+  if(n>=1&&n<=QB.opts.length&&QB.pick===null&&!QB.done){ e.preventDefault(); qbAnswer(n-1); }
+}
+/* ================= chiptune music ================= */
+var QM={timer:0,step:0,song:null};
+var N=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
+var SONGS={
+  walk:{ms:200,lead:[72,0,76,79,77,76,74,0,72,74,76,72,69,0,67,0, 72,0,76,79,81,79,77,76,74,77,76,74,72,0,0,0],bass:[48,48,53,53,55,55,48,48,45,45,53,53,55,55,48,48],type:"square",v:.018},
+  battle:{ms:140,lead:[69,72,76,72,69,72,77,76,67,71,74,71,67,71,76,74, 69,72,76,81,79,76,77,76,74,72,71,72,74,71,69,0],bass:[45,45,45,45,41,41,41,41,43,43,43,43,40,40,40,40],type:"square",v:.017},
+  boss:{ms:125,lead:[57,0,60,57,63,62,60,0,57,0,60,57,64,63,62,60, 57,60,63,66,64,63,62,60,59,62,65,64,62,60,59,57],bass:[33,33,33,33,33,33,36,36,31,31,31,31,32,32,32,32],type:"sawtooth",v:.012}
+};
+function qwMusic(song){
+  clearInterval(QM.timer); QM.timer=0; QM.song=song;
+  if(!song||!ST.sound||!QS().music) return;
+  var S=SONGS[song]; QM.step=0;
+  QM.timer=setInterval(function(){
+    if(document.hidden) return;
+    if($("#quest").hidden){ clearInterval(QM.timer); QM.timer=0; return; }
+    var i=QM.step++, l=S.lead[i%S.lead.length], b=S.bass[Math.floor(i/2)%S.bass.length], dur=S.ms/1000;
+    if(l) tone(N(l),0,dur*.9,S.type,S.v);
+    if(i%2===0) tone(N(b),0,dur*1.8,"triangle",S.v*1.6);
+    if(song!=="walk"&&i%4===2) tone(90,0,.05,"square",S.v*.8);
+  },S.ms);
+}
+if(/[?&]qa=1/.test(location.search)) window.QWQA={state:QS,world:function(){ return QWD; },tp:function(x,y){ QP.x=QP.tx=x; QP.y=QP.ty=y; QP.moving=false; },fight:function(i,boss){ var f=boss?QWD.bosses[i]:QWD.mons[i]; qwBattle(f,!!boss); },mode:function(){ return QMODE; },
+  answer:function(){ return QB?QB.pool.qs[QB.cur].right:null; },opts:function(){ return QB?QB.opts:null; }};
+
+document.addEventListener("click",function(e){ if(e.target.closest("[data-open-quest]")){ sfx("blip"); openQuest(); } });
+
 /* ---------- Boot ---------- */
 save(); applyTheme(); renderStars();
 renderSound();
 var h=(location.hash||"").replace("#","");
-if(h==="battle") openBattle(""); else if(h&&findGuide(h)) openGuide(h); else goHome();
+if(h==="quest") openQuest(); else if(h==="battle") openBattle(""); else if(h&&findGuide(h)) openGuide(h); else goHome();
 })();
 </script>
