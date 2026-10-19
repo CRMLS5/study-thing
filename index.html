@@ -113,6 +113,79 @@
 :root[data-skin][data-skin="mintnight"],[data-sk="mintnight"]{--paper:#0E1B1A; --sheet:#172B29; --ink:#E6F0EF; --ink-soft:#A1BAB8; --rule:#324846; --accent:#4CF0C7; --accent-ink:#0B1918; --hi:#F584AA; --hi-ink:#0B1918; --cardline:#39AC8F; --good:#75D7A6; --good-bg:#153224; --bad:#F88277; --bad-bg:#361917; --shadow:rgba(0,0,0,.55); --c1:#297A66; --c2:#297A7A; --c3:#297A52; --c4:#913051; --cover-ink:#F3F5FA; color-scheme:dark}
 :root[data-skin][data-skin="sunsetdrive"],[data-sk="sunsetdrive"]{--paper:#120E1B; --sheet:#1E172B; --ink:#E9E6F0; --ink-soft:#A9A1BA; --rule:#3A3248; --accent:#F0904C; --accent-ink:#0F0B19; --hi:#F47BB8; --hi-ink:#0F0B19; --cardline:#AC6939; --good:#75D7A6; --good-bg:#153224; --bad:#F88277; --bad-bg:#361917; --shadow:rgba(0,0,0,.55); --c1:#915930; --c2:#913061; --c3:#513091; --c4:#813091; --cover-ink:#F3F5FA; color-scheme:dark}
 
+/* ---------- Boss Battle ---------- */
+.bt-banner{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:var(--cover-ink);background:linear-gradient(135deg,var(--c4),var(--c1));border:0;border-radius:16px;padding:16px 18px;margin:18px 0 8px;cursor:pointer;box-shadow:0 14px 30px -20px var(--shadow);transition:transform .15s ease}
+.bt-banner:hover{transform:translateY(-2px)}
+.bt-banner .big{font-size:42px;line-height:1}
+.bt-banner b{display:block;font-family:var(--font-display);font-weight:800;font-size:24px;line-height:1.1}
+.bt-banner .s{font-size:15px;opacity:.92}
+.worlds{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:18px}
+.world{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;min-width:0;text-align:left;font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:16px;cursor:pointer;box-shadow:0 14px 30px -24px var(--shadow);transition:transform .15s ease,border-color .15s ease}
+.world:hover{transform:translateY(-3px);border-color:var(--ink)}
+.world .wicon{font-size:44px;line-height:1.1}
+.world .wname{font-family:var(--font-display);font-weight:800;font-size:21px;line-height:1.15}
+.world .wrec{margin-top:4px;font-size:14px;font-weight:700;color:var(--ink-soft)}
+.world .wrec.won{color:var(--good)}
+.arena{position:relative;overflow:hidden;border-radius:18px;padding:14px 16px 12px;margin-top:14px;color:var(--cover-ink);background:radial-gradient(120% 80% at 50% 110%,rgba(0,0,0,.28),transparent 60%),linear-gradient(160deg,var(--c1),var(--c4))}
+.arena.boss{background:radial-gradient(120% 80% at 50% 110%,rgba(0,0,0,.35),transparent 60%),linear-gradient(160deg,var(--c3),var(--c4))}
+.arena.win,.arena.lose{text-align:center;padding:22px 16px}
+.arena.win{background:linear-gradient(160deg,var(--c2),var(--c1))}
+.arena.lose{background:linear-gradient(160deg,var(--c4),var(--c3))}
+.arena p{margin:6px 0 0}
+.arena::after{content:"";position:absolute;inset:0;background:#ff2a2a;opacity:0;pointer-events:none}
+.arena.flash::after{animation:btflash .45s}
+.bt-top{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.92}
+.bt-field{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:8px;margin-top:6px}
+.fighter{text-align:center;min-width:0}
+.fx{display:inline-block;font-size:clamp(56px,15vw,88px);line-height:1.15}
+.arena.boss .mob .fx{font-size:clamp(70px,19vw,112px)}
+.hearts{font-size:17px;letter-spacing:1px;white-space:nowrap}
+.buffs{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;min-height:24px;margin-top:4px}
+.buffs span{font-size:12px;font-weight:700;background:rgba(0,0,0,.25);border-radius:99px;padding:3px 8px}
+.buffs .hot{background:var(--hi);color:var(--hi-ink)}
+.mname{font-family:var(--font-display);font-weight:800;font-size:17px;line-height:1.15}
+.hpbar{height:12px;max-width:190px;margin:6px auto 2px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}
+.hpbar i{display:block;height:100%;width:100%;background:var(--hi);transition:width .35s ease}
+.hptext{font-family:var(--font-mono);font-size:12px}
+.vs{font-family:var(--font-display);font-weight:800;font-size:20px;opacity:.8;padding-bottom:42px}
+.bt-log{margin:10px 0 0;min-height:1.4em;text-align:center;font-weight:700}
+.bt-big{font-size:72px;line-height:1.1}
+.bt-title{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,6vw,32px);margin:4px 0 0;color:inherit}
+.bt-q{margin-top:16px}
+.bt-q .opt .kn{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:6px;font:700 12px/1 var(--font-mono);color:var(--ink-soft);border:1px solid var(--rule);vertical-align:1px}
+.speed{height:6px;border-radius:99px;background:var(--rule);overflow:hidden;margin:0 0 14px}
+.speed i{display:block;height:100%;background:var(--accent);transform-origin:left;animation:btdrain 7s linear forwards}
+.rewards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.reward{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font:inherit;color:var(--ink);background:var(--sheet);border:1.5px solid var(--rule);border-radius:14px;padding:16px 12px;cursor:pointer}
+.reward:hover:not(:disabled){border-color:var(--ink);transform:translateY(-2px)}
+.reward:disabled{opacity:.5;cursor:default}
+.reward .ri{font-size:38px;line-height:1.1}
+.reward b{font-family:var(--font-display);font-size:19px}
+.reward span:last-child{font-size:14px;color:var(--ink-soft)}
+.row-btns{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.review{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.review li{display:flex;flex-direction:column;gap:4px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:12px 14px}
+.review .rq{font-weight:700}
+.review .ra{color:var(--good);font-weight:700}
+.dmg{position:absolute;z-index:2;font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--hi);text-shadow:0 2px 0 rgba(0,0,0,.4);pointer-events:none;animation:btup .9s ease-out forwards}
+.dmg.crit{font-size:38px}
+.fx.appear{animation:btappear .5s ease-out}
+.fx.hit{animation:bthit .45s}
+.fx.lunge{animation:btlunge .5s}
+.fx.lunge-r{animation:btlunger .4s}
+.fx.hurt{animation:bthurt .45s}
+.fx.poof{animation:btpoof .7s forwards}
+@keyframes btup{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-50px) scale(1.3)}}
+@keyframes btappear{from{opacity:0;transform:scale(.2) translateY(30px)}}
+@keyframes bthit{0%,100%{transform:none;filter:none}20%{transform:translateX(10px) rotate(8deg);filter:brightness(2.5)}50%{transform:translateX(-8px) rotate(-5deg)}75%{transform:translateX(4px)}}
+@keyframes btlunge{0%,100%{transform:none}40%{transform:translateX(-55%) scale(1.15)}}
+@keyframes btlunger{0%,100%{transform:none}40%{transform:translateX(40%) scale(1.1)}}
+@keyframes bthurt{0%,100%{transform:none}25%{transform:translateX(-8px) rotate(-6deg)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+@keyframes btpoof{to{opacity:0;transform:scale(0) rotate(200deg)}}
+@keyframes btflash{30%{opacity:.35}}
+@keyframes btdrain{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.dmg,.fx.appear,.fx.hit,.fx.lunge,.fx.lunge-r,.fx.hurt,.arena.flash::after,.speed i{animation:none}.fx.poof{animation:none;opacity:.2}}
+
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.5;padding-inline:16px;padding-block:0 48px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:880px;margin-inline:auto}
@@ -379,7 +452,17 @@ h2:first-child{margin-top:0}
       <h1>Study Guide Maker <mark>2000</mark></h1>
       <p class="lede">Pick a study guide. Earn stars. Beat your high score.</p>
     </header>
+    <button class="bt-banner" data-open-battle=""><span class="big" aria-hidden="true">⚔️</span><span><b>Boss Battle</b><span class="s">Turn your study guides into a game. Beat the monsters, then beat the boss.</span></span></button>
     <div class="gallery" id="guide-list"></div>
+  </section>
+
+  <!-- Boss Battle -->
+  <section id="battle" hidden>
+    <div class="guide-bar">
+      <button class="link" id="battle-back">← All study guides</button>
+      <div class="bar-right"><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
+    </div>
+    <div id="battle-body"></div>
   </section>
 
   <!-- Star shop -->
@@ -399,6 +482,7 @@ h2:first-child{margin-top:0}
         <li>Every 5 in a row: <b>+2 ⭐</b> extra</li>
         <li>Bonus question right: <b>+3 ⭐</b></li>
         <li>Finish a Match game: <b>+3 ⭐</b> (+2 more for a new best time)</li>
+        <li>Boss Battle: <b>+2 ⭐</b> per monster, <b>+5 ⭐</b> for the boss, <b>+5 ⭐</b> more if you lose no hearts</li>
       </ul>
     </div>
     <h2>Themes</h2>
@@ -425,6 +509,7 @@ h2:first-child{margin-top:0}
       <p class="eyebrow" id="g-course"></p>
       <h1 id="g-title"></h1>
       <p class="lede" id="g-lede"></p>
+      <p style="margin:12px 0 0"><button class="chipbtn" id="g-battle">⚔️ Boss Battle this guide</button></p>
     </header>
 
     <div class="parts" id="parts" role="group" aria-label="Pick a topic" hidden></div>
@@ -1558,6 +1643,7 @@ var SFX={
   wrong:function(P){ tone(196*P.k,0,.18,"square",.035); tone(147*P.k,.12,.22,"square",.035); },
   streak:function(P){ [523,659,784,1047].forEach(function(f,i){ tone(f*P.k,i*.07,.16,P.type,.08*P.v); }); },
   blip:function(P){ tone(880*P.k,0,.09,P.type,.08*P.v); },
+  boss:function(P){ [196,175,147].forEach(function(f,i){ tone(f*P.k,i*.16,.24,"sawtooth",.045*P.v); }); },
   fanfare:function(P){ [523,659,784].forEach(function(f,i){ tone(f*P.k,i*.1,.18,P.type,.08*P.v); }); tone(1047*P.k,.32,.5,P.type,.1*P.v); }
 };
 function sfx(name,packId,force){ if((ST.sound||force)&&SFX[name]) SFX[name](item("sound",packId||ST.eq.sound)); }
@@ -1628,7 +1714,7 @@ function renderGallery(){
 $("#guide-list").addEventListener("click",function(e){ var b=e.target.closest("[data-guide]"); if(b){ sfx("blip"); openGuide(b.dataset.guide); } });
 $("#back").addEventListener("click",goHome);
 
-function showView(v){ ["home","shop","guide"].forEach(function(id){ document.getElementById(id).hidden=id!==v; }); }
+function showView(v){ ["home","shop","guide","battle"].forEach(function(id){ document.getElementById(id).hidden=id!==v; }); }
 function goHome(){
   stopMatch(); stopSpeak(); G=null; GUIDE=null; showView("home"); renderGallery(); setHash(""); window.scrollTo(0,0);
 }
@@ -2331,10 +2417,208 @@ $("#match").addEventListener("click",function(e){
   }
 });
 
+/* ================= BOSS BATTLE: every guide becomes a world ================= */
+var WORLDS={
+  "bio-energy-3":{name:"Cell Kingdom",icon:"🧫",mobs:[["🦠","Germ Grunt"],["🍄","Spore Sprout"],["🪱","Waste Worm"],["🧫","Petri Blob"]],boss:["🦑","The ATP Kraken"]},
+  "spanish2":{name:"Pretérito Peaks",icon:"🌵",mobs:[["🌵","Cactus Bandido"],["🦂","El Escorpión"],["🐂","Toro Furioso"],["🦅","Águila Veloz"]],boss:["🐉","El Dragón del Pretérito"]},
+  "grammar-1-2":{name:"Grammar Grove",icon:"🌳",mobs:[["🐌","Run-On Snail"],["🦇","Comma Bat"],["🐸","Verb Shift Frog"],["👻","Passive Ghost"]],boss:["👹","The Agreement Ogre"]},
+  "born-a-crime-5-6":{name:"Loophole Lands",icon:"🦎",mobs:[["🦎","Loophole Lizard"],["🐍","Rule Snake"],["🦂","Sand Scorpion"],["🐗","Wild Warthog"]],boss:["🦁","Lion of the Highveld"]},
+  "all":{name:"Final Exam Tower",icon:"🏰",mobs:null,boss:["🐲","The Final Exam"]}
+};
+var GENERIC_MOBS=[["👾","Pop Quiz"],["🧟","Zombie Homework"],["🐺","Deadline Wolf"],["🤖","Robo Grader"]];
+var MOB_HP=[60,70,80,90], BOSS_HP=220, BASE_DMG=10, FAST_MS=7000, HEARTS=5;
+var BT=null;
+function guideById(id){ return GUIDES.filter(function(x){ return x.id===id; })[0]||null; }
+function worldOf(id){
+  if(WORLDS[id]) return WORLDS[id];
+  var g=guideById(id); return {name:(g?g.title:"Mystery")+" World",icon:"⚔️",mobs:GENERIC_MOBS,boss:["😈","The Test Boss"]};
+}
+function guideQuestions(g){
+  var src=g.parts?g.parts.filter(function(p){ return p.quiz; }):[g], out=[];
+  src.forEach(function(p){ p.quiz.forEach(function(q){ out.push({q:q[0],right:q[1][0],opts:q[1],why:q[2]||"",en:typeof q[3]==="string"?q[3]:""}); }); });
+  return out;
+}
+function worldQuestions(id){
+  if(id==="all"){ var all=[]; GUIDES.forEach(function(g){ all=all.concat(guideQuestions(g)); }); return all; }
+  var g=guideById(id); return g?guideQuestions(g):[];
+}
+function openBattle(world){
+  stopMatch(); stopSpeak(); G=null; GUIDE=null; showView("battle"); setHash("battle"); window.scrollTo(0,0);
+  if(world) startBattle(world); else renderWorlds();
+}
+function battleRecord(id){ var b=ST.best["battle-"+id]; return b&&typeof b==="object"?b:{}; }
+function renderWorlds(){
+  BT=null;
+  var ids=GUIDES.map(function(g){ return g.id; }).concat(["all"]);
+  $("#battle-body").innerHTML='<header><p class="eyebrow">Boss Battle</p><h1>Pick a <mark>world</mark></h1>'+
+    '<p class="lede">Beat 4 monsters and a boss. Right answers are attacks. Wrong answers cost a heart. 3 in a row = critical hits!</p></header>'+
+    '<div class="worlds">'+ids.map(function(id){
+      var W=worldOf(id), g=id==="all"?null:guideById(id), r=battleRecord(id), n=worldQuestions(id).length;
+      var rec=r.won?'🏆 Beaten '+r.won+'×'+(r.flawless?' · 💎 Flawless':''):(r.lvl?'Best: reached level '+r.lvl+' of 5':'Not played yet');
+      return '<button class="world" data-world="'+id+'"><span class="wicon" aria-hidden="true">'+W.icon+'</span>'+
+        '<span class="wname">'+W.name+'</span><span class="small">'+(g?g.title+' · '+g.sub:'Every subject mixed')+' · '+n+' questions</span>'+
+        '<span class="wrec'+(r.won?' won':'')+'">'+rec+'</span></button>';
+    }).join("")+'</div>'+
+    '<div class="earn" style="margin-top:18px"><b>How it works</b><ul>'+
+      '<li>Answer fast (under 7 seconds) for a <b>⚡ bonus hit</b>.</li>'+
+      '<li>Get 3 or more in a row for <b>🔥 critical hits</b> (+10 damage).</li>'+
+      '<li>Beat a monster: pick a power-up and earn <b>+2 ⭐</b>. Beat the boss: <b>+5 ⭐</b>. No hearts lost: <b>+5 ⭐</b> more.</li>'+
+      '<li>Questions you miss come back later, so you can get them right.</li></ul></div>';
+}
+function startBattle(world){
+  var qs=worldQuestions(world); if(!qs.length){ renderWorlds(); return; }
+  var W=worldOf(world), mobs=W.mobs?W.mobs.slice():shuffle(Object.keys(WORLDS).filter(function(k){ return WORLDS[k].mobs; }).reduce(function(a,k){ return a.concat(WORLDS[k].mobs); },[])).slice(0,4);
+  BT={world:world,W:W,qs:qs,queue:shuffle(qs.map(function(_,i){ return i; })),back:{},lvl:0,mobs:mobs,hp:HEARTS,dmg:BASE_DMG,shield:false,
+      streak:0,bestStreak:0,right:0,wrong:0,missed:[],stars:0,lostHeart:false,cur:-1,opts:[],pick:null,t0:0};
+  spawn();
+}
+function spawn(){
+  var boss=BT.lvl===4, m=boss?BT.W.boss:BT.mobs[BT.lvl], max=boss?BOSS_HP:MOB_HP[BT.lvl];
+  BT.mob={e:m[0],name:m[1],hp:max,max:max,boss:boss};
+  $("#battle-body").innerHTML=
+    '<div class="arena'+(boss?' boss':'')+'" id="arena">'+
+      '<div class="bt-top"><span>'+BT.W.icon+' '+BT.W.name+'</span><span>'+(boss?'⚠️ Boss':'Level '+(BT.lvl+1)+' of 5')+'</span></div>'+
+      '<div class="bt-field">'+
+        '<div class="fighter hero"><div class="fx" id="bt-hero" aria-hidden="true">🧙</div><div class="hearts" id="bt-hearts"></div><div class="buffs" id="bt-buffs"></div></div>'+
+        '<div class="vs" aria-hidden="true">VS</div>'+
+        '<div class="fighter mob"><div class="fx appear" id="bt-mob" aria-hidden="true">'+BT.mob.e+'</div><div class="mname">'+BT.mob.name+'</div>'+
+          '<div class="hpbar" role="progressbar" aria-label="Monster health" aria-valuemin="0" aria-valuemax="'+max+'" id="bt-hpbar"><i id="bt-hp"></i></div><div class="hptext" id="bt-hptext"></div></div>'+
+      '</div>'+
+      '<p class="bt-log" id="bt-log" aria-live="polite">'+(boss?'The boss is here: '+BT.mob.name+'!':'A wild '+BT.mob.name+' appears!')+'</p>'+
+    '</div>'+
+    '<div class="bt-q" id="bt-q"></div>'+
+    '<p style="margin-top:16px"><button class="link" id="bt-quit">Run away (end battle)</button></p>';
+  sfx(boss?"boss":"blip");
+  updateArena(); nextQ();
+}
+function updateArena(){
+  var h=""; for(var i=0;i<HEARTS;i++) h+=i<BT.hp?"❤️":"🖤";
+  $("#bt-hearts").textContent=h; $("#bt-hearts").setAttribute("aria-label",BT.hp+" of "+HEARTS+" hearts left");
+  $("#bt-buffs").innerHTML=(BT.dmg>BASE_DMG?'<span>⚔️ +'+(BT.dmg-BASE_DMG)+'</span>':'')+(BT.shield?'<span>🛡️ Shield</span>':'')+(BT.streak>=3?'<span class="hot">🔥 ×'+BT.streak+'</span>':BT.streak?'<span>🔥 '+BT.streak+'/3</span>':'');
+  $("#bt-hp").style.width=(BT.mob.hp/BT.mob.max*100)+"%";
+  $("#bt-hpbar").setAttribute("aria-valuenow",BT.mob.hp);
+  $("#bt-hptext").textContent=BT.mob.hp+" / "+BT.mob.max+" HP";
+}
+function anim(id,cls){ var el=document.getElementById(id); if(!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function log(t){ var l=$("#bt-log"); if(l) l.textContent=t; }
+function nextQ(){
+  if(!BT.queue.length) BT.queue=shuffle(BT.qs.map(function(_,i){ return i; }));
+  BT.cur=BT.queue.shift(); BT.pick=null;
+  BT.opts=shuffle(BT.qs[BT.cur].opts); BT.t0=performance.now();
+  drawQ();
+}
+function drawQ(){
+  var q=BT.qs[BT.cur], done=BT.pick!==null, ok=done&&BT.opts[BT.pick]===q.right;
+  $("#bt-q").innerHTML=(done?'':'<div class="speed" aria-hidden="true"><i></i></div>')+
+    '<h3 class="q">'+q.q+'</h3>'+(q.en?'<p class="en"><span>EN</span>'+q.en+'</p>':'')+
+    '<div class="opts">'+BT.opts.map(function(o,k){
+      var cls="opt", m="";
+      if(done){ if(o===q.right){ cls+=" right"; m='<span class="mark">✓</span>'; } else if(k===BT.pick){ cls+=" wrong"; m='<span class="mark">✗</span>'; } else cls+=" dim"; }
+      return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'>'+m+'<span class="kn" aria-hidden="true">'+(k+1)+'</span>'+o+'</button>';
+    }).join("")+'</div>'+
+    (done&&!ok?'<p class="fb no" role="status"><b>'+(BT.hp>0?'Ouch!':'Knocked out!')+'</b> '+q.why+'</p><button class="btn primary next" id="bt-go">'+(BT.hp>0?'Keep fighting':'See results')+'</button>':'')+
+    (done&&ok&&q.why?'<p class="fb ok" role="status"><b>Hit!</b> '+q.why+'</p>':'');
+  if(done&&!ok){ var g=$("#bt-go"); if(g) g.focus({preventScroll:true}); }
+}
+function dmgPop(text,cls){
+  var a=$("#arena"), m=$("#bt-mob"); if(!a||!m) return;
+  var r=m.getBoundingClientRect(), ar=a.getBoundingClientRect(), d=document.createElement("span");
+  d.className="dmg"+(cls?" "+cls:""); d.textContent=text;
+  d.style.left=(r.left-ar.left+r.width/2-20)+"px"; d.style.top=(r.top-ar.top)+"px";
+  a.appendChild(d); setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },950);
+}
+function battleAnswer(k){
+  if(!BT||BT.pick!==null||!BT.mob||BT.mob.hp<=0) return;
+  var q=BT.qs[BT.cur]; BT.pick=k;
+  var ok=BT.opts[k]===q.right, fast=performance.now()-BT.t0<FAST_MS;
+  if(ok){
+    BT.right++; BT.streak++; BT.bestStreak=Math.max(BT.bestStreak,BT.streak);
+    var crit=BT.streak>=3, d=BT.dmg+(crit?10:0)+(fast?5:0);
+    BT.mob.hp=Math.max(0,BT.mob.hp-d);
+    anim("bt-hero","lunge-r"); setTimeout(function(){ anim("bt-mob","hit"); dmgPop("-"+d,crit?"crit":""); },180);
+    sfx(crit?"streak":"right");
+    log((crit?"🔥 CRITICAL! ":"")+(fast?"⚡ Fast! ":"")+"You hit "+BT.mob.name+" for "+d+".");
+    updateArena(); drawQ();
+    if(BT.mob.hp<=0) setTimeout(defeatMob,800); else setTimeout(function(){ if(BT&&BT.pick!==null) nextQ(); },q.why?1500:900);
+  } else {
+    BT.wrong++; BT.streak=0;
+    if(BT.missed.indexOf(BT.cur)<0) BT.missed.push(BT.cur);
+    if(!BT.back[BT.cur]){ BT.back[BT.cur]=1; BT.queue.splice(Math.min(3,BT.queue.length),0,BT.cur); }
+    anim("bt-mob","lunge");
+    if(BT.shield){ BT.shield=false; log("🛡️ Your shield blocked "+BT.mob.name+"’s attack!"); sfx("blip"); }
+    else { BT.hp--; BT.lostHeart=true; setTimeout(function(){ anim("arena","flash"); anim("bt-hero","hurt"); },200); log(BT.mob.name+" hits you! −1 ❤️"); sfx("wrong"); }
+    updateArena(); drawQ();
+  }
+}
+function defeatMob(){
+  if(!BT||!BT.mob) return;
+  var boss=BT.mob.boss; anim("bt-mob","poof"); sfx("fanfare");
+  var earned=boss?5:2; BT.stars+=earned; addStars(earned);
+  log("You defeated "+BT.mob.name+"! +"+earned+" ⭐");
+  setTimeout(function(){ if(!BT) return; if(boss) victory(); else rewards(); },700);
+}
+function rewards(){
+  $("#bt-q").innerHTML='<h3 class="q">Level '+(BT.lvl+1)+' cleared! Pick a power-up</h3>'+
+    '<div class="rewards">'+
+      '<button class="reward" data-rw="heal"'+(BT.hp>=HEARTS?' disabled':'')+'><span class="ri">❤️</span><b>Heal</b><span>+2 hearts'+(BT.hp>=HEARTS?' (you’re full)':'')+'</span></button>'+
+      '<button class="reward" data-rw="sword"><span class="ri">⚔️</span><b>Sharpen</b><span>+5 damage on every hit</span></button>'+
+      '<button class="reward" data-rw="shield"'+(BT.shield?' disabled':'')+'><span class="ri">🛡️</span><b>Shield</b><span>'+(BT.shield?'You already have one':'Blocks the next hit')+'</span></button>'+
+    '</div>';
+  confetti(50);
+}
+function takeReward(r){
+  if(r==="heal") BT.hp=Math.min(HEARTS,BT.hp+2);
+  if(r==="sword") BT.dmg+=5;
+  if(r==="shield") BT.shield=true;
+  sfx("blip"); BT.lvl++; spawn(); window.scrollTo(0,0);
+}
+function missedList(){
+  if(!BT.missed.length) return '<p class="small">You didn’t miss a single question. 💎</p>';
+  return '<h2>Review what you missed</h2><ul class="review">'+BT.missed.map(function(i){
+    var q=BT.qs[i]; return '<li><span class="rq">'+q.q+'</span><span class="ra">✓ '+q.right+'</span>'+(q.why?'<span class="small">'+q.why+'</span>':'')+'</li>';
+  }).join("")+'</ul>';
+}
+function resultButtons(){
+  return '<div class="row-btns"><button class="btn primary" id="bt-again">⚔️ Play again</button><button class="btn" id="bt-worlds">🗺️ Pick another world</button></div>';
+}
+function victory(){
+  var flawless=!BT.lostHeart, r=ST.best["battle-"+BT.world]; if(!r||typeof r!=="object") r=ST.best["battle-"+BT.world]={};
+  r.won=(r.won||0)+1; r.lvl=5; if(flawless){ r.flawless=true; addStars(5); BT.stars+=5; } save();
+  confetti(180); sfx("streak");
+  $("#battle-body").innerHTML='<div class="arena win"><div class="bt-big" aria-hidden="true">🏆</div><h2 class="bt-title">You beat '+BT.W.name+'!</h2>'+
+    '<p>'+(flawless?'💎 FLAWLESS: no hearts lost! ':'')+BT.right+' hits · '+BT.wrong+' misses · best streak '+BT.bestStreak+' · +'+BT.stars+' ⭐</p></div>'+
+    resultButtons()+missedList();
+  setHash("battle");
+}
+function gameOver(){
+  var r=ST.best["battle-"+BT.world]; if(!r||typeof r!=="object") r=ST.best["battle-"+BT.world]={};
+  r.lvl=Math.max(r.lvl||0,BT.lvl+1); save(); sfx("wrong");
+  $("#battle-body").innerHTML='<div class="arena lose"><div class="bt-big" aria-hidden="true">'+BT.mob.e+'</div><h2 class="bt-title">'+BT.mob.name+' wins this time</h2>'+
+    '<p>You reached level '+(BT.lvl+1)+' of 5 · '+BT.right+' hits · best streak '+BT.bestStreak+(BT.stars?' · +'+BT.stars+' ⭐':'')+'</p></div>'+
+    resultButtons()+missedList();
+}
+document.getElementById("battle").addEventListener("click",function(e){
+  var t;
+  if((t=e.target.closest("[data-world]"))){ sfx("blip"); startBattle(t.dataset.world); window.scrollTo(0,0); return; }
+  if((t=e.target.closest("[data-bk]"))){ battleAnswer(+t.dataset.bk); return; }
+  if((t=e.target.closest("[data-rw]"))&&!t.disabled){ takeReward(t.dataset.rw); return; }
+  if(e.target.closest("#bt-go")){ if(BT.hp<=0) gameOver(); else nextQ(); return; }
+  if(e.target.closest("#bt-again")){ startBattle(BT.world); window.scrollTo(0,0); return; }
+  if(e.target.closest("#bt-worlds")||e.target.closest("#bt-quit")){ renderWorlds(); window.scrollTo(0,0); return; }
+  if(e.target.closest("#battle-back")){ goHome(); return; }
+});
+document.addEventListener("keydown",function(e){
+  if(document.getElementById("battle").hidden||!BT||e.metaKey||e.ctrlKey||e.altKey) return;
+  var n=parseInt(e.key,10);
+  if(n>=1&&n<=BT.opts.length&&BT.pick===null&&$("#bt-q [data-bk]")){ e.preventDefault(); battleAnswer(n-1); }
+});
+document.addEventListener("click",function(e){ if(e.target.closest("[data-open-battle]")){ sfx("blip"); openBattle(e.target.closest("[data-open-battle]").dataset.openBattle||""); } });
+$("#g-battle").addEventListener("click",function(){ sfx("blip"); openBattle(GUIDE&&GUIDE.id); });
+
 /* ---------- Boot ---------- */
 save(); applyTheme(); renderStars();
 renderSound();
 var h=(location.hash||"").replace("#","");
-if(h&&findGuide(h)) openGuide(h); else goHome();
+if(h==="battle") openBattle(""); else if(h&&findGuide(h)) openGuide(h); else goHome();
 })();
 </script>
