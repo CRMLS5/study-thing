@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.QUEST_PAUSED=true</script>
 <title>Study Guide Maker 2000</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -193,6 +194,7 @@
 
 /* ---------- Study Quest (pixel-art RPG) ---------- */
 .qw-stage [hidden],.qw-battle[hidden],.qw-battle [hidden]{display:none!important}
+.bt-banner[hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .pxi{height:14px;width:auto;image-rendering:pixelated;vertical-align:-2px}
 .pxi.big{height:26px}
@@ -3507,6 +3509,7 @@ function getMap(id){
 function qwAlive(mon){ var t=QS().dead[mon.id]; return !t||Date.now()-t>RESPAWN_MS; }
 function qwBlocked(x,y){ if(x<0||y<0||x>=MAP.W||y>=MAP.H) return true; var i=y*MAP.W+x; return !walkable(MAP,i); }
 function openQuest(){
+  if(window.QUEST_PAUSED){ goHome(); return; } /* paused on the GitHub site */
   stopMatch(); stopSpeak(); G=null; GUIDE=null; showView("quest"); setHash("quest"); window.scrollTo(0,0);
   buildLands(); var s=QS();
   qwCv=$("#qw-canvas"); qwCx=qwCv.getContext("2d");
@@ -4154,6 +4157,7 @@ document.addEventListener("click",function(e){ if(e.target.closest("[data-open-q
 save(); applyTheme(); renderStars();
 renderSound();
 try{ $("#quest-art").innerHTML='<img src="'+heroSprite(QS().look,"side",1,false).toDataURL()+'" width="48" height="48" alt="">'+spriteImg("slime","slimeGreen",3)+spriteImg("dragon","dragonRed",4); }catch(e){}
+if(window.QUEST_PAUSED) document.querySelectorAll("[data-open-quest]").forEach(function(b){ b.hidden=true; });
 var h=(location.hash||"").replace("#","");
 if(h==="quest") openQuest(); else if(h==="battle") openBattle(""); else if(h&&findGuide(h)) openGuide(h); else goHome();
 })();
