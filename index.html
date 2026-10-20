@@ -5358,7 +5358,7 @@ function mpHost(tries){
     if(err) return mpSetStatus("Couldn’t load online play. Check your internet.");
     var code=mpMakeCode(), p;
     try{ p=mpNewPeer(mpPid(code)); }catch(e){ return mpSetStatus(mpErrText({type:"browser-incompatible"})); }
-    p.on("open",function(id){ MP.peer=p; MP.host=true; MP.code=code; MP.on=true; MP.me=id; MP.players={}; MP.status=""; mpStart(); mpSys("Room "+code+" is open. Send your friends the code!"); mpRefresh(); });
+    p.on("open",function(id){ mpRelayHook(p); MP.peer=p; MP.host=true; MP.code=code; MP.on=true; MP.me=id; MP.players={}; MP.status=""; mpStart(); mpSys("Room "+code+" is open. Send your friends the code!"); mpRefresh(); });
     p.on("error",function(e){ if(e.type==="unavailable-id"&&tries<4&&!MP.on){ try{ p.destroy(); }catch(_){} mpHost(tries+1); return; } if(!MP.on) mpSetStatus(mpErrText(e)); else if(e.type!=="peer-unavailable") toast(mpErrText(e)); });
     p.on("connection",mpHostConn);
     p.on("disconnected",function(){ if(MP.peer===p&&!p.destroyed) try{ p.reconnect(); }catch(_){} });
@@ -5366,11 +5366,12 @@ function mpHost(tries){
 }
 function mpHostConn(c){
   c.on("open",function(){
+    if(MP.conns[c.peer]&&MP.conns[c.peer].relay){ try{ c.close(); }catch(_){} return; }
     if(MP.locked||Object.keys(MP.conns).length>=MP_MAX-1){ try{ c.send({t:MP.locked?"locked":"full",f:MP.me}); }catch(_){} setTimeout(function(){ try{ c.close(); }catch(_){} },400); return; }
     MP.conns[c.peer]=c; });
   c.on("data",function(d){ mpRecv(d,c.peer); });
-  c.on("close",function(){ mpDrop(c.peer); });
-  c.on("error",function(){ mpDrop(c.peer); });
+  c.on("close",function(){ if(MP.conns[c.peer]===c) mpDrop(c.peer); });
+  c.on("error",function(){ if(MP.conns[c.peer]===c) mpDrop(c.peer); });
 }
 function mpJoin(code){
   code=mpClean(code,14).toUpperCase().replace(/\s/g,""); if(!/^[A-Z]{2,6}-?\d{4}$/.test(code)) return mpSetStatus("Codes look like FROG-4821. Check it and try again.");
@@ -5380,18 +5381,24 @@ function mpJoin(code){
     if(err) return mpSetStatus("Couldn’t load online play. Check your internet.");
     var p; try{ p=mpNewPeer(); }catch(e){ return mpSetStatus(mpErrText({type:"browser-incompatible"})); }
     var done=false, fail=function(t){ if(done) return; done=true; try{ p.destroy(); }catch(_){} MP.peer=null; MP.hostConn=null; mpSetStatus(t); };
-    p.on("open",function(id){ MP.peer=p; MP.me=id;
-      var c=p.connect(mpPid(code),{reliable:true}); MP.hostConn=c;
-      var to=setTimeout(function(){ if(!MP.on) fail("No room with that code. Check it and try again."); },10000);
-      c.on("open",function(){ clearTimeout(to); done=true; MP.on=true; MP.host=false; MP.code=code; MP.players={}; MP.status=""; c.send({t:"hello",p:mpMe()}); mpStart(); mpSys("You joined room "+code+"."); mpRefresh(); });
-      c.on("data",function(d){ mpRecv(d,null); });
-      c.on("close",function(){ if(MP.on&&MP.hostConn===c){ mpSys("The room closed."); toast("The room closed."); mpLeave(true); } }); });
-    p.on("error",function(e){ if(e.type==="peer-unavailable") fail("No room with that code. Check it and try again."); else if(!MP.on) fail(mpErrText(e)); });
+    p.on("open",function(id){ mpRelayHook(p); MP.peer=p; MP.me=id;
+      var hostId=mpPid(code), c=window.MP_FORCE_RELAY?null:p.connect(hostId,{reliable:true}); MP.hostConn=c;
+      var to=setTimeout(function(){ if(MP.on||done) return; /* the direct link didn't open (school Wi-Fi often blocks it): go through the relay */
+        try{ if(c) c.close(); }catch(_){} mpSetStatus("Joining "+code+"… (school Wi-Fi mode, a few more seconds)");
+        var rc=mpRelayConn(hostId); MP.hostConn=rc; MP.joinCode=code; MP.joinDone=function(){ done=true; }; rc.send({t:"rhello",p:mpMe()});
+        setTimeout(function(){ if(!MP.on) fail("Couldn’t connect to that room. Check the code, and make sure your friend still has the room open on the website."); },10000);
+      },window.MP_FORCE_RELAY?50:6000);
+      if(c) c.on("open",function(){ clearTimeout(to); if(done||MP.on) return; done=true; MP.on=true; MP.host=false; MP.code=code; MP.players={}; MP.status=""; c.send({t:"hello",p:mpMe()}); mpStart(); mpSys("You joined room "+code+"."); mpRefresh(); });
+      if(c) c.on("data",function(d){ if(MP.hostConn===c) mpRecv(d,null); });
+      if(c) c.on("close",function(){ if(MP.on&&MP.hostConn===c){ mpSys("The room closed."); toast("The room closed."); mpLeave(true); } }); });
+    p.on("error",function(e){ if(e.type==="peer-unavailable"){ if(!MP.on) fail("No room with that code. Check it, and make sure your friend made the room on the website."); } else if(!MP.on) fail(mpErrText(e)); });
   });
 }
 function mpStart(){ clearInterval(MP.timer); MP.timer=setInterval(mpTick,2500); mpEnsureUI(); qwHud(); mpPos(); }
 function mpLeave(quiet){
   if(MP.on&&!quiet) mpSend({t:"bye"});
+  if(MP.hostConn&&MP.hostConn.relay) MP.hostConn.close();
+  if(MP.host) Object.keys(MP.conns).forEach(function(id){ var c=MP.conns[id]; if(c&&c.relay) c.close(); });
   if(QB&&QB.team) QB.team=null;
   var p=MP.peer; MP.peer=null; setTimeout(function(){ try{ if(p) p.destroy(); }catch(_){} },quiet?0:250);
   clearInterval(MP.timer); MP.on=false; MP.host=false; MP.code=""; MP.hostConn=null; MP.conns={}; MP.players={}; MP.invite=null; MP.locked=false;
@@ -5399,6 +5406,29 @@ function mpLeave(quiet){
   mpChatClose(); mpRenderLog(); mpInviteUI(); if(qwCx) qwHud(); mpRefresh();
 }
 window.addEventListener("beforeunload",function(){ if(MP.on) mpSend({t:"bye"}); });
+/* ---------- relay: game messages ride on the connection-service link when a direct link is blocked ---------- */
+function mpRelayHook(p){ if(!p||p.__sgm||typeof p._handleMessage!=="function") return; p.__sgm=true; var orig=p._handleMessage;
+  p._handleMessage=function(msg){ try{ if(msg&&msg.type==="CANDIDATE"&&msg.payload&&msg.payload.sgm===1){ mpRelayIn(String(msg.src||""),msg.payload.d); return; } }catch(e){} return orig.call(this,msg); }; }
+function mpRelaySend(id,data){ var p=MP.peer; if(!p||!p.socket||!id) return; try{ p.socket.send({type:"CANDIDATE",payload:{sgm:1,d:data},dst:id}); }catch(e){} }
+function mpRelayConn(id){ return {peer:id,relay:true,open:true,last:Date.now(),send:function(m){ mpRelaySend(id,m); },close:function(){ if(!this.open) return; this.open=false; mpRelaySend(id,{t:"rbye"}); }}; }
+function mpRelayIn(src,d){
+  if(!src||!d||typeof d!=="object"||typeof d.t!=="string") return;
+  if(MP.host){ var c=MP.conns[src];
+    if(d.t==="rbye"){ if(c&&c.relay) mpDrop(src); return; }
+    if(!c){ if(d.t!=="rhello") return;
+      if(MP.locked||Object.keys(MP.conns).length>=MP_MAX-1){ mpRelaySend(src,{t:MP.locked?"locked":"full",f:MP.me}); return; }
+      c=MP.conns[src]=mpRelayConn(src); d={t:"hello",p:d.p}; }
+    else if(!c.relay) return;
+    c.last=Date.now(); mpRecv(d.t==="rhello"?{t:"hello",p:d.p}:d,src); return; }
+  var h=MP.hostConn; if(!h||!h.relay||src!==h.peer) return;
+  h.last=Date.now();
+  if(d.t==="rbye"){ if(MP.on){ mpSys("The room closed."); toast("The room closed."); mpLeave(true); } return; }
+  if(!MP.on&&(d.t==="locked"||d.t==="full")){ var why=d.t==="locked"?"That room is locked.":"That room is full (6 players)."; if(MP.joinDone) MP.joinDone(); try{ MP.peer.destroy(); }catch(_){} MP.peer=null; MP.hostConn=null; mpSetStatus(why); return; }
+  if(!MP.on){ if(MP.joinDone) MP.joinDone(); MP.on=true; MP.host=false; MP.code=MP.joinCode; MP.players={}; MP.status=""; mpStart(); mpSys("You joined room "+MP.code+" (school Wi-Fi mode)."); mpRefresh(); }
+  mpRecv(d,null); }
+function mpRelayCheck(){ var now=Date.now();
+  if(MP.host) Object.keys(MP.conns).forEach(function(id){ var c=MP.conns[id]; if(c&&c.relay&&now-c.last>20000) mpDrop(id); });
+  else if(MP.hostConn&&MP.hostConn.relay&&now-MP.hostConn.last>20000){ mpSys("Lost the connection to the room."); toast("Lost the connection to the room."); mpLeave(true); } }
 /* ---------- messages ---------- */
 function mpSend(msg){ if(!MP.on) return; msg.f=MP.me; if(MP.host) mpRelay(msg,null); else if(MP.hostConn&&MP.hostConn.open){ try{ MP.hostConn.send(msg); }catch(_){} } }
 function mpRelay(msg,except){ Object.keys(MP.conns).forEach(function(id){ if(id===except||(msg.to&&msg.to!==id)) return; var c=MP.conns[id]; if(c&&c.open) try{ c.send(msg); }catch(_){} }); }
@@ -5460,7 +5490,7 @@ function mpPlayer(id,p){
   MP.players[id]=o; return o;
 }
 function mpPos(){ if(!MP.on||!QP||!MAP) return; mpSend({t:"pos",p:{m:MAP.id,fx:+(QP.fx!=null?QP.fx:QP.x).toFixed(2),fy:+(QP.fy!=null?QP.fy:QP.y).toFixed(2),x:QP.x,y:QP.y,d:QP.dir,fl:!!QP.flip,lv:QS().lvl,tl:totalLvl()}}); }
-function mpTick(){ if(!MP.on) return; if(QP&&MAP) mpSend({t:"pos",p:mpMe()}); mpInviteUI(); dgInviteUI(); }
+function mpTick(){ if(!MP.on) return; mpRelayCheck(); if(QP&&MAP) mpSend({t:"pos",p:mpMe()}); mpInviteUI(); dgInviteUI(); }
 /* ---------- drawing friends in the world ---------- */
 function mpDrawPlayers(add,now){
   var vw=qwCv.width/SC, vh=qwCv.height/SC;
@@ -5613,7 +5643,7 @@ function mpDuelQs(g){ return worldQuestions(g); }
 function mpDuelPick(id){ var p=MP.players[id]; if(!p) return;
   var gs=GUIDES.filter(function(g){ return !isArchived(g); }); if(!gs.length) gs=GUIDES.slice();
   gs.sort(function(a,b){ return (inThisWeek(b)?1:0)-(inThisWeek(a)?1:0); });
-  qwPanel('<div id="mp-panel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>Duel '+esc(p.n)+'</h2><p class="pxsmall">5 questions. Right answers score 100, plus up to 50 more for speed. Pick the subject:</p><div class="mp-subj">'+
+  qwPanel('<div id="mp-dpanel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>Duel '+esc(p.n)+'</h2><p class="pxsmall">5 questions. Right answers score 100, plus up to 50 more for speed. Pick the subject:</p><div class="mp-subj">'+
     gs.map(function(g){ return '<button class="pxbtn" data-mp="dgo" data-id="'+esc(id)+'" data-g="'+esc(g.id)+'">'+esc(g.title)+(inThisWeek(g)?' <small>this week</small>':'')+'</button>'; }).join("")+
     '</div><div class="row-btns"><button class="pxbtn" data-mp="back">◀ Back</button></div></div>'); }
 function mpDuelHash(g,qs){ var all=mpDuelQs(g); return hstr(qs.map(function(Q){ var q=all[Q.i]; return q?q.q+"|"+q.right:"?"; }).join("~")); }
@@ -5621,7 +5651,7 @@ function mpDuelSend(id,g){ if(!MP.players[id]||MP.duel) return; var all=mpDuelQs
   var idx=shuffle(all.map(function(_,i){ return i; })).slice(0,5), qs=idx.map(function(i){ return {i:i,o:shuffle(all[i].opts.map(function(_,k){ return k; }))}; });
   MP.duel={id:Math.random().toString(36).slice(2,10),op:id,g:g,qs:qs,pool:all,state:"wait",my:[],opAns:[],score:0,opScore:0,limit:20000};
   mpSend({t:"dinv",to:id,id:MP.duel.id,g:g,qs:qs,h:mpDuelHash(g,qs)});
-  qwPanel('<div id="mp-panel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>Waiting for '+esc(MP.players[id].n)+'…</h2><p class="pxsmall">'+esc((guideById(g)||{}).title||"")+' · 5 questions</p><div class="row-btns"><button class="pxbtn" data-mp="dcancel">Cancel</button></div></div>'); }
+  qwPanel('<div id="mp-dpanel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>Waiting for '+esc(MP.players[id].n)+'…</h2><p class="pxsmall">'+esc((guideById(g)||{}).title||"")+' · 5 questions</p><div class="row-btns"><button class="pxbtn" data-mp="dcancel">Cancel</button></div></div>'); }
 function mpDuelMsg(d){ var D=MP.duel, f=d.f;
   if(d.t==="dinv"){
     var bad=function(why){ mpSend({t:"dno",to:f,id:d.id,why:why}); };
@@ -5633,7 +5663,7 @@ function mpDuelMsg(d){ var D=MP.duel, f=d.f;
     if(!qs||mpDuelHash(g,qs)!==d.h) return bad("old");
     MP.duel={id:String(d.id).slice(0,12),op:f,g:g,qs:qs,pool:all,state:"asked",my:[],opAns:[],score:0,opScore:0,limit:20000};
     sfx("encounter");
-    qwPanel('<div id="mp-panel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>⚔ '+esc(mpName(f))+' challenges you!</h2><p>'+esc(guideById(g).title)+' · 5 questions. Fast right answers win.</p><div class="row-btns"><button class="pxbtn go" data-mp="dyes">▶ Accept</button><button class="pxbtn" data-mp="dno">No thanks</button></div></div>');
+    qwPanel('<div id="mp-dpanel" class="mp-panel"><p class="pxlabel">Quiz duel</p><h2>⚔ '+esc(mpName(f))+' challenges you!</h2><p>'+esc(guideById(g).title)+' · 5 questions. Fast right answers win.</p><div class="row-btns"><button class="pxbtn go" data-mp="dyes">▶ Accept</button><button class="pxbtn" data-mp="dno">No thanks</button></div></div>');
     return; }
   if(!D||d.id!==D.id||f!==D.op) return;
   if(d.t==="dyes"&&D.state==="wait"){ mpDuelGo(); return; }
@@ -5650,7 +5680,7 @@ function mpDuelDecline(){ var D=MP.duel; if(!D) return; mpSend({t:"dno",to:D.op,
 function mpDuelQuit(theyLeft){ var D=MP.duel; if(!D) return;
   if(!theyLeft) mpSend({t:"dquit",to:D.op,id:D.id});
   if(theyLeft&&(D.state==="play"||D.state==="done")){ D.opLeft=true; if(D.state==="done") return mpDuelResult(); toast(mpName(D.op)+" left the duel."); return; }
-  MP.duel=null; if(QMODE==="panel"&&($("#mp-duel")||$("#mp-panel"))){ if(theyLeft) qwPanel('<div class="mp-panel"><h2>Duel cancelled</h2><p>'+esc(mpName(D.op))+' left.</p><div class="row-btns"><button class="pxbtn go" data-close>▶ OK</button></div></div>'); else qwPanelClose(); } }
+  MP.duel=null; if(QMODE==="panel"&&($("#mp-duel")||$("#mp-dpanel")||$("#mp-panel"))){ if(theyLeft) qwPanel('<div class="mp-panel"><h2>Duel cancelled</h2><p>'+esc(mpName(D.op))+' left.</p><div class="row-btns"><button class="pxbtn go" data-close>▶ OK</button></div></div>'); else qwPanelClose(); } }
 function mpDots(arr,n){ var h=''; for(var i=0;i<n;i++){ var a=arr[i]; h+='<i class="'+(a?(a.ok?'ok':'bad'):'')+'"></i>'; } return h; }
 function mpDuelGo(){ var D=MP.duel; D.state="play"; D.qi=0; sfx("boss"); mpDuelDraw(null); }
 function mpDuelDraw(fb){ var D=MP.duel, Q=D.qs[D.qi], q=D.pool[Q.i];
