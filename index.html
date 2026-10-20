@@ -4087,7 +4087,7 @@ function qwTutor(n){
 function qbSaveQueue(pool){ var s=QS(); if(!s.qq) s.qq={}; s.qq[pool.region]=pool.queue.map(function(i){ return pool.keys[i]; }); }
 /* ---------- saved progress ---------- */
 function QS(){
-  if(ST.qreset!=="r1"){ ST.qreset="r1"; ST.quest2={}; try{ save(); }catch(e){} }
+  if(ST.qreset!=="r2"){ ST.qreset="r2"; ST.quest2={}; try{ save(); }catch(e){} }
   if(!ST.quest2||typeof ST.quest2!=="object") ST.quest2={};
   var s=ST.quest2, d={name:"Hero",look:{o:0,s:0},lvl:1,xp:0,coins:0,potions:2,sword:0,armor:0,kills:{},badges:{},chests:{},dead:{},ach:{},combo:0,bestCombo:0,map:"village",x:16,y:9,music:true,created:false,met:false,wins:0,champ:false,cls:null,pw:0,inv:{},eq:{w:null,a:null,c1:null,c2:null},sq:{},ways:{},lore:{},found:{},disc:{},elite:{},pitSeen:{},scroll:{},lastWay:{},questsDone:0,wv:0,lands:{},cur:null,mast:{}};
   Object.keys(d).forEach(function(k){ if(s[k]==null) s[k]=d[k]; });
@@ -4519,7 +4519,7 @@ var LFIELDS=["lvl","xp","hp","pw","potions","inv","eq"];
 function newLandRec(){ return {lvl:1,xp:0,hp:null,pw:0,potions:2,inv:{},eq:{w:null,a:null,c1:null,c2:null}}; }
 function landRec(id){ var s=QS(); if(!s.lands[id]) s.lands[id]=newLandRec(); return s.lands[id]; }
 function landLvl(id){ var s=QS(); return id===s.cur?s.lvl:(s.lands[id]&&s.lands[id].lvl)||1; }
-function totalLvl(){ return GUIDES.reduce(function(n,g){ return n+landLvl(g.id); },0); }
+function totalLvl(){ return 1+GUIDES.reduce(function(n,g){ return n+Math.max(0,landLvl(g.id)-1); },0); }
 function landSwap(id){
   var s=QS(), isLand=!!landById(id);
   if(s.cur&&landById(s.cur)){ var r=landRec(s.cur); LFIELDS.forEach(function(k){ r[k]=s[k]; }); }
