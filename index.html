@@ -333,6 +333,11 @@
 @media (max-width:520px){.mp-dopts{grid-template-columns:1fr}.mp-code{font-size:30px}}
 .dg-inv{top:142px}
 .qw-mini.dg{width:46px}
+/* ---- how to play ---- */
+.howto-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.howto-tabs .pxbtn{padding:7px 10px;font-size:14px}
+.howto-list{margin:0;padding-left:20px;display:grid;gap:8px;font-size:16px;line-height:1.4}
+.howto-list b{color:#ffd43b}
 
 .bt-banner[hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -752,6 +757,27 @@ h2:first-child{margin-top:0}
   .pop,.shake,.mt.bad,.mt.matched{animation:none}
   .float,.penalty{animation:none;opacity:1}
 }
+/* ---- save files ---- */
+.savebtn{display:inline-flex;align-items:center;gap:6px;font:800 15px/1 var(--font-display);background:var(--sheet);color:var(--ink);border:1.5px solid var(--rule);border-radius:999px;padding:9px 13px;cursor:pointer}
+.homebar-r{display:flex;gap:8px;align-items:center}
+.save-dlg{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(10,14,30,.55);overflow:auto}
+.save-dlg[hidden]{display:none}
+.save-card{position:relative;width:min(520px,100%);background:var(--sheet);color:var(--ink);border:1.5px solid var(--rule);border-radius:16px;padding:20px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.3);font-family:var(--font-body)}
+.save-card h2{font:800 24px/1.15 var(--font-display);margin:0 30px 8px 0}
+.save-card h3{font:800 17px/1.2 var(--font-display);margin:16px 0 6px}
+.save-card p{margin:0 0 10px;line-height:1.45}
+.save-sum{padding:9px 11px;border-radius:10px;background:var(--paper);font-size:14px}
+.save-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.save-row .btn{flex:1 1 180px}
+.save-card .btn.ghost{background:transparent}
+.save-file{position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden}
+.save-file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.save-box{width:100%;min-height:74px;margin:6px 0;padding:8px;border:1.5px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);font:13px/1.35 var(--font-mono);resize:vertical;box-sizing:border-box}
+.save-ask{margin-top:10px;padding:10px 12px;border-radius:12px;border:2px solid var(--hi);background:var(--paper)}
+.save-msg{min-height:1.2em;font-weight:700;color:var(--good,#2f9e44);margin:8px 0 0}
+.save-msg.bad{color:var(--bad,#c92a2a)}
+.save-x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);font-size:16px;cursor:pointer}
+body.save-open{overflow:hidden}
 </style>
 <script>
 /* Put on the saved shop theme before the page draws */
@@ -775,7 +801,7 @@ h2:first-child{margin-top:0}
     <header>
       <div class="homebar">
         <p class="eyebrow">Study hub</p>
-        <button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button>
+        <div class="homebar-r"><button class="savebtn" data-open-saves aria-label="Save or load your progress">💾 Save</button><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
       </div>
       <h1>Study Guide Maker <mark>2000</mark></h1>
       <p class="lede">Pick a study guide. Earn stars. Beat your high score.</p>
@@ -792,7 +818,7 @@ h2:first-child{margin-top:0}
   <section id="quest" hidden>
     <div class="guide-bar">
       <button class="link" id="quest-back">← All study guides</button>
-      <div class="bar-right"><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
+      <div class="bar-right"><button class="savebtn" data-open-saves aria-label="Save or load your progress">💾</button><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
     </div>
     <div class="qw-stage" id="qw-stage">
       <canvas id="qw-canvas" role="img" aria-label="Study Quest map"></canvas>
@@ -803,14 +829,14 @@ h2:first-child{margin-top:0}
       <div class="qw-dialog" id="qw-dialog" hidden></div>
       <div class="qw-panel" id="qw-panel" hidden></div>
     </div>
-    <p class="small qw-help">Move: arrow keys or WASD · Talk / open / enter: walk into it or press Space · Answer in battle: 1–4 · M = map · Q = quest log · P = potion</p>
+    <p class="small qw-help">Move: arrows or WASD (Shift = run) · Space: talk / open · 1–4: answer &amp; attack · B bag · Q quests &amp; 📖 How to play · M map · P potion · T chat · H help a friend · J join a dungeon</p>
   </section>
 
   <!-- Boss Battle -->
   <section id="battle" hidden>
     <div class="guide-bar">
       <button class="link" id="battle-back">← All study guides</button>
-      <div class="bar-right"><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
+      <div class="bar-right"><button class="savebtn" data-open-saves aria-label="Save or load your progress">💾</button><button class="stars" data-open-shop aria-label="Open the star shop">⭐ <b data-stars>0</b> <span>Shop</span></button></div>
     </div>
     <div id="battle-body"></div>
   </section>
@@ -2177,6 +2203,70 @@ if(typeof ST.en!=="boolean") ST.en=true;
 if([0.72,0.85,1].indexOf(ST.speed)<0) ST.speed=0.85; /* calm by default */
 if(!ST.voice||typeof ST.voice!=="object") ST.voice={};
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} }
+/* ---------- 💾 save files: back up all your progress, or move it to another device or browser ---------- */
+var SAVEQM=null, SAVEPEND=null;
+function saveCode(){ save(); return "SGM2000:"+btoa(unescape(encodeURIComponent(JSON.stringify(ST)))); }
+function saveParse(txt){
+  txt=String(txt||"").trim(); var j=txt, o=null;
+  if(/^SGM2000:/i.test(txt)){ try{ j=decodeURIComponent(escape(atob(txt.slice(8).replace(/\s+/g,"")))); }catch(e){ return null; } }
+  try{ o=JSON.parse(j); }catch(e){ return null; }
+  if(!o||typeof o!=="object"||Array.isArray(o)) return null;
+  if(!("stars" in o)&&!("best" in o)&&!("quest2" in o)) return null;
+  return o; }
+function saveEsc(t){ return String(t==null?"":t).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+function saveSummary(o){
+  var q=o.quest2&&typeof o.quest2==="object"?o.quest2:{}, lands=q.lands&&typeof q.lands==="object"?q.lands:{}, tl=1;
+  Object.keys(lands).forEach(function(k){ var lv=(k===q.cur?q.lvl:(lands[k]||{}).lvl)|0; tl+=Math.max(0,lv-1); });
+  if(q.cur&&!lands[q.cur]&&q.lvl&&/-/.test(String(q.cur))) tl+=Math.max(0,(q.lvl|0)-1);
+  var cls=q.cls&&typeof CLASSES!=="undefined"&&CLASSES[q.cls]?CLASSES[q.cls].n:"";
+  var quizzes=o.best&&typeof o.best==="object"?Object.keys(o.best).length:0;
+  return (q.created?'Hero <b>'+saveEsc(q.name||"Hero")+'</b>'+(cls?' the '+saveEsc(cls):'')+' · Total LV '+tl:'No Study Quest hero yet')+' · ⭐ '+(o.stars|0)+' stars · '+quizzes+' study records'; }
+function openSaves(from){
+  var d=$("#save-dlg");
+  if(!d){ d=document.createElement("div"); d.id="save-dlg"; d.className="save-dlg"; d.hidden=true; d.setAttribute("role","dialog"); d.setAttribute("aria-modal","true"); d.setAttribute("aria-labelledby","save-h"); document.body.appendChild(d);
+    d.addEventListener("click",saveClick); d.addEventListener("keydown",function(e){ e.stopPropagation(); if(e.key==="Escape") closeSaves(); });
+    d.addEventListener("change",function(e){ if(e.target.id==="save-file"&&e.target.files&&e.target.files[0]){ var f=e.target.files[0], r=new FileReader(); r.onload=function(){ saveOffer(saveParse(r.result),"file"); }; r.onerror=function(){ saveMsg("Couldn’t read that file.",true); }; r.readAsText(f); e.target.value=""; } }); }
+  if(from==="quest"&&typeof QMODE!=="undefined"&&QMODE!=="busy"){ SAVEQM=QMODE; QMODE="busy"; }
+  SAVEPEND=null; renderSaves(); d.hidden=false; document.body.classList.add("save-open"); var f=d.querySelector("button"); if(f) f.focus();
+}
+function closeSaves(){ var d=$("#save-dlg"); if(d) d.hidden=true; document.body.classList.remove("save-open"); if(SAVEQM!=null&&typeof QMODE!=="undefined"){ QMODE=SAVEQM==="panel"?"walk":SAVEQM; SAVEQM=null; } }
+function renderSaves(){
+  var d=$("#save-dlg"); if(!d) return;
+  d.innerHTML='<div class="save-card"><button class="save-x" data-save="close" aria-label="Close">✕</button><h2 id="save-h">💾 Save your progress</h2>'+
+    '<p>Your progress already <b>saves by itself</b> in this browser. A save file is a backup you can keep, or load on another device or browser (like moving from the Claude version to the website).</p>'+
+    '<p class="save-sum">On this device: '+saveSummary(ST)+'</p>'+
+    '<div class="save-row"><button class="btn" data-save="dl">⬇ Download save file</button><button class="btn ghost" data-save="code">📋 Copy save code</button></div>'+
+    '<textarea id="save-out" class="save-box" readonly hidden aria-label="Your save code"></textarea>'+
+    '<h3>Load a save</h3><div class="save-row"><label class="btn ghost save-file">⬆ Choose a save file<input type="file" id="save-file" accept=".json,.txt,application/json,text/plain"></label></div>'+
+    '<textarea id="save-in" class="save-box" placeholder="…or paste a save code here (it starts with SGM2000:)" aria-label="Paste a save code"></textarea><div class="save-row"><button class="btn ghost" data-save="paste">Load this code</button></div>'+
+    '<div id="save-confirm"></div><p class="save-msg" id="save-msg" role="status"></p></div>';
+}
+function saveMsg(t,bad){ var m=$("#save-msg"); if(m){ m.textContent=t; m.classList.toggle("bad",!!bad); } }
+function saveOffer(o,how){
+  var c=$("#save-confirm"); if(!c) return;
+  if(!o){ SAVEPEND=null; c.innerHTML=""; return saveMsg(how==="file"?"That file isn’t a Study Guide Maker save.":"That code doesn’t look right. Copy the whole thing, starting with SGM2000:",true); }
+  SAVEPEND=o; saveMsg("");
+  c.innerHTML='<div class="save-ask"><p><b>Load this save?</b><br>'+saveSummary(o)+'</p><p class="small">It replaces the progress on this device. (A backup of your current progress is kept on this device, just in case.)</p><div class="save-row"><button class="btn" data-save="yes">Yes, load it</button><button class="btn ghost" data-save="no">Cancel</button></div></div>';
+  var y=c.querySelector("[data-save=yes]"); if(y) y.focus();
+}
+function saveClick(e){
+  if(e.target===$("#save-dlg")) return closeSaves();
+  var b=e.target.closest("[data-save]"); if(!b) return; var k=b.dataset.save;
+  if(k==="close") closeSaves();
+  else if(k==="dl"){ try{ var code=JSON.stringify((save(),ST)), blob=new Blob([code],{type:"application/json"}), a=document.createElement("a"), dt=new Date();
+      a.href=URL.createObjectURL(blob); a.download="study-guide-save-"+dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0")+".json";
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); saveMsg("Save file downloaded. Keep it somewhere safe!"); }
+    catch(err){ saveMsg("Downloading didn’t work here. Use “Copy save code” instead.",true); } }
+  else if(k==="code"){ var cd=saveCode(), out=$("#save-out"); out.value=cd; out.hidden=false;
+    var done=function(){ saveMsg("Save code copied! Paste it somewhere safe, like a note or an email to yourself."); }, fail=function(){ out.focus(); out.select(); saveMsg("Select all the text in the box and copy it."); };
+    try{ navigator.clipboard.writeText(cd).then(done,fail); }catch(err){ fail(); } }
+  else if(k==="paste"){ saveOffer(saveParse(($("#save-in")||{}).value),"code"); }
+  else if(k==="no"){ SAVEPEND=null; $("#save-confirm").innerHTML=""; saveMsg("Nothing changed."); }
+  else if(k==="yes"&&SAVEPEND){ var o=SAVEPEND; o.qreset=ST.qreset||o.qreset;
+    try{ localStorage.setItem(KEY+"-backup",JSON.stringify(ST)); localStorage.setItem(KEY,JSON.stringify(o)); }catch(err){ return saveMsg("Couldn’t save on this device (storage is blocked or full).",true); }
+    saveMsg("Loaded! Restarting…"); setTimeout(function(){ location.reload(); },500); }
+}
+document.addEventListener("click",function(e){ if(e.target.closest("[data-open-saves]")){ sfx("blip"); openSaves($("#quest")&&!$("#quest").hidden?"quest":"home"); } });
 function bestFor(id){ if(!ST.best[id]||typeof ST.best[id]!=="object") ST.best[id]={}; return ST.best[id]; }
 
 /* ---------- Star shop items ---------- */
@@ -4499,10 +4589,8 @@ function qwNpc(n){
   if(MAP.big) return qwLandNpc(n);
   var s=QS(), face=portraitOf(n);
   if(n.id==="elder"){
-    if(!s.met){ s.met=true; save(); return qwSay(n.name,face,["Ah, "+s.name+" the "+clsOf(s).n+"! Welcome to the Hidden Village.","Each portal up north leads to a HUGE land for one of your classes. Explore, do side quests and find gear!",
-      "Bump into monsters to battle. A right answer charges POWER. Pick an attack, then time your STRIKE in the green zone for a CRIT!","Miss a question and the monster hits you for 3+ HEARTS (stronger monsters hit harder). Press SPACE when the marker is in the green zone to dodge!",
-      "Every land has its OWN level (max 25) and its own items. Areas are sealed until you’re strong enough. LV 25 means you mastered that class!","Out there, watch your step: spike traps, hidden pits, and chests that bite back.","Beat "+KILLS_FOR_BOSS+" monsters in a land to wake its boss. Press B for your bag. Mo sells potions and gear. Now go, hero!"]); }
-    return qwSay(n.name,face,[qwNextGoal()]);
+    if(!s.met2) return qwHootIntro(n,face);
+    return qwSay(n.name,face,[qwNextGoal()],[["Thanks!",null],["📖 How to play",function(){ qwHowTo("Basics"); }],["💾 Save",function(){ openSaves("quest"); }]]);
   }
   if(n.id==="shop") return qwShop();
   var lines={kid1:["I heard one of the bosses is a DRAGON. Good luck!","Did you know? Combos keep going between battles!","Some chests are MIMICS. The Owl Eye charm shows which ones!"],
@@ -4663,7 +4751,7 @@ function qwDuel(q,n){
 function qReady(q){ var p=qProgress(q); return p[0]>=p[1]; }
 function qActive(q){ var st=QS().sq[q.id]; return !!(st&&st.st==="active"); }
 function npcQuest(n){ return (MAP.quests||[]).filter(function(q){ return q.giver===n.id; })[0]||null; }
-function qBubble(n){ var s=QS(); if(n.tutor) return "i"; if(n.id==="elder") return s.met?null:"!";
+function qBubble(n){ var s=QS(); if(n.tutor) return "i"; if(n.id==="elder") return s.met2?null:"!";
   if(MAP&&MAP.big&&(MAP.quests||[]).some(function(q){ return q.type==="deliver"&&q.to===n.id&&qActive(q)&&!s.sq[q.id].dl; })) return "?";
   if(n.id==="shop"||n.id==="gshop"||n.id==="gshop2") return "$";
   var q=npcQuest(n); if(!q) return null; var st=s.sq[q.id]; if(!st) return "!"; if(st.st==="active"&&qReady(q)) return "?"; return null; }
@@ -4811,7 +4899,7 @@ function qwLog(){
     LANDS.map(function(L){ var k=s.kills[L.id]||0, m=getMap(L.id), ch=m.chests, op=ch.filter(function(c){ return s.chests[c.id]; }).length, qd=(m.quests||[]).filter(function(q){ return s.sq[q.id]&&s.sq[q.id].st==="done"; }).length;
       return '<li><span class="ql-ico">'+spriteImg(L.boss[0],L.boss[1],2)+'</span><div><b>'+L.name+' · LV '+landLvl(L.id)+'</b><span>'+L.guide.title+' · Mastery '+Math.round(masteryPct(L.id)*100)+'% · '+(s.badges[L.id]?'★ Badge earned':'Monsters '+Math.min(k,KILLS_FOR_BOSS)+'/'+KILLS_FOR_BOSS)+' · Chests '+op+'/'+ch.length+' · Quests '+qd+'/'+(m.quests||[]).length+'</span></div></li>'; }).join("")+
     '</ul><p class="pxlabel">Achievements</p><div class="ach">'+Object.keys(ACH).map(function(a){ return '<span class="'+(s.ach[a]?'on':'')+'">'+(s.ach[a]?'★ ':'· ')+ACH[a]+'</span>'; }).join("")+'</div>'+
-    '<div class="row-btns"><button class="pxbtn go" data-close>▶ Back</button><button class="pxbtn" id="qw-bag-btn">'+icon("bag")+' Bag</button><button class="pxbtn" id="qw-edit">Change hero</button></div>');
+    '<div class="row-btns"><button class="pxbtn go" data-close>▶ Back</button><button class="pxbtn" id="qw-bag-btn">'+icon("bag")+' Bag</button><button class="pxbtn" id="qw-edit">Change hero</button><button class="pxbtn" data-howto="Basics">📖 How to play</button><button class="pxbtn" data-qsave>💾 Save</button></div>');
 }
 $("#qw-panel").addEventListener("click",function(e){
   var t;
@@ -5848,6 +5936,63 @@ function dgMsg(d){ if(!dgIsId(d.map)||typeof d.run!=="string") return; var P=dgP
 document.addEventListener("keydown",function(e){ if($("#quest").hidden||e.metaKey||e.ctrlKey||e.altKey) return; var tg=e.target; if(tg&&(tg.tagName==="INPUT"||tg.tagName==="TEXTAREA")) return;
   if(QMODE==="walk"&&e.code==="KeyJ"&&MP.dgInv){ e.preventDefault(); dgJoinInvite(); } });
 function dgSong(){ if(!SONGS.dgn) SONGS.dgn=makeSong(4242,{sc:"phryg",root:50,ms:175,type:"square",v:.013,drum:true}); return "dgn"; }
+/* ================= tutorial: Professor Hoot's intro + a How to play guide you can open any time ================= */
+var HOWTO={
+  "Basics":["<b>Move</b> with the arrow keys or WASD (or the pad on a phone). Hold <b>Shift</b> or tap <b>RUN</b> to run.",
+    "<b>Talk, open and use</b>: walk into something or press <b>Space</b>.",
+    "<b>Keys</b>: B = bag · Q = quest log · M = map · P = potion · T = chat · H = help a friend’s fight · J = join a friend’s dungeon.",
+    "The <b>village</b> has a portal to every class. Each portal leads to a huge land, and every battle there quizzes you on that class’s study guide.",
+    "Bubbles over people: <b>!</b> = new quest · <b>?</b> = quest ready or a delivery · <b>i</b> = tutor with study tips · <b>$</b> = shop."],
+  "Battles":["Bump into a monster to fight. Answer the question with keys <b>1–4</b> or a tap.",
+    "<b>Right answer</b>: you get POWER (⚡ answer fast for extra). Pick an attack, then press Space when the marker is in the <b>green zone</b> for a CRIT. Hit the <b>yellow center</b> for a SUPER CRIT.",
+    "<b>Wrong answer</b>: the monster attacks for 3+ hearts. Press Space in the green zone to dodge. The yellow center counterattacks!",
+    "Battles go through <b>every question and flashcard</b> in the guide before any repeat. Questions you miss come back sooner.",
+    "Every <b>boss</b> has its own power that can hurt you even when you answer right. Read it when the fight starts."],
+  "Levels":["Every land has its <b>own level</b> (max 25), hearts, potions and gear. Items stay in the land where you found them.",
+    "Your <b>Total LV</b> adds up everything you’ve earned in all the lands.",
+    "Each land has 5 areas that need <b>LV 1, 6, 12, 18 and 25</b>. Glowing walls block areas you’re not ready for.",
+    "To go past low levels you have to <b>master</b> the guide: answer each question right twice in a row. LV 25 means you really know the class.",
+    "Mo in the village sells training. Traders in each land sell potions and gear."],
+  "Danger":["Monsters that <b>spot you chase you</b>. Ones above your level are super fast. Ones far below you are slow, so run!",
+    "<b>Pits</b> have warning signs. Fall in and you lose hearts and go back to your last waystone. <b>Spike traps</b> pop up and down.",
+    "Some chests are <b>mimics</b>. If a chest twitches, it bites.",
+    "If you run out of hearts you <b>faint</b>: you wake up in the village and drop 25% of your coins. A Phoenix Feather saves you once."],
+  "Quests":["Every land has its own <b>side quests</b>: deliveries, quiz duels, collecting things, streaks, bounties and more.",
+    "<b>Waystones</b> let you teleport around a land. <b>Lore stones</b> teach you something from your guide.",
+    "Beat enough monsters in a land to <b>wake its boss</b>. Beat the boss for that land’s badge. Get every badge to open the Final Exam Tower.",
+    "Tutors with an <b>i</b> bubble give you real study tips from your guide."],
+  "Dungeons":["Every area of every land has <b>2 dungeons</b>. Look for the stone doors (purple dots on the map).",
+    "Get the <b>key</b> from the Dungeon Keeper standing next to the door: beat monsters in that area, or answer 3 in a row.",
+    "The door only opens for <b>2 heroes</b>: a friend from your online room has to stand there with you.",
+    "Inside: a <b>monster room</b> (5 monsters), a <b>puzzle room</b> (riddle stone or boulders), another monster room, a <b>two-plate room</b> (you each stand on one), the <b>boss</b>, then <b>treasure</b>.",
+    "After you clear a dungeon or faint inside it, that dungeon is <b>locked for 30 minutes</b>."],
+  "Online":["Online play works on the <b>website</b>. Tap <b>👥 ONLINE</b>, make a room, and send friends the code. Up to 6 players.",
+    "You see each other walking around. Press <b>T</b> to chat (bad words are hidden unless you turn that off).",
+    "When a friend starts a fight in your land, press <b>H</b> to jump in. Everyone hits the same monster and everyone gets the rewards.",
+    "Tap <b>⚔ Duel</b> next to a friend for a 5-question quiz race. Fast right answers win stars and coins.",
+    "The host can kick players or lock the room. Anyone can mute someone."],
+  "Saving":["Your progress <b>saves by itself</b> in this browser on this device.",
+    "Use <b>💾 Save</b> to download a save file or copy a save code. Load it on another device or browser (like moving from the Claude version to the website).",
+    "Keep a save file somewhere safe. If your browser data ever gets cleared, you can load it back."]
+};
+function qwHowTo(tab){
+  tab=HOWTO[tab]?tab:"Basics";
+  qwPanel('<div class="howto"><p class="pxlabel">Professor Hoot’s guide</p><h2>How to play</h2><div class="howto-tabs" role="tablist">'+Object.keys(HOWTO).map(function(k){ return '<button class="pxbtn'+(k===tab?' go':'')+'" role="tab" aria-selected="'+(k===tab)+'" data-howto="'+k+'">'+k+'</button>'; }).join("")+'</div>'+
+    '<ul class="howto-list">'+HOWTO[tab].map(function(t){ return '<li>'+t+'</li>'; }).join("")+'</ul>'+
+    '<div class="row-btns">'+(tab==="Saving"?'<button class="pxbtn go" data-qsave>💾 Save / Load</button>':'')+'<button class="pxbtn'+(tab==="Saving"?'':' go')+'" data-close>▶ Back to the game</button></div></div>');
+}
+$("#qw-panel").addEventListener("click",function(e){ var t;
+  if((t=e.target.closest("[data-howto]"))){ sfx("blip"); qwHowTo(t.dataset.howto); }
+  else if(e.target.closest("[data-qsave]")){ qwPanelClose(); openSaves("quest"); } });
+function qwHootIntro(n,face){ var s=QS(); s.met=true; s.met2=true; save(); qwHud();
+  qwSay(n.name,face,["Ah, "+s.name+" the "+clsOf(s).n+"! Welcome to the Hidden Village.",
+    "Each portal leads to a HUGE land for one of your classes. Every battle quizzes you on that class’s study guide.",
+    "Right answer = POWER. Pick an attack, then press SPACE in the green zone for a CRIT (yellow center = SUPER CRIT). Wrong answer = the monster attacks, so dodge in the green zone!",
+    "Every land has its own level, up to 25, and you only reach 25 by mastering the questions. Areas stay sealed until you’re strong enough.",
+    "NEW: every area has 2 dungeons! Get the key from the Dungeon Keeper, then bring a friend from 👥 ONLINE to open the door.",
+    "Press Q any time and tap 📖 How to play to see everything again. Your progress saves by itself, and 💾 Save backs it up. Now go, hero!"],
+    [["Let’s go!",null],["📖 How to play",function(){ qwHowTo("Basics"); }]]);
+}
 /* ================= chiptune soundtrack ================= */
 var QM={timer:0,step:0,song:null};
 var NOTE=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
