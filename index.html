@@ -4334,7 +4334,13 @@ function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return "rgba("+((n>>16)&2
 function qwAtmos(now,vw,vh){
   var c=qwCx, B=MAP.B, W=qwCv.width, H=qwCv.height;
   if(B.tint){ c.fillStyle=B.tint; c.fillRect(0,0,W,H); }
-  var CB=4*SC; c.fillStyle="rgba(0,0,10,.07)"; for(var i=0;i<3;i++){ var cxp=((now/90+i*420)%(W/SC+300))-150, cyp=(i*137+60)%(vh); for(var cy2=-24;cy2<=24;cy2+=4){ var hw=Math.floor(68*Math.sqrt(Math.max(0,1-(cy2*cy2)/(26*26)))/4)*4; if(hw<=0) continue; c.fillRect(Math.round((cxp-hw)*SC/CB)*CB,Math.round((cyp+cy2)*SC/CB)*CB,Math.round(hw*2*SC/CB)*CB,CB); } }
+  /* cloud shadows live on the ground (world space): they drift slowly and stay put when you walk */
+  c.fillStyle="rgba(0,0,10,.07)"; var cdx=Math.floor(now/90/4)*4, CWD=300, CHT=220, cx0=qwCam.x, cy0=qwCam.y;
+  for(var gx=Math.floor((cx0-cdx-160)/CWD);gx<=Math.floor((cx0-cdx+vw+160)/CWD);gx++) for(var gy=Math.floor((cy0-80)/CHT);gy<=Math.floor((cy0+vh+80)/CHT);gy++){
+    var ch=(Math.imul(gx,73856093)^Math.imul(gy,19349663))>>>0; if(ch%3===0) continue;
+    var cwx=gx*CWD+ch%180+cdx, cwy=gy*CHT+(ch>>>8)%160, crw=52+(ch>>>16)%26;
+    for(var cy2=-24;cy2<=24;cy2+=4){ var hw=Math.floor(crw*Math.sqrt(Math.max(0,1-(cy2*cy2)/(26*26)))/4)*4; if(hw<=0) continue; var rx=Math.floor((cwx-hw)/4)*4, ry=Math.floor((cwy+cy2)/4)*4;
+      c.fillRect(Math.round((rx-cx0)*SC),Math.round((ry-cy0)*SC),Math.round(hw*2*SC),Math.ceil(4*SC)); } }
   var kind=B.amb, max=kind==="firefly"?26:kind==="ember"?30:22;
   while(qwAmb.length<max) qwAmb.push({x:Math.random()*vw,y:Math.random()*vh,ph:Math.random()*6,v:.3+Math.random()*.6});
   qwAmb.forEach(function(p){
