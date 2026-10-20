@@ -2253,10 +2253,12 @@ function saveClick(e){
   if(e.target===$("#save-dlg")) return closeSaves();
   var b=e.target.closest("[data-save]"); if(!b) return; var k=b.dataset.save;
   if(k==="close") closeSaves();
-  else if(k==="dl"){ try{ var code=JSON.stringify((save(),ST)), blob=new Blob([code],{type:"application/json"}), a=document.createElement("a"), dt=new Date();
-      a.href=URL.createObjectURL(blob); a.download="study-guide-save-"+dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0")+".json";
-      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); saveMsg("Save file downloaded. Keep it somewhere safe!"); }
-    catch(err){ saveMsg("Downloading didn’t work here. Use “Copy save code” instead.",true); } }
+  else if(k==="dl"){ var data=JSON.stringify((save(),ST)), dt=new Date(), fn="study-guide-save-"+dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0")+".json";
+    var ok=function(){ saveMsg("Save file downloaded. Keep it somewhere safe!"); }, bad=function(){ saveMsg("Downloading didn’t work here. Use “Copy save code” instead.",true); };
+    var viaLink=function(){ try{ var blob=new Blob([data],{type:"application/json"}), a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fn; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); ok(); }catch(err){ bad(); } };
+    if(window.claude&&typeof window.claude.use==="function"){ /* inside Claude: files go through Claude's download prompt */
+      window.claude.use("downloads").then(function(dl){ if(!dl) return bad(); dl.save({filename:fn,data:data}).then(ok,function(err){ if(err&&err.code==="declined") saveMsg("Download cancelled."); else bad(); }); },bad); }
+    else viaLink(); }
   else if(k==="code"){ var cd=saveCode(), out=$("#save-out"); out.value=cd; out.hidden=false;
     var done=function(){ saveMsg("Save code copied! Paste it somewhere safe, like a note or an email to yourself."); }, fail=function(){ out.focus(); out.select(); saveMsg("Select all the text in the box and copy it."); };
     try{ navigator.clipboard.writeText(cd).then(done,fail); }catch(err){ fail(); } }
