@@ -844,6 +844,19 @@ em.locked{color:#ffd43b}em.solid{color:#69db7c}em.shaky{color:#ff8787}em.new{col
 .q .ps,.bt-q .ps{font-size:clamp(15px,2.1vw,18.5px);line-height:1.55;font-weight:500}
 .q .pq{font-size:clamp(16px,2.3vw,20px);line-height:1.35}
 .q .pt{font-size:15px}.q .pfig{max-width:320px}
+
+.bmbtn{display:inline-flex;align-items:center;gap:6px;margin:8px 8px 4px 0;padding:6px 12px;font:700 13.5px/1.2 var(--font-body,system-ui),sans-serif;border-radius:999px;border:2px dashed #e8a200;background:transparent;color:#a35f00;cursor:pointer}
+.bmbtn:hover,.bmbtn:focus-visible{background:rgba(250,176,5,.14);outline:none}
+.bmbtn.on{border-style:solid;background:#fab005;color:#1a1c2c}
+.bmbtn.done{border-style:solid;border-color:#40c057;color:#2b8a3e}
+.bmtag{display:inline-block;margin-right:8px;padding:2px 8px;font:700 12px/1.4 var(--font-body,system-ui),sans-serif;color:#1a1c2c;background:#fab005;border-radius:999px;vertical-align:2px}
+.qw-battle .bmbtn,.qp-in .bmbtn{font-family:"Pixelify Sans",monospace;border-radius:4px;color:#ffd43b;border-color:#ffd43b}
+.qw-battle .bmbtn.on,.qp-in .bmbtn.on{color:#1a1c2c;background:#ffd43b}
+.qw-battle .bmbtn.done,.qp-in .bmbtn.done{color:#8ce99a;border-color:#8ce99a}
+.qw-battle .bmtag,.qp-in .bmtag{font-family:"Pixelify Sans",monospace;border-radius:4px;background:#ffd43b;color:#1a1c2c}
+.mnote{margin:4px 0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bmbtn:not(.on){color:#ffd43b;border-color:#ffd43b}}
+:root[data-theme="dark"] .bmbtn:not(.on){color:#ffd43b;border-color:#ffd43b}
 /* ---- save files ---- */
 .savebtn{display:inline-flex;align-items:center;gap:6px;font:800 15px/1 var(--font-display);background:var(--sheet);color:var(--ink);border:1.5px solid var(--rule);border-radius:999px;padding:9px 13px;cursor:pointer}
 .homebar-r{display:flex;gap:8px;align-items:center}
@@ -9426,6 +9439,31 @@ $("#deck-reset").addEventListener("click",function(){
   var k=(GUIDE&&GUIDE.id)||G.id; ST.decks[k]={}; save(); resetArmed=0; b.textContent="Reset decks"; deck="all"; pos=0; rebuild(); render(); toast("Decks reset");
 });
 
+/* ---------- 🔖 Bookmarks: got it right but only guessed? Bookmark it. It comes back more often until you get it right 3 times in a row ---------- */
+var BM_NEED=3, BM_LAST={};
+function bmStore(){ if(!ST.bm||typeof ST.bm!=="object") ST.bm={}; return ST.bm; }
+function bmKey(qhtml,right){ return hstr(String(qhtml)+"|"+String(right)).toString(36); }
+function bmGet(k){ return bmStore()[k]||null; }
+function bmCount(gid){ var B=bmStore(); return Object.keys(B).filter(function(k){ return !gid||B[k].g===gid; }).length; }
+function bmToggle(k,gid){ var B=bmStore(); BM_LAST={}; if(B[k]) delete B[k]; else B[k]={g:gid||"",n:0,t:Date.now()}; save(); return !!B[k]; }
+/* after answering a bookmarked question: right adds to the streak, wrong resets it, 3 in a row clears the bookmark */
+function bmResult(k,ok){ var B=bmStore(), b=B[k]; if(!b) return null;
+  if(ok){ b.n=(b.n||0)+1; if(b.n>=BM_NEED){ delete B[k]; save(); BM_LAST={k:k,r:"done"}; setTimeout(function(){ toast("🔖 3 in a row! You’ve got it. Bookmark cleared."); },350); return "done"; } }
+  else b.n=0;
+  BM_LAST={k:k,r:b.n}; save(); return b.n; }
+function bmBtn(k,gid,ok){ var b=bmGet(k), done=!b&&BM_LAST.k===k&&BM_LAST.r==="done";
+  return '<button type="button" class="bmbtn'+(b?' on':'')+(done?' done':'')+'" data-bm="'+k+'" data-bmg="'+esc(gid||"")+'" data-bmok="'+(ok?1:0)+'" aria-pressed="'+!!b+'" title="'+(b?'Tap to remove the bookmark':'A bookmarked question comes back more often until you get it right 3 times in a row')+'">'+
+    (b?'🔖 Bookmarked · '+(b.n||0)+'/'+BM_NEED+' in a row':done?'🔖 3 in a row! Bookmark cleared':ok?'🔖 Guessed? Bookmark it':'🔖 Bookmark it')+'</button>'; }
+/* a little tag while you answer, so you know it's one of yours */
+function bmTag(k,px){ var b=bmGet(k); return b?'<span class="'+(px?'pxlabel ':'')+'bmtag" title="Bookmarked: get it right '+BM_NEED+' times in a row to clear it">🔖 '+(b.n||0)+'/'+BM_NEED+'</span>':''; }
+/* pick a bookmarked question from a list now and then (about 1 in 3), never the same one twice in a row */
+function bmPick(keys,last,rate){ if(Math.random()>=(rate||.35)) return -1; var c=[]; keys.forEach(function(k,i){ if(i!==last&&bmGet(k)) c.push(i); }); return c.length?c[Math.floor(Math.random()*c.length)]:-1; }
+document.addEventListener("click",function(e){ var t=e.target.closest("[data-bm]"); if(!t) return; e.preventDefault(); e.stopPropagation();
+  var on=bmToggle(t.dataset.bm,t.dataset.bmg); sfx("blip");
+  var tmp=document.createElement("div"); tmp.innerHTML=bmBtn(t.dataset.bm,t.dataset.bmg,t.dataset.bmok==="1"); var nb=tmp.firstChild; t.replaceWith(nb);
+  /* in the quick Boss Battle a right answer moves on by itself, so wait for the player after they bookmark */
+  if(typeof BT!=="undefined"&&BT&&nb.closest("#bt-q")&&BT.pick!==null&&!document.getElementById("bt-go")){ BT.hold=true; nb.insertAdjacentHTML("afterend",'<button class="btn primary next" id="bt-go">Keep fighting</button>'); }
+  toast(on?"🔖 Bookmarked! It’ll come back more often until you get it right 3 times in a row.":"Bookmark removed."); },true);
 /* ---------- Quiz: points + streaks → Redemption round → surprise bonus → results ---------- */
 var Q, lastBonus=-1;
 function mult(s){ return s>=10?4:s>=6?3:s>=3?2:1; }
@@ -9441,8 +9479,13 @@ function start(){
   Q={phase:"main",order:G.pick?G.pick():shuffle(G.quiz.map(function(_,i){ return i; })).slice(0,G.roundSize||G.quiz.length),i:0,score:0,pick:null,opts:null,lastOk:false,missed:[],queue:[],redeemed:0,
      bonus:b,bPick:null,bOpts:null,bOk:false,pts:0,prevPts:0,gained:0,streak:0,bestStreak:0,fresh:false,milestone:false,saved:false,
      starsRound:0,starsNow:0};
-  draw();
+  bmBoost(); draw();
 }
+function bmBoost(){ if(!G||!G.quiz||!Q) return; var o=Q.order, bm=[];
+  G.quiz.forEach(function(q,k){ if(bmGet(bmKey(q[0],q[1][0]))) bm.push(k); }); if(!bm.length) return;
+  shuffle(bm).slice(0,8).forEach(function(k){ var at=o.indexOf(k);
+    if(at<0){ var others=[]; o.forEach(function(x,i){ if(bm.indexOf(x)<0) others.push(i); }); if(others.length){ at=others[Math.floor(Math.random()*others.length)]; o[at]=k; } else { at=o.length; o.push(k); } }
+    var lo=Math.min(o.length,at+3), at2=lo+Math.floor(Math.random()*(o.length-lo+1)); o.splice(at2,0,k); }); }
 function enOn(){ return G&&G.hasEn&&ST.en; }
 function enToggle(){ return G&&G.hasEn?'<button class="chipbtn" id="en-toggle" aria-pressed="'+(ST.en?"true":"false")+'">English: '+(ST.en?"On":"Off")+'</button>':""; }
 function optButtons(opts,pick,attr){
@@ -9522,10 +9565,10 @@ function draw(){
     fb=ok?'<b>'+(Q.milestone?'🔥 '+Q.streak+' in a row! ':'Correct! ')+'+'+Q.gained+' pts · +'+Q.starsNow+' ⭐</b> '+q[2]:'<b>Not quite.</b> '+q[2]+' You’ll get a redemption shot at the end.';
     nextLabel=Q.i+1<n?"Next":(Q.queue.length?"Go to redemption":"Go to the bonus");
   }
-  root.innerHTML='<div class="top-row">'+head+'</div>'+bar+'<div class="qtools">'+chip+enToggle()+'</div>'+
+  root.innerHTML='<div class="top-row">'+head+'</div>'+bar+'<div class="qtools">'+chip+bmTag(bmKey(q[0],q[1][0]))+enToggle()+'</div>'+
     '<h3 class="q" id="qh" tabindex="-1">'+q[0]+'</h3>'+(enOn()&&q[3]?'<p class="en"><span>EN</span>'+q[3]+'</p>':'')+
     '<div class="opts">'+optButtons(Q.opts,Q.pick,"data-k")+'</div>'+
-    (done?'<p class="fb '+(ok?"ok":"no")+'" role="status">'+fb+'</p><button class="btn primary next" id="go">'+nextLabel+'</button>':"");
+    (done?'<p class="fb '+(ok?"ok":"no")+'" role="status">'+fb+'</p>'+bmBtn(bmKey(q[0],q[1][0]),GUIDE?GUIDE.id:"",ok)+'<button class="btn primary next" id="go">'+nextLabel+'</button>':"");
   afterDraw();
 }
 function afterDraw(){ if(Q.fresh){ countUp($("#pts"),Q.prevPts,Q.pts); Q.fresh=false; } }
@@ -9536,6 +9579,7 @@ $("#quiz").addEventListener("click",function(e){
   var b=e.target.closest("[data-k]");
   if(b&&Q.pick===null&&(Q.phase==="main"||Q.phase==="redeem")){
     Q.pick=+b.dataset.k; Q.lastOk=Q.opts[Q.pick].ok; Q.prevPts=Q.pts; Q.gained=0; Q.milestone=false; Q.fresh=true;
+    var bq=G.quiz[Q.phase==="redeem"?Q.queue[0]:Q.order[Q.i]]; if(bq) bmResult(bmKey(bq[0],bq[1][0]),Q.lastOk);
     if(Q.phase==="main"){
       var cur=Q.order[Q.i];
       if(Q.lastOk){
@@ -9544,7 +9588,7 @@ $("#quiz").addEventListener("click",function(e){
         Q.milestone=Q.streak%5===0;
         Q.starsNow=1+(Q.milestone?2:0); Q.starsRound+=Q.starsNow; addStars(Q.starsNow);
         if(Q.milestone){ sfx("streak"); confetti(90); } else sfx("right");
-      } else { Q.streak=0; Q.missed.push(cur); Q.queue.push(cur); sfx("wrong"); }
+      } else { Q.streak=0; if(Q.missed.indexOf(cur)<0){ Q.missed.push(cur); Q.queue.push(cur); } sfx("wrong"); }
     } else {
       if(Q.lastOk){ Q.gained=50; Q.pts+=50; sfx("right"); } else sfx("wrong");
     }
@@ -9819,21 +9863,22 @@ function anim(id,cls){ var el=document.getElementById(id); if(!el) return; el.cl
 function log(t){ var l=$("#bt-log"); if(l) l.textContent=t; }
 function nextQ(){
   if(!BT.queue.length) BT.queue=shuffle(BT.qs.map(function(_,i){ return i; }));
-  BT.cur=BT.queue.shift(); BT.pick=null;
+  if(!BT.bk) BT.bk=BT.qs.map(function(q){ return bmKey(q.q,q.right); });
+  var bi=bmPick(BT.bk,BT.cur); if(bi>=0) BT.cur=bi; else BT.cur=BT.queue.shift(); BT.pick=null; BT.hold=false;
   BT.opts=shuffle(BT.qs[BT.cur].opts); BT.t0=performance.now();
   drawQ();
 }
 function drawQ(){
   var q=BT.qs[BT.cur], done=BT.pick!==null, ok=done&&BT.opts[BT.pick]===q.right;
   $("#bt-q").innerHTML=(done?'':'<div class="speed" aria-hidden="true"><i></i></div>')+
-    '<h3 class="q">'+q.q+'</h3>'+(q.en&&BT.lvl!==4?(ST.en?'<p class="en"><span>EN</span>'+q.en+'</p>':'')+'<button class="chipbtn bt-en" id="bt-en" aria-pressed="'+!!ST.en+'">English help: '+(ST.en?'On':'Off')+'</button>':'')+
+    bmTag(bmKey(q.q,q.right))+'<h3 class="q">'+q.q+'</h3>'+(q.en&&BT.lvl!==4?(ST.en?'<p class="en"><span>EN</span>'+q.en+'</p>':'')+'<button class="chipbtn bt-en" id="bt-en" aria-pressed="'+!!ST.en+'">English help: '+(ST.en?'On':'Off')+'</button>':'')+
     '<div class="opts">'+BT.opts.map(function(o,k){
       var cls="opt", m="";
       if(done){ if(o===q.right){ cls+=" right"; m='<span class="mark">✓</span>'; } else if(k===BT.pick){ cls+=" wrong"; m='<span class="mark">✗</span>'; } else cls+=" dim"; }
       return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'>'+m+'<span class="kn" aria-hidden="true">'+(k+1)+'</span>'+o+'</button>';
     }).join("")+'</div>'+
-    (done&&!ok?'<p class="fb no" role="status"><b>'+(BT.hp>0?'Ouch!':'Knocked out!')+'</b> '+q.why+'</p><button class="btn primary next" id="bt-go">'+(BT.hp>0?'Keep fighting':'See results')+'</button>':'')+
-    (done&&ok&&q.why?'<p class="fb ok" role="status"><b>Hit!</b> '+q.why+'</p>':'');
+    (done&&!ok?'<p class="fb no" role="status"><b>'+(BT.hp>0?'Ouch!':'Knocked out!')+'</b> '+q.why+'</p>'+bmBtn(bmKey(q.q,q.right),BT.world||"",false)+'<button class="btn primary next" id="bt-go">'+(BT.hp>0?'Keep fighting':'See results')+'</button>':'')+
+    (done&&ok?'<p class="fb ok" role="status"><b>Hit!</b> '+(q.why||'')+'</p>'+bmBtn(bmKey(q.q,q.right),BT.world||"",true):'');
   if(done&&!ok){ var g=$("#bt-go"); if(g) g.focus({preventScroll:true}); }
 }
 function dmgPop(text,cls){
@@ -9846,7 +9891,7 @@ function dmgPop(text,cls){
 function battleAnswer(k){
   if(!BT||BT.pick!==null||!BT.mob||BT.mob.hp<=0) return;
   var q=BT.qs[BT.cur]; BT.pick=k;
-  var ok=BT.opts[k]===q.right, fast=performance.now()-BT.t0<FAST_MS;
+  var ok=BT.opts[k]===q.right, fast=performance.now()-BT.t0<FAST_MS; bmResult(BT.bk?BT.bk[BT.cur]:bmKey(q.q,q.right),ok);
   if(ok){
     BT.right++; BT.streak++; BT.bestStreak=Math.max(BT.bestStreak,BT.streak);
     var crit=BT.streak>=3, d=BT.dmg+(crit?10:0)+(fast?5:0);
@@ -9855,7 +9900,7 @@ function battleAnswer(k){
     sfx(crit?"streak":"right");
     log((crit?"🔥 CRITICAL! ":"")+(fast?"⚡ Fast! ":"")+"You hit "+BT.mob.name+" for "+d+".");
     updateArena(); drawQ();
-    if(BT.mob.hp<=0) setTimeout(defeatMob,800); else setTimeout(function(){ if(BT&&BT.pick!==null) nextQ(); },q.why?1500:900);
+    if(BT.mob.hp<=0) setTimeout(defeatMob,800); else setTimeout(function(){ if(BT&&BT.pick!==null&&!BT.hold) nextQ(); },q.why?1900:1400);
   } else {
     BT.wrong++; BT.streak=0;
     if(BT.missed.indexOf(BT.cur)<0) BT.missed.push(BT.cur);
@@ -11073,7 +11118,7 @@ function qwHud(){
         '<div class="qh-pw" title="Power for special attacks" aria-label="Power '+(s.pw||0)+' of '+PW_MAX+'">'+pips(s.pw||0,PW_MAX)+'<span class="qh-tot">TOTAL LV '+totalLvl()+'</span></div>':'<div class="qh-sub">'+(s.cls?'<span style="color:'+C.col+'">'+C.n+'</span> · ':'')+'each land has its own level</div>')+'</div></div>'+
     (qs.length?'<div class="pxwin qh-quests">'+qs.slice(0,3).map(function(q){ var p=qProgress(q), r=p[0]>=p[1]; return '<div class="'+(r?'qdone':'')+'">'+(r?'✔ ':'◆ ')+esc(q.title)+' <b>'+p[0]+'/'+p[1]+'</b></div>'; }).join("")+'</div>':'')+'</div>'+
     '<div class="qh-right"><span class="pxwin qh-pill">'+icon("coin")+' <b>'+s.coins+'</b></span>'+
-      (big?'<button class="pxwin qh-pill" id="qh-potion" '+(s.potions&&s.hp<max?'':'disabled')+' aria-label="Drink a potion">'+icon("potion")+' '+s.potions+'</button>'+(MAP&&MAP.cave?'<button class="pxwin qh-pill lgpill" id="qh-ledger" title="Your Ledger: concepts that are Solid. It sets your level cap." aria-label="Open the Ledger">📒 '+mp+'% · CAP '+lvCap(MAP.id)+'</button>':'<span class="pxwin qh-pill" title="Mastery: questions you got right twice in a row. It sets your level cap.">📖 '+mp+'% · CAP '+lvCap(MAP.land||MAP.id)+'</span>')+'':'')+
+      (big?'<button class="pxwin qh-pill" id="qh-potion" '+(s.potions&&s.hp<max?'':'disabled')+' aria-label="Drink a potion">'+icon("potion")+' '+s.potions+'</button>'+(MAP&&MAP.cave?'<button class="pxwin qh-pill lgpill" id="qh-ledger" title="Your Ledger: concepts that are Solid. It sets your level cap." aria-label="Open the Ledger">📒 '+mp+'% · CAP '+lvCap(MAP.id)+'</button>':'<span class="pxwin qh-pill" title="Mastery: questions you got right twice in a row. It sets your level cap.'+(capNeed(MAP.land||MAP.id)?' Master '+capNeed(MAP.land||MAP.id)+' more for the next level.':'')+'">📖 '+mp+'% · CAP '+lvCap(MAP.land||MAP.id)+'</span>')+'':'')+
       '<span class="pxwin qh-pill">'+icon("badge")+' '+qwBadges(s)+'/'+LANDS.length+'</span>'+
       (s.combo>=2?'<span class="pxwin qh-pill hot">COMBO ×'+s.combo+'</span>':'')+
       '<button class="pxwin qh-pill" id="qh-bag">'+icon("bag")+' BAG</button><button class="pxwin qh-pill" id="qh-log">LOG</button><button class="pxwin qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'">MAP</button>'+
@@ -11202,11 +11247,16 @@ function guideCards(g){ return g.parts?g.parts.reduce(function(a,p){ return a.co
 function qKey(q){ return hstr(q.q+"|"+q.right).toString(36); }
 function mastOf(id){ var s=QS(); if(!s.mast) s.mast={}; return s.mast[id]||(s.mast[id]={}); }
 function masteryPct(id){ if(id===CAVE_ID) return lgSolidFrac(); var qs=worldQuestions(id), m=mastOf(id); if(!qs.length) return 0; return qs.filter(function(q){ return (m[qKey(q)]||0)>=2; }).length/qs.length; }
-function lvCap(id){ if(id===CAVE_ID) return caveCap(); return Math.min(MAX_LV,3+Math.floor(22*masteryPct(id)+1e-9)); }
+function capFor(p){ return Math.min(MAX_LV,3+Math.floor(22*Math.sqrt(Math.min(1,Math.max(0,p)/.9))+1e-9)); }
+function lvCap(id){ if(id===CAVE_ID) return caveCap(); return capFor(masteryPct(id)); }
+function mastCount(id){ var qs=worldQuestions(id), m=mastOf(id); return {n:qs.length,have:qs.filter(function(q){ return (m[qKey(q)]||0)>=2; }).length}; }
+/* how many more questions to master before the cap goes up one level */
+function capNeed(id){ if(id===CAVE_ID) return 0; var c=mastCount(id); if(!c.n) return 0; var cap=capFor(c.have/c.n); if(cap>=MAX_LV) return 0; for(var k=c.have+1;k<=c.n;k++) if(capFor(k/c.n)>cap) return k-c.have; return 0; }
+function capLine(id){ var c=mastCount(id), cap=lvCap(id), nd=capNeed(id); return 'Mastered '+c.have+'/'+c.n+' questions · level cap LV '+cap+(nd?' · master '+nd+' more to raise it to LV '+capFor((c.have+nd)/c.n):''); }
 var qwCapT=0;
 function qwXp(n){ var s=QS(), before=s.lvl, land=MAP&&landById(MAP.land||MAP.id)?(MAP.land||MAP.id):null, cap=land?lvCap(land):MAX_LV, MXL=land===CAVE_ID?CAVE_MAX:MAX_LV; s.xp+=n;
   while(s.xp>=qwNeed(s.lvl)&&s.lvl<cap){ s.xp-=qwNeed(s.lvl); s.lvl++; }
-  if(s.lvl>=cap&&s.xp>=qwNeed(s.lvl)){ s.xp=qwNeed(s.lvl); if(land&&n>0&&s.lvl<MXL&&Date.now()-qwCapT>25000){ qwCapT=Date.now(); setTimeout(function(){ toast(land===CAVE_ID?"Level cap LV "+cap+"! Make more concepts Solid in your Ledger to grow (L to see it).":"Level cap LV "+cap+"! Master more questions to grow (mastery "+Math.round(masteryPct(land)*100)+"%)."); },1500); } }
+  if(s.lvl>=cap&&s.xp>=qwNeed(s.lvl)){ s.xp=qwNeed(s.lvl); if(land&&n>0&&s.lvl<MXL&&Date.now()-qwCapT>25000){ qwCapT=Date.now(); setTimeout(function(){ toast(land===CAVE_ID?"Level cap LV "+cap+"! Make more concepts Solid in your Ledger to grow (L to see it).":"Level cap LV "+cap+"! Get questions right twice in a row to master them. Master "+capNeed(land)+" more to raise your cap."); },1500); } }
   var ups=s.lvl-before; if(s.lvl>=MAX_LV&&land!==CAVE_ID) qwAch("master"); if(land===CAVE_ID&&s.lvl>=CAVE_MAX) qwAch("psat50"); if(ups){ s.hp=qwMaxHp(s); if(s.lvl>=5) qwAch("lv5"); if(s.lvl>=10) qwAch("lv10"); if(totalLvl()>=20) qwAch("total20"); } return ups; }
 /* ---------- every land is its own adventure: its own level, hearts, power, potions and gear ---------- */
 var LFIELDS=["lvl","xp","hp","pw","potions","inv","eq"];
@@ -11421,7 +11471,7 @@ function qwBuy(id,price){ var s=QS(); if(s.coins<price) return; s.coins-=price; 
   save(); sfx("fanfare"); qwHud(); if(SHOPKIND==="zed") qwTrader(); else qwShop(); toast(msg); }
 function qwLog(){
   var s=QS(), C=clsOf(s), here=MAP&&MAP.quests?MAP.quests:[];
-  qwPanel('<p class="pxlabel">Quest log</p><h2>'+esc(s.name)+' · '+C.n+' · Total LV '+totalLvl()+'</h2>'+(MAP.big?'<p class="pxsmall">Here: LV '+s.lvl+' · level cap '+lvCap(MAP.id)+' · mastery '+Math.round(masteryPct(MAP.id)*100)+'% (each question right twice in a row)</p>':'')+'<p class="pxsmall">'+icon("sword")+' '+qwDmg(s)+' damage · '+icon("heart")+' '+qwMaxHp(s)+' max · best combo '+s.bestCombo+' · '+s.wins+' wins · '+(s.questsDone||0)+' side quests</p>'+
+  qwPanel('<p class="pxlabel">Quest log</p><h2>'+esc(s.name)+' · '+C.n+' · Total LV '+totalLvl()+'</h2>'+(MAP.big?'<p class="pxsmall">Here: LV '+s.lvl+' · level cap '+lvCap(MAP.id)+' · '+capLine(MAP.id).replace(/ · level cap LV \d+/,'')+' (a question is mastered when you get it right twice in a row)</p>':'')+'<p class="pxsmall">'+icon("sword")+' '+qwDmg(s)+' damage · '+icon("heart")+' '+qwMaxHp(s)+' max · best combo '+s.bestCombo+' · '+s.wins+' wins · '+(s.questsDone||0)+' side quests</p>'+
     '<p class="qlog-goal"><b>NEXT:</b> '+qwNextGoal()+'</p>'+
     (here.length?'<p class="pxlabel">Side quests in this land</p><ul class="qlog sq">'+here.map(function(q){ var st=s.sq[q.id], p=qProgress(q), giver=(MAP.npcs.filter(function(n){ return n.id===q.giver; })[0]||{}).name;
       return '<li class="'+(st&&st.st==="done"?'qdone':'')+'"><div><b>'+esc(q.title)+'</b><span>'+(!st?'Talk to '+giver:st.st==="done"?'★ Done':qReady(q)?'✔ Ready! Go see '+giver:q.type==="deliver"?'Bring '+esc(q.letter)+' to '+esc(qNpcName(q.to)):'In progress '+p[0]+'/'+p[1])+' · '+rewText(q.rew,q.land)+'</span></div></li>'; }).join("")+'</ul>':'')+
@@ -11496,7 +11546,14 @@ var QB=null, QBQ={}, BS=null;
 function qbPool(region){ if(!QBQ[region]){ var qs=worldQuestions(region), s=QS(), keys=qs.map(qKey), idx={}; keys.forEach(function(k,i){ idx[k]=i; });
     var saved=((s.qq||{})[region]||[]).map(function(k){ return idx[k]; }).filter(function(i,n,a){ return i!=null&&a.indexOf(i)===n; });
     QBQ[region]={qs:qs,keys:keys,queue:saved,region:region}; } return QBQ[region]; }
-function qbNextIndex(pool){ if(!pool.queue.length){ pool.queue=shuffle(pool.qs.map(function(_,i){ return i; })); pool.round=(pool.round||0)+1; } var i=pool.queue.shift(); qbSaveQueue(pool); return i; }
+function qbNextIndex(pool){ if(!pool.recent) pool.recent=[];
+  function took(i){ var at=pool.queue.indexOf(i); if(at>=0) pool.queue.splice(at,1); pool.recent.push(i); if(pool.recent.length>5) pool.recent.shift(); pool.lastI=i; qbSaveQueue(pool); return i; }
+  /* 🔖 bookmarked questions come back about 1 in 3 */
+  var b=bmPick(pool.keys,pool.lastI); if(b>=0&&pool.recent.indexOf(b)<0) return took(b);
+  /* right once, or missed: it comes back soon so you can master it (that's what raises your level cap) */
+  if(pool.region!=="all"&&Math.random()<.4){ var m=mastOf(pool.region), due=[]; pool.keys.forEach(function(k,i){ var v=m[k]; if((v===1||v===0)&&pool.recent.indexOf(i)<0) due.push(i); }); if(due.length) return took(due[Math.floor(Math.random()*due.length)]); }
+  if(!pool.queue.length){ pool.queue=shuffle(pool.qs.map(function(_,i){ return i; })); pool.round=(pool.round||0)+1; }
+  return took(pool.queue.shift()); }
 function qwEncounter(m){ if(QMODE!=="walk"||QB) return; if(MAP.cave&&caveGuard(m)) return; qwBattle(m,false); }
 /* every boss has its own way of hurting you, even when you answer right */
 var BOSS_MECH={thorns:{n:"Spiky Hide",d:"Every hit you land costs you 2 hearts, unless it’s a SUPER CRIT."},breath:{n:"Fire Breath",d:"Every 2nd turn it breathes fire, even if you were right. Dodge it!"},
@@ -11579,6 +11636,9 @@ function qbItem(id){ var s=QS(), now=performance.now(); if(!QB||QB.done||QB.dodg
 function qbNext(){ if(!QB||QB.done) return;
   if(QB.poison>0&&QB.qn>0){ QB.poison--; var pd=QB.pdmg||5; QB.hp=Math.max(0,QB.hp-pd); BS.hit=performance.now(); bsFx("poison"); bsFloat("-"+pd+" POISON","#69db7c"); if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,700); return; } }
   QB.cur=QB.pool.cave?lgNext(QB):qbNextIndex(QB.pool); QB.timeout=false; QB.typedRaw=null; QB.lensUsed=QB.lensUsed||false; QB.lensOut=-1; QB.pick=null; QB.dodgeRes=null; QB.choosing=false; QB.qn++; QB.opts=shuffle(QB.pool.qs[QB.cur].opts); QB.t0=performance.now(); qbDraw(); qbBar(); if(QB.pool.cave){ lgTimerStart(); var ti=$("#bs-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },80); } }
+function qbMastNote(){ if(!QB||QB.region==="all"||!QB.mnote) return "";
+  var nd=capNeed(QB.region), t=QB.mnote==="mastered"?'📖 <b class="okc">Mastered!</b> Right twice in a row.'+(nd?' '+nd+' more to raise your level cap.':''):QB.mnote==="once"?'📖 Right once. It’ll come back soon: get it right again to master it.':'📖 This one was mastered. Get it right twice in a row again.';
+  return '<p class="pxsmall mnote">'+t+'</p>'; }
 function pips(n,count){ var h=''; for(var i=0;i<count;i++) h+='<i class="pip'+(i<n?' on':'')+'"></i>'; return '<span class="pips">'+h+'</span>'; }
 function qbDraw(){
   var q=QB.pool.qs[QB.cur], done=QB.pick!==null, ok=done&&QB.opts[QB.pick]===q.right, s=QS();
@@ -11587,17 +11647,17 @@ function qbDraw(){
   if(QB.striking){ $("#bs-q").innerHTML='<div class="dodge-panel strike"><p class="pxtitle">'+esc(QB.striking.n).toUpperCase()+'!</p><p>Press <b>SPACE</b> or tap <b>STRIKE</b> when the white marker is in the <b class="gz">green zone</b> for a <b class="oz">CRIT</b>. Hit the <b class="yz">yellow center</b> for a <b class="yz">SUPER CRIT</b>!'+(s.combo>=3?' <b class="oz">Combo bonus: bigger zone!</b>':'')+'</p><button class="pxbtn go big" id="bs-strike">STRIKE!</button></div>'; return; }
   if(QB.choosing){ var A=atkList(s);
     $("#bs-q").innerHTML='<div class="atk-top"><span class="pxlabel okc">✓ Correct!'+(QB.fast?' ⚡ Fast: +2 power':' +1 power')+'</span><span class="pw-meter">POWER '+pips(s.pw||0,PW_MAX)+'</span></div>'+
-      (q.why?'<p class="bsfb ok">'+q.why+'</p>':'')+(QB.pool.cave?lgAfterHTML(q,true):'')+'<p class="pxlabel">Choose your attack</p><div class="atk-grid">'+A.map(function(a,i){ var dis=a.locked||(s.pw||0)<a.c;
+      (q.why?'<p class="bsfb ok">'+q.why+'</p>':'')+(QB.pool.cave?lgAfterHTML(q,true):qbMastNote()+bmBtn(qKey(q),QB.region,true))+'<p class="pxlabel">Choose your attack</p><div class="atk-grid">'+A.map(function(a,i){ var dis=a.locked||(s.pw||0)<a.c;
         return '<button class="atk'+(a.c>=5?' ult':'')+'" data-atk="'+i+'"'+(dis?' disabled':'')+'><span class="kn">'+(i+1)+'</span><span class="atk-b"><b>'+a.n+'</b><small>'+(a.locked?'🔒 Unlocks at LV '+a.lv:a.d)+'</small></span><span class="cost">'+(a.c?pips(a.c,a.c):'FREE')+'</span></button>'; }).join("")+'</div>';
     return; }
   var head={perfect:'PERFECT DODGE! You countered!',dodge:'DODGED! No damage.',block:'BLOCKED! Your shield took the hit.',smoke:'SMOKE! The attack missed you.'}[QB.dodgeRes]||(s.hp>0?'OUCH! −'+qbHitDmg()+' hearts.':'OUT OF HEARTS!');
-  $("#bs-q").innerHTML='<div class="bsq-top">'+(QB.pool.cave?lgChip(q):'<span class="pxlabel" title="Every question and flashcard in the study guide, then it starts over">Guide '+(QB.pool.qs.length-QB.pool.queue.length)+'/'+QB.pool.qs.length+'</span>')+''+(QB.mech?'<span class="pxlabel red" title="'+esc(BOSS_MECH[QB.mech].d)+'">⚠ '+BOSS_MECH[QB.mech].n+'</span>':'')+
+  $("#bs-q").innerHTML='<div class="bsq-top">'+(QB.pool.cave?lgChip(q):'<span class="pxlabel" title="Every question and flashcard in the study guide, then it starts over">Guide '+(QB.pool.qs.length-QB.pool.queue.length)+'/'+QB.pool.qs.length+'</span>'+bmTag(qKey(q),true))+''+(QB.mech?'<span class="pxlabel red" title="'+esc(BOSS_MECH[QB.mech].d)+'">⚠ '+BOSS_MECH[QB.mech].n+'</span>':'')+
     (q.en?(QB.boss?'<span class="pxlabel">No English help in boss fights</span>':'<button class="bsq-entog" id="bs-en" aria-pressed="'+!!ST.en+'">EN help: '+(ST.en?'ON':'OFF')+'</button>'):'')+(done?'':'<span class="pxlabel fast">⚡ Fast = +2 power</span>')+'</div>'+(done?'':'<div class="speed" aria-hidden="true"><i style="animation-duration:'+(clsOf(s).fast/1000)+'s"></i></div>')+
     (QB.pool.cave?'<div class="bsq lgq">'+q.q+'</div>'+(!done&&!q.typed&&ghas(s,"lens")&&!QB.lensUsed&&q.c.z<=5?'<button class="pxbtn lgl" id="bs-lens">🔍 Evidence Lens</button>':'')+(!done&&ghas(s,"desmos")&&q.c.z>=6?'<button class="pxbtn lgl" id="bs-graph">📈 Graph it</button>':''):'<h3 class="bsq">'+q.q+'</h3>')+(q.en&&ST.en&&!QB.boss?'<p class="bsq-en"><span>EN</span>'+q.en+'</p>':'')+
     (q.typed?lgTypedHTML(q,done):'<div class="bsopts">'+QB.opts.map(function(o,k){ var cls="bsopt", m=""; if(!done&&QB.lensOut===k) cls+=" lensed";
       if(done){ if(o===q.right){ cls+=" right"; m="✓ "; } else if(k===QB.pick){ cls+=" wrong"; m="✗ "; } else cls+=" dim"; }
       return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'><span class="kn">'+(k+1)+'</span><span>'+m+o+'</span></button>'; }).join("")+'</div>')+(QB.pool.cave?lgTimerHTML(q,done):'')+
-    (done&&!ok?'<p class="bsfb '+(QB.dodgeRes&&QB.dodgeRes!=="hit"?'dodge':'no')+'" role="status"><b>'+(QB.timeout?'⏱ TIME’S UP! ':'')+head+'</b> '+q.why+'</p>'+(QB.pool.cave?lgAfterHTML(q,false):'')+'<button class="pxbtn go" id="bs-go">▶ '+(s.hp>0?'Keep fighting':'Continue')+'</button>':'')+
+    (done&&!ok?'<p class="bsfb '+(QB.dodgeRes&&QB.dodgeRes!=="hit"?'dodge':'no')+'" role="status"><b>'+(QB.timeout?'⏱ TIME’S UP! ':'')+head+'</b> '+q.why+'</p>'+(QB.pool.cave?lgAfterHTML(q,false):qbMastNote()+bmBtn(qKey(q),QB.region,false))+'<button class="pxbtn go" id="bs-go">▶ '+(s.hp>0?'Keep fighting':'Continue')+'</button>':'')+
     (done&&ok&&QB.lastAtk?'<p class="bsfb ok" role="status"><b>'+esc(QB.lastAtk).toUpperCase()+'!</b> '+(q.why||'')+'</p>':'');
   if(done&&!ok){ var g=$("#bs-go"); if(g) g.focus({preventScroll:true}); }
 }
@@ -11606,7 +11666,9 @@ function qbAnswer(k){
   var q=QB.pool.qs[QB.cur], s=QS(), now=performance.now(); QB.pick=k; QB.lastAtk=null;
   var ok=QB.opts[k]===q.right, fast=now-QB.t0<(QB.pool.cave?lgFastMs(q):clsOf(s).fast);
   if(QB.pool.cave){ clearInterval(LGT); q.res=lgAnswer(q,ok,now-QB.t0,QB.timeout?null:q.typed?QB.typedRaw:QB.opts[k]); (QB.lgLog=QB.lgLog||[]).push(q.res); QB.pool.lastOk=ok; }
-  else { var mk=mastOf(QB.region), kk=qKey(q); mk[kk]=ok?Math.min(3,(mk[kk]||0)+1):0; }
+  else { var mk=mastOf(QB.region), kk=qKey(q), was=mk[kk]||0, cap0=QB.region!=="all"?lvCap(QB.region):0; mk[kk]=ok?Math.min(3,was+1):0;
+    QB.mnote=ok&&was<2&&mk[kk]>=2?"mastered":ok&&mk[kk]===1?"once":!ok&&was>=2?"lost":null; bmResult(kk,ok);
+    if(QB.region!=="all"){ var cap1=lvCap(QB.region); if(cap1>cap0) setTimeout(function(){ toast("📖 Level cap is now LV "+cap1+"! Keep mastering questions to grow."); },400); } }
   if(QB.mech==="squeeze"&&now-QB.t0>6000){ if(qbHurtHero(4,"TENTACLE SQUEEZE")){ qbDraw(); return; } }
   if(ok){
     QB.hits++; s.combo++; s.bestCombo=Math.max(s.bestCombo,s.combo); QB.fast=fast; questStat("combo",s.combo,true); if(fast) questStat("speed",1);
@@ -11728,7 +11790,7 @@ function qbWin(){
   setTimeout(function(){ if(!QB) return;
     $("#bs-q").innerHTML='<div class="qb-win"><h2 class="pxtitle">'+(QB.boss?'BOSS DEFEATED!':QB.elite?'ELITE DEFEATED!':QB.mini?'MINI BOSS DEFEATED!':'VICTORY!')+'</h2><p class="pxsmall">'+esc(QB.def[2])+' · '+QB.hits+' hits · '+QB.misses+' misses</p>'+
       '<div class="loot">'+loot.map(function(l){ return '<div class="lt '+l[0]+'">'+l[1]+'</div>'; }).join("")+'</div>'+
-      (MAP.cave?caveWinHTML(QB):landById(MAP.id)?'<p class="pxsmall">Mastery '+Math.round(masteryPct(MAP.id)*100)+'% · level cap LV '+lvCap(MAP.id)+'</p>':'')+'<div class="qb-xp"><span>LV '+s.lvl+(lv>L0+1?' · tough foe: bonus XP':lv<L0-1?' · easy foe: less XP':'')+'</span><div class="bar"><i id="qb-xpfill" style="width:'+pct0+'%"></i></div><span>'+s.xp+'/'+qwNeed(s.lvl)+'</span></div>'+
+      (MAP.cave?caveWinHTML(QB):landById(MAP.id)?'<p class="pxsmall">'+capLine(MAP.id)+'</p>':'')+'<div class="qb-xp"><span>LV '+s.lvl+(lv>L0+1?' · tough foe: bonus XP':lv<L0-1?' · easy foe: less XP':'')+'</span><div class="bar"><i id="qb-xpfill" style="width:'+pct0+'%"></i></div><span>'+s.xp+'/'+qwNeed(s.lvl)+'</span></div>'+
       (QB.missed.length?'<details class="qb-miss"><summary>Review what you missed ('+QB.missed.length+')</summary><ul class="review">'+QB.missed.map(function(i){ var q=QB.pool.qs[i]; return '<li><span class="rq">'+q.q+'</span><span class="ra">✓ '+q.right+'</span></li>'; }).join("")+'</ul></details>':'')+
       '<button class="pxbtn go big" id="bs-done">▶ Continue</button></div>';
     var bar=$(".qb2-bar"); if(bar) bar.hidden=true;
@@ -13039,8 +13101,8 @@ function lgQ(c,pick){ var v=pick.v; return {q:v.q,right:lgAnsText(v),opts:v.t===
 /* ---------- choosing what to ask next ---------- */
 function lgReached(){ var s=QS(), C=s.cave||{}, out={}; for(var a=1;a<=10;a++) if((C.vis||{})[a]) out[a]=1; return out; }
 function lgChoose(a,avoid){ var now=Date.now(), s=QS(), L=s.ledger||{}, vis=lgReached(), zone=lgZone(a), A=[],B=[],Cd=[],D=[],E=[];
-  zone.forEach(function(c){ var st=lgSt(c.id); if(st===1) A.push(c); else if(st===0) B.push(c); else if(!lgDue(c)) E.push(c); });
-  PSATC.forEach(function(c){ var r=L[c.id]; if(!r||!(vis[c.z]||c.z===a)) return; if(lgDue(c)) Cd.push(c); else if(r.st===1&&c.z!==a) D.push(c); });
+  zone.forEach(function(c){ var st=lgSt(c.id); if(st===1||lgBmOn(c.id)) A.push(c); else if(st===0) B.push(c); else if(!lgDue(c)) E.push(c); });
+  PSATC.forEach(function(c){ var r=L[c.id]; if(!r||!(vis[c.z]||c.z===a)) return; if(lgDue(c)) Cd.push(c); else if((r.st===1||r.bm)&&c.z!==a) D.push(c); });
   function ok(list){ var f=list.filter(function(c){ return (avoid||[]).indexOf(c.id)<0; }); return f.length?f:list; }
   var groups=[[A,.5],[B,.3],[Cd,.12],[D,.08]];
   if(!A.length) groups=[[B,.62],[Cd,.2],[D,.18]];
@@ -13080,8 +13142,9 @@ function lgAnswer(q,ok,ms,given){ var c=q.c, r=lgRec(c.id), now=Date.now(), was=
     else if(lockCheck) r.st=3; }
   else if(ok){ r.r++; r.m=0; if(r.st===0) r.st=1; }
   else { r.w++; r.m=(r.m||0)+1; r.k=0; r.st=1; r.sa=0; lgLogMiss(q,given); }
+  var bmc=false; r.bmDone=0; if(r.bm){ if(ok&&!slow){ r.bk=(r.bk||0)+1; if(r.bk>=BM_NEED){ delete r.bm; r.bk=0; r.bmDone=1; bmc=true; setTimeout(function(){ toast("🔖 3 in a row on "+c.n+"! Bookmark cleared."); },500); } } else r.bk=0; }
   var s=QS(); if(!s.cave) s.cave={}; s.cave.ans=(s.cave.ans||0)+1; if(ok) s.cave.right=(s.cave.right||0)+1;
-  save(); var res={was:was,st:r.st,slow:slow,rule:!ok&&r.m>=2,k:r.k,lock:lockCheck,c:c,ok:ok};
+  save(); var res={was:was,st:r.st,slow:slow,rule:!ok&&r.m>=2,k:r.k,lock:lockCheck,c:c,ok:ok,bm:r.bm?r.bk:null,bmc:bmc};
   if(r.st===3&&was!==3) setTimeout(function(){ toast("🔒 LOCKED IN: "+c.n+"!"); },300);
   if(lgAllLocked()) qwAch("psatLocked");
   return res; }
@@ -13089,7 +13152,7 @@ function lgLogMiss(q,given){ var s=QS(); if(!s.lglog) s.lglog=[]; var txt=psNorm
   s.lglog.unshift({c:q.c.id,t:Date.now(),q:txt.length>170?txt.slice(0,167)+"…":txt,a:given==null?"(time ran out)":String(given).replace(/<[^>]+>/g,"").slice(0,90),r:String(q.right).replace(/<[^>]+>/g,"").slice(0,90)});
   if(s.lglog.length>60) s.lglog.length=60; }
 /* ---------- what the battle panel shows ---------- */
-function lgChip(q){ var st=lgSt(q.c.id); return '<span class="pxlabel lgchip '+LG_CLS[st]+'" title="'+esc(q.c.dom+' · '+q.c.skill)+'">📒 '+esc(q.c.n)+' · '+(q.lock?'LOCK-IN CHECK':LG_ST[st].toUpperCase())+(q.mod?' · '+q.mod:'')+'</span>'; }
+function lgChip(q){ var st=lgSt(q.c.id); return '<span class="pxlabel lgchip '+LG_CLS[st]+'" title="'+esc(q.c.dom+' · '+q.c.skill)+'">📒 '+esc(q.c.n)+' · '+(q.lock?'LOCK-IN CHECK':LG_ST[st].toUpperCase())+(q.mod?' · '+q.mod:'')+'</span>'+(lgBmOn(q.c.id)?'<span class="pxlabel bmtag">🔖 '+(lgRec(q.c.id).bk||0)+'/'+BM_NEED+'</span>':''); }
 function lgRuleHTML(c){ var e=c.ex||{}; return '<div class="lgrule"><p class="pxlabel">📜 Rule card · '+esc(c.n)+'</p><p>'+c.rule+'</p>'+(e.q?'<p class="lgex"><b>Worked example:</b> '+e.q+'</p><ol>'+(e.steps||[]).map(function(t){ return '<li>'+t+'</li>'; }).join("")+'</ol><p class="lgex"><b>Answer:</b> '+e.a+'</p>':'')+'</div>'; }
 function lgAfterHTML(q,ok){ var R=q.res; if(!R) return ""; var c=q.c, t;
   if(ok&&R.slow) t='⏱ Right, but slower than the clock. <b>'+esc(c.n)+'</b> stays Shaky until you get it right in time.';
@@ -13099,7 +13162,7 @@ function lgAfterHTML(q,ok){ var R=q.res; if(!R) return ""; var c=q.c, t;
   else if(ok&&R.st===3&&R.lock) t='🔒 <b>'+esc(c.n)+'</b> passed the 2-day check: <b class="yz">LOCKED IN</b>.';
   else if(ok) t='📒 <b>'+esc(c.n)+'</b> is still '+LG_ST[R.st]+'.';
   else t='📒 <b>'+esc(c.n)+'</b> is now <b class="rz">SHAKY ⚠</b>. It goes in your Ledger and comes back asked a different way'+(R.was>=2?' (it was '+LG_ST[R.was]+')':'')+'. An Echo ghost will haunt '+esc(CZ[c.z].n)+' until it’s Solid.';
-  return '<p class="lgnote">'+t+'</p>'+(R.rule?lgRuleHTML(c):''); }
+  return '<p class="lgnote">'+t+'</p>'+(R.rule?lgRuleHTML(c):'')+lgBmBtn(c,ok); }
 function lgTypedHTML(q,done){ var v=q.tv;
   if(!done) return '<form class="bstyped" id="bs-typed" autocomplete="off"><label class="sr-only" for="bs-tin">Your answer</label><input id="bs-tin" class="pxin" '+(v.num!=null?'inputmode="decimal"':'')+' maxlength="24" placeholder="'+(v.num!=null?'Type a number, like 3/4 or −2.5':'Type your answer')+'" spellcheck="false"><button class="pxbtn go" type="submit">Enter ⏎</button></form>'+(v.num!=null?'<p class="pxsmall lghint">Typed answer, like the real test: fractions or decimals are fine. Negative answers allowed.</p>':'');
   var ok=QB&&QB.opts[0]===q.right; return '<div class="bstyped-res '+(ok?'ok':'no')+'"><span>You typed: <b>'+esc(QB&&QB.typedRaw!=null?QB.typedRaw:"")+'</b></span><span>Answer: <b>'+q.right+'</b></span></div>'; }
@@ -13143,13 +13206,24 @@ document.addEventListener("keydown",function(e){ if(!CQ||QMODE!=="panel"||$("#qw
   else if((e.code==="Enter"||e.code==="Space")&&CQ.done){ e.preventDefault(); cqNext(); } });
 /* ---------- the Ledger panel (L) ---------- */
 var LGTAB="Zones";
-function lgPanel(tab,openZone){ if(tab) LGTAB=tab; var s=QS(), n=lgCounts(), tot=PSATC.length||1, due=PSATC.filter(lgDue), sh=PSATC.filter(function(c){ return lgSt(c.id)===1; }), C=s.cave||{};
+/* ---------- 🔖 bookmarks in The Hollow work on whole concepts: a bookmarked concept comes back like a Shaky one until you get it right 3 times in a row ---------- */
+function lgBmOn(id){ var s=QS(), r=s.ledger&&s.ledger[id]; return !!(r&&r.bm); }
+function lgBmToggle(id){ var r=lgRec(id); if(r.bm){ delete r.bm; r.bk=0; } else { r.bm=1; r.bk=0; } save(); return !!r.bm; }
+function lgBmBtn(c,ok){ var r=(QS().ledger||{})[c.id], on=!!(r&&r.bm), done=!on&&r&&r.bmDone;
+  return '<button type="button" class="bmbtn'+(on?' on':'')+(done?' done':'')+'" data-lgbm="'+c.id+'" data-bmok="'+(ok?1:0)+'" aria-pressed="'+on+'" title="'+(on?'Tap to remove the bookmark':'A bookmarked concept comes back more often until you get it right 3 times in a row')+'">'+
+    (on?'🔖 Bookmarked · '+(r.bk||0)+'/'+BM_NEED+' in a row':done?'🔖 3 in a row! Bookmark cleared':ok?'🔖 Guessed? Bookmark it':'🔖 Bookmark it')+'</button>'; }
+document.addEventListener("click",function(e){ var t=e.target.closest("[data-lgbm]"); if(!t) return; e.preventDefault(); e.stopPropagation();
+  var id=t.dataset.lgbm, on=lgBmToggle(id), r=lgRec(id); r.bmDone=0; sfx("blip");
+  var tmp=document.createElement("div"); tmp.innerHTML=lgBmBtn(lgBy(id),t.dataset.bmok==="1"); t.replaceWith(tmp.firstChild);
+  toast(on?"🔖 Bookmarked! This concept comes back more often until you get it right 3 times in a row.":"Bookmark removed."); },true);
+function lgPanel(tab,openZone){ if(tab) LGTAB=tab; var s=QS(), n=lgCounts(), tot=PSATC.length||1, due=PSATC.filter(lgDue), sh=PSATC.filter(function(c){ return lgSt(c.id)===1; }), bms=PSATC.filter(function(c){ return lgBmOn(c.id); }), C=s.cave||{};
   var bar='<div class="lgbar">'+[3,2,1].map(function(i){ return '<i class="'+LG_CLS[i]+'" style="width:'+(n[i]/tot*100)+'%"></i>'; }).join("")+'</div>';
   var body="";
   if(LGTAB==="Zones") body=[1,2,3,4,5,6,7,8,9,10].map(function(a){ var zl=lgZone(a), zn=lgCounts(zl), rd=lgZoneReady(a), wd=(C.wd||{})[a];
       return '<details class="lgzone"'+(openZone===a?' open':'')+'><summary><b>'+(a<=5?'↑':'↓')+' '+esc(CZ[a].n)+'</b> <span class="pxsmall">'+esc(CZ[a].sub)+'</span><span class="lgzc">'+(zn[3]?'<em class="locked">🔒'+zn[3]+'</em>':'')+'<em class="solid">✔'+zn[2]+'</em><em class="shaky">⚠'+zn[1]+'</em><em class="new">○'+zn[0]+'</em>'+(wd?' · 🏆 Warden beaten':rd&&zl.length?' · ⚔ Warden ready':'')+'</span></summary>'+
         '<ul class="lglist">'+zl.map(function(c){ var st=lgSt(c.id), r=(s.ledger||{})[c.id]; return '<li><button class="lgc '+LG_CLS[st]+'" data-lgc="'+c.id+'"><span class="lgi">'+LG_IC[st]+'</span><span>'+esc(c.n)+'</span><small>'+(r?r.r+'✓ '+r.w+'✗':'not seen yet')+(lgDue(c)?' · check due':'')+'</small></button></li>'; }).join("")+(zl.length?'':'<li class="pxsmall">Coming soon.</li>')+'</ul></details>'; }).join("");
-  else if(LGTAB==="Shaky") body=sh.length?'<button class="pxbtn go" data-lgdrill="shaky">⚔ Drill my Shaky concepts ('+Math.min(6,sh.length)+')</button><ul class="lglist">'+sh.map(function(c){ return '<li><button class="lgc shaky" data-lgc="'+c.id+'"><span class="lgi">⚠</span><span>'+esc(c.n)+'</span><small>'+esc(CZ[c.z].n)+'</small></button></li>'; }).join("")+'</ul>':'<p>Nothing is Shaky right now. Nice work! New mistakes show up here.</p>';
+  else if(LGTAB==="Shaky") body=sh.length?'<button class="pxbtn go" data-lgdrill="shaky">⚔ Drill my Shaky concepts ('+Math.min(6,sh.length+bms.length)+')</button><ul class="lglist">'+sh.map(function(c){ return '<li><button class="lgc shaky" data-lgc="'+c.id+'"><span class="lgi">⚠</span><span>'+esc(c.n)+'</span><small>'+esc(CZ[c.z].n)+'</small></button></li>'; }).join("")+'</ul>':'<p>Nothing is Shaky right now. Nice work! New mistakes show up here.</p>';
+  if(LGTAB==="Shaky"&&bms.length) body+=(sh.length?'':'<button class="pxbtn go" data-lgdrill="shaky">⚔ Drill my bookmarks ('+Math.min(6,bms.length)+')</button>')+'<p class="pxlabel">🔖 Bookmarked ('+bms.length+')</p><ul class="lglist">'+bms.map(function(c){ return '<li><button class="lgc '+LG_CLS[lgSt(c.id)]+'" data-lgc="'+c.id+'"><span class="lgi">🔖</span><span>'+esc(c.n)+'</span><small>'+(lgRec(c.id).bk||0)+'/'+BM_NEED+' in a row</small></button></li>'; }).join("")+'</ul>';
   else if(LGTAB==="Mistakes"){ var lg=s.lglog||[]; body=lg.length?'<ul class="lgmiss">'+lg.slice(0,30).map(function(e){ var c=lgBy(e.c); return '<li><p class="pxsmall">'+esc(c?c.n:e.c)+' · '+new Date(e.t).toLocaleDateString()+'</p><p class="rq">'+esc(e.q)+'</p><p><span class="no">✗ '+esc(e.a)+'</span> <span class="ok">✓ '+esc(e.r)+'</span></p></li>'; }).join("")+'</ul>':'<p>No mistakes logged yet. Every miss in The Hollow lands here so you can review it.</p>'; }
   else if(LGTAB==="Lock-ins"){ var soon=PSATC.filter(function(c){ return lgSt(c.id)===2&&!lgDue(c); }).map(function(c){ return [c,LOCK_MS-(Date.now()-lgRec(c.id).sa)]; }).sort(function(a,b){ return a[1]-b[1]; });
     body='<p class="pxsmall">A Solid concept gets a surprise check 2+ days later. Pass it and it’s <b>Locked in</b>. The Proctor only fights you when every concept is Locked in.</p>'+
@@ -13157,13 +13231,13 @@ function lgPanel(tab,openZone){ if(tab) LGTAB=tab; var s=QS(), n=lgCounts(), tot
       (soon.length?'<ul class="lglist">'+soon.slice(0,20).map(function(x){ var h=Math.max(1,Math.round(x[1]/36e5)); return '<li><button class="lgc solid" data-lgc="'+x[0].id+'"><span class="lgi">✔</span><span>'+esc(x[0].n)+'</span><small>check in '+(h>=24?Math.round(h/24)+' day'+(Math.round(h/24)>1?'s':''):h+' h')+'</small></button></li>'; }).join("")+'</ul>':''); }
   qwPanel('<div class="lgp"><p class="pxlabel">📒 The Ledger · PSAT 8/9</p><h2>'+n[3]+' locked · '+n[2]+' solid · '+n[1]+' shaky · '+n[0]+' new</h2>'+bar+
     '<p class="pxsmall">Reading & Writing ready: <b>'+Math.round(lgReady("rw")*100)+'%</b> · Math ready: <b>'+Math.round(lgReady("m")*100)+'%</b> · Hollow level cap: <b>LV '+caveCap()+'</b> (Solid concepts raise it, up to 50)</p>'+
-    '<div class="lgtabs" role="tablist">'+["Zones","Shaky","Mistakes","Lock-ins"].map(function(t){ return '<button class="pxbtn'+(t===LGTAB?' on':'')+'" data-lgtab="'+t+'" role="tab" aria-selected="'+(t===LGTAB)+'">'+t+(t==="Shaky"&&sh.length?' ('+sh.length+')':t==="Lock-ins"&&due.length?' ('+due.length+')':'')+'</button>'; }).join("")+'</div>'+
+    '<div class="lgtabs" role="tablist">'+["Zones","Shaky","Mistakes","Lock-ins"].map(function(t){ return '<button class="pxbtn'+(t===LGTAB?' on':'')+'" data-lgtab="'+t+'" role="tab" aria-selected="'+(t===LGTAB)+'">'+t+(t==="Shaky"&&sh.length+bms.length?' ('+(sh.length+bms.length)+')':t==="Lock-ins"&&due.length?' ('+due.length+')':'')+'</button>'; }).join("")+'</div>'+
     '<div class="lgbody">'+body+'</div><button class="pxbtn go" data-close>▶ Back to the cave</button></div>'); }
 function lgConceptPanel(id){ var c=lgBy(id); if(!c) return; var st=lgSt(id), r=(QS().ledger||{})[id];
   qwPanel('<div class="lgp"><p class="pxlabel">'+esc(CZ[c.z].n)+' · '+esc(c.dom)+' · '+esc(c.skill)+'</p><h2>'+LG_IC[st]+' '+esc(c.n)+'</h2><p class="lgst '+LG_CLS[st]+'">'+LG_ST[st]+(r?' · '+r.r+' right, '+r.w+' wrong':'')+(lgDue(c)?' · lock-in check due!':'')+'</p>'+lgRuleHTML(c)+
-    '<div class="cq-bot"><button class="pxbtn go" data-lgdrill="one:'+id+'">⚔ Practice it 3 different ways</button><button class="pxbtn" data-lgtab="'+LGTAB+'">◀ Back to the Ledger</button></div></div>'); }
+    '<div class="cq-bot"><button class="pxbtn go" data-lgdrill="one:'+id+'">⚔ Practice it 3 different ways</button>'+lgBmBtn(c,false)+'<button class="pxbtn" data-lgtab="'+LGTAB+'">◀ Back to the Ledger</button></div></div>'); }
 function lgDrill(kind){ var list=[], title="Practice";
-  if(kind==="shaky"){ list=PSATC.filter(function(c){ return lgSt(c.id)===1; }).slice(0,6).map(function(c){ return {c:c}; }); title="Shaky drill"; }
+  if(kind==="shaky"){ list=PSATC.filter(function(c){ return lgSt(c.id)===1||lgBmOn(c.id); }).slice(0,6).map(function(c){ return {c:c}; }); title="Shaky drill"; }
   else if(kind==="due"){ list=PSATC.filter(lgDue).slice(0,8).map(function(c){ return {c:c}; }); title="Lock-in checks"; }
   else if(kind.indexOf("one:")===0){ var c=lgBy(kind.slice(4)); if(c){ list=[{c:c},{c:c},{c:c}]; title=c.n; } }
   else if(kind.indexOf("zone:")===0){ var a=+kind.slice(5); list=lgZone(a).filter(function(x){ return lgSt(x.id)===1; }).concat(lgZone(a).filter(function(x){ return lgSt(x.id)===0; })).slice(0,5).map(function(x){ return {c:x}; }); title=CZ[a].n+" practice"; }
