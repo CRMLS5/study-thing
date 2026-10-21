@@ -11054,7 +11054,7 @@ function drawPortal(p,now,s){
     if(Math.random()<.25) qwParts.push({x:ins[0]+(Math.random()-.5)*14,y:ins[1]+8,vx:0,vy:-.4,life:700,max:700,s:1,col:col}); }
   drawSpr(fr,cx-14,by-36);
   if(locked){ wrect(cx-3,by-21,6,5,"#ffd43b"); wrect(cx-2,by-24,4,3,"#1a1c2c"); wrect(cx-1,by-23,2,2,"#5a5468"); }
-  var sub=""; if(!p.ret&&!p.final){ var k=s.kills[p.land]||0, L0=landById(p.land); sub="LV "+landLvl(p.land)+" · "+(s.badges[p.land]?"★ CLEARED":isArchived(L0&&L0.guide)?"ARCHIVED":k+"/"+KILLS_FOR_BOSS); } if(p.final) sub=locked?"LOCKED "+qwBadges(s)+"/"+LANDS.length:"OPEN!";
+  var sub=""; if(!p.ret&&!p.final){ var k=s.kills[p.land]||0, L0=landById(p.land); sub="LV "+landLvl(p.land); } if(p.final) sub=locked?"LOCKED "+qwBadges(s)+"/"+LANDS.length:"OPEN!";
   label(p.label,cx,by-40,p.ret?"#ffd43b":"#ffffff"); if(sub) label(sub,cx,by-31,p.final&&locked?"#ff8fa3":s.badges[p.land]?"#ffd43b":"#c8f0ff");
 }
 function shade(hex,amt){ var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255; r=Math.max(0,Math.min(255,r+r*amt)); g=Math.max(0,Math.min(255,g+g*amt)); b=Math.max(0,Math.min(255,b+b*amt)); return "rgb("+(r|0)+","+(g|0)+","+(b|0)+")"; }
@@ -13276,7 +13276,7 @@ function drawBigPortal(p,now,s){
   if(Math.random()<.5) qwParts.push({x:ins[0]+(Math.random()-.5)*30,y:ins[1]+20,vx:(Math.random()-.5)*.3,vy:-.5,life:900,max:900,s:1,col:Math.random()<.5?col:"#d0bfff"});
   drawSpr(fr,cx-14*K,by-36*K,K);
   var pct=Math.round(lgSolidFrac()*100), lv=landLvl(CAVE_ID);
-  label("✦ "+p.label+" ✦",cx,by-36*K-6,"#ffd43b"); label("PSAT 8/9 · LV "+lv+" · "+pct+"% solid",cx,by-36*K+4,"#e5dbff"); }
+  label("✦ "+p.label+" ✦",cx,by-36*K-6,"#ffd43b"); label("LV "+lv,cx,by-36*K+4,"#e5dbff"); }
 /* ---------- entering the cave ---------- */
 function caveOnEnter(){ var C=caveS(); if(!C.found){ C.found=1; save(); qwAch("hollow"); } caveApplyState(MAP); caveEchoSync(MAP); qwMiniBuild(); caveHowTo(); if(!C.intro){ C.intro=1; save(); setTimeout(caveIntro,700); } }
 function caveIntro(){ var n=MAP.npcs.filter(function(x){ return x.id==="wren"; })[0];
