@@ -10328,6 +10328,7 @@ function tex(name,v,frame){
   var k=name+v+"-"+(frame||0); if(TEXCACHE[k]) return TEXCACHE[k];
   var r=rng(hstr(name)+v*7919), c=pxCanvas(16,16,function(x,p){
     var C=TEXC[name], B=TEXB[name], i;
+    if((name==="wood"||name==="lwall")&&libTex(name,v,p,r)) return;
     if(name==="cwall"||name==="chasm"||name==="lava"||name==="crys"||name==="mine"){ caveTex(name,v,frame,x,p,r); return; }
     if(C){ p(0,0,C[0],16,16); for(i=0;i<22;i++) p(r()*16|0,r()*16|0,C[1+(r()*2|0)]); for(i=0;i<10;i++) p(r()*16|0,r()*16|0,C[3]);
       if(name==="sand"){ var yy=3+v*3+(r()*3|0); for(i=0;i<16;i++) p(i,yy+Math.round(Math.sin(i/2.5)),C[4]); }
@@ -10385,6 +10386,90 @@ function treeObj(m,kind,x,y){
   if(kind==="rock") return addObj(m,"rock",x,y,{pal:SPAL[m.B.rock||"rock"]});
   return addObj(m,kind,x,y,{pal:kind==="bush"?L:SPAL.cactus});
 }
+/* ---------- 📚 The Library: when a test is archived, its portal moves out of the village plaza and into this big library ---------- */
+BIOME.library={ground:"wood",sky:["#2a1a10","#4a2e1a"],far:"#3a2616",hill:"#2a1a10",plat:"#6b4a2e",tint:"rgba(255,170,80,.05)",amb:"dust"};
+["wood","lwall"].forEach(function(n){ if(GI[n]==null){ GI[n]=GT.length; GT.push(n); } });
+var LIB_BOOKS=["#c0392b","#2f6fd0","#2f9e44","#8a4fd8","#e8a33a","#e6dcc4","#1f6e6e","#a8323a","#5c7cfa"];
+function libArchived(){ return LANDS.filter(function(L){ return isArchived(L.guide); }).sort(function(a,b){ return String(b.guide.due||"").localeCompare(String(a.guide.due||"")); }); }
+/* floor planks and whole walls of bookshelves */
+function libTex(name,v,p,r){
+  if(name==="wood"){ p(0,0,["#8a5a34","#86562f","#8e5e37"][v%3],16,16);
+    for(var row=0;row<4;row++){ var y0=row*4; p(0,y0,"#9c6a40",16,1); p(0,y0+3,"#5e3a1e",16,1); p((r()*14|0)+1,y0,"#5e3a1e",1,3); for(var i=0;i<2;i++) p(r()*15|0,y0+1+(r()*2|0),"#7a4c2a",2,1); }
+    return true; }
+  if(name==="lwall"){ p(0,0,"#2e1c10",16,16);
+    [0,8].forEach(function(y0){ p(0,y0,"#5a3a22",16,1); var x=1; while(x<15){ var w=1+(r()*2|0), h=3+(r()*4|0); if(x+w>15) w=15-x; if(r()>.1){ p(x,y0+7-h,LIB_BOOKS[r()*LIB_BOOKS.length|0],w,h); if(h>4) p(x,y0+8-h,"rgba(255,255,255,.22)",w,1); } x+=w; } p(0,y0+7,"#4a2e18",16,1); });
+    p(0,0,"#1e120a",1,16); p(15,0,"#1e120a",1,16); return true; }
+  return false; }
+/* the building in the village */
+function librarySprite(){ if(BAKED.library) return BAKED.library;
+  BAKED.library=pxCanvas(112,98,function(x,p){
+    var O="#1a1c2c", ST="#e2d9c6", SD="#bfb39a", SL="#f6f1e6", RF="#4e5f86", RD="#36425f", y;
+    for(var r=0;r<24;r++){ var half=Math.round(8+r*2.1), x0=56-half, x1=56+half; p(x0-1,6+r,O,x1-x0+2,1); p(x0,6+r,r%4===3?RD:RF,x1-x0,1); }
+    p(53,2,O,6,5); p(54,3,"#ffd43b",4,3);
+    p(45,15,O,22,11); p(46,16,"#ffe8a8",10,9); p(56,16,"#ffe8a8",10,9); p(56,16,"#c9a227",1,9); [18,20,22].forEach(function(yy){ p(48,yy,"#c9a227",6,1); p(58,yy,"#c9a227",6,1); });
+    p(1,30,O,110,5); p(2,30,SL,108,2); p(2,32,SD,108,2);
+    p(4,35,O,104,56); p(5,35,ST,102,55);
+    for(y=40;y<90;y+=6) p(5,y,SD,102,1);
+    for(y=35;y<90;y+=6) for(var xx=((y-35)/6)%2?8:14;xx<107;xx+=12) p(xx,y+1,SD,1,5);
+    [22,90].forEach(function(cx){ p(cx-8,46,O,16,32); p(cx-7,47,"#ffd97a",14,30); p(cx-7,47,O,2,1); p(cx-7,48,O,1,1); p(cx+5,47,O,2,1); p(cx+6,48,O,1,1);
+      p(cx,47,"#8a5a2a",1,30); p(cx-7,60,"#8a5a2a",14,1); p(cx-7,70,"#8a5a2a",14,1);
+      for(var b=0;b<6;b++){ p(cx-6+b*2+(b>2?1:0),71+(b%3),LIB_BOOKS[(b*3+cx)%LIB_BOOKS.length],1,6-(b%3)); }
+      p(cx-9,78,O,18,3); p(cx-8,78,SL,16,2); });
+    [9,39,73,103].forEach(function(cx){ p(cx-4,37,O,9,52); p(cx-3,37,SL,7,52); p(cx+1,37,SD,2,52); p(cx-5,35,O,11,4); p(cx-4,36,SL,9,2); p(cx-5,86,O,11,4); p(cx-4,87,SL,9,2); });
+    p(42,39,O,28,10); p(43,40,"#c9a227",26,8); p(44,41,"#ffd43b",24,6); p(47,43,"#7a5a10",18,1); p(49,45,"#7a5a10",14,1);
+    for(y=0;y<8;y++){ var hw=Math.round(Math.sqrt(64-(8-y)*(8-y))*1.5); p(56-hw-1,53+y,O,hw*2+2,1); p(56-hw,53+y,y<3?"#fff3c0":"#ffd97a",hw*2,1); }
+    p(43,61,O,26,30); p(44,61,"#6b3f1f",24,30); [50,56,62].forEach(function(lx){ p(lx,61,"#55301a",1,30); }); p(44,61,"#8a5a2a",24,2);
+    p(53,75,"#ffd43b",2,2); p(58,75,"#ffd43b",2,2);
+    [30,79].forEach(function(lx){ p(lx,60,O,5,8); p(lx+1,61,"#ffe08a",3,6); p(lx+2,58,O,1,2); });
+    p(32,90,O,48,4); p(33,90,SL,46,3); p(28,94,O,56,4); p(29,94,SD,54,3);
+  });
+  return BAKED.library; }
+function bshelfSprite(bw){ var k="bshelf"+bw; if(BAKED[k]) return BAKED[k]; var W=bw*16, r=rng(hstr(k));
+  BAKED[k]=pxCanvas(W,32,function(x,p){ p(0,0,"#1a1c2c",W,32); p(1,1,"#5a3a22",W-2,30); p(1,1,"#7a5232",W-2,2);
+    [4,13,22].forEach(function(y0){ p(2,y0,"#2e1c10",W-4,8); var xx=2; while(xx<W-2){ var w=1+(r()*2|0), h=4+(r()*4|0); if(xx+w>W-2) w=W-2-xx; if(r()>.1){ p(xx,y0+8-h,LIB_BOOKS[r()*LIB_BOOKS.length|0],w,h); if(h>5) p(xx,y0+9-h,"rgba(255,255,255,.22)",w,1); } xx+=w; } p(1,y0+8,"#7a5232",W-2,1); }); });
+  return BAKED[k]; }
+function rtableSprite(kind){ var k="rtable"+(kind||""); if(BAKED[k]) return BAKED[k];
+  BAKED[k]=pxCanvas(32,24,function(x,p){ var O="#1a1c2c";
+    if(kind==="desk"){ p(1,9,O,30,15); p(2,9,"#9c6a40",28,4); p(2,13,"#7a4c2a",28,10); p(3,15,"#5a3a22",26,1); p(14,18,"#c9a227",4,1);
+      p(4,1,O,11,9); p(5,2,"#c0392b",9,2); p(5,4,"#2f6fd0",9,2); p(6,6,"#2f9e44",8,2); p(5,8,"#e8a33a",9,1); }
+    else { p(1,9,O,30,6); p(2,9,"#9c6a40",28,4); p(2,13,"#6b4226",28,1); p(3,15,O,3,9); p(4,15,"#5a3a22",1,8); p(26,15,O,3,9); p(27,15,"#5a3a22",1,8);
+      p(7,6,O,14,4); p(8,7,"#f6f1e6",6,2); p(14,7,"#f6f1e6",6,2); p(14,7,"#c9a227",1,2); p(9,7,"#8a8a9a",4,1); p(15,7,"#8a8a9a",4,1); }
+    p(24,4,O,4,6); p(25,5,"#f6f1e6",2,4); p(23,9,O,6,1); });
+  return BAKED[k]; }
+function libDrawObj(o,now){
+  if(o.k==="library"){ var ls=librarySprite(); drawSpr(ls,o.x*16,(o.y+1)*16-ls.height); return; }
+  if(o.k==="bshelf"){ var bs=bshelfSprite(o.bw||1); drawSpr(bs,o.x*16,(o.y+1)*16-bs.height); return; }
+  if(o.k==="rtable"){ var ts=rtableSprite(o.kind), bx=o.x*16, by=(o.y+1)*16-ts.height; shadow(bx+16,(o.y+1)*16-1,14); drawSpr(ts,bx,by); var fh=2+((now/110)%3|0); wrect(bx+25,by+4-fh,2,fh,"#ffd43b"); wrect(bx+25,by+4-fh,1,1,"#fff3c0"); }
+}
+/* the village door and the library's way out */
+function libDrawDoor(p,now,s){
+  if(p.exit){ if(!p.main) return; var x0=p.x*16, y0=p.y*16; wrect(x0,y0,32,16,"#1a1c2c"); wrect(x0+2,y0+1,28,15,"#ffe8a8"); wrect(x0+2,y0+1,28,4,"#fff6d6"); wrect(x0+15,y0+1,2,15,"#c9a227");
+    label("VILLAGE",x0+16,y0+12,"#ffd43b"); return; }
+  label("✦ THE LIBRARY ✦",p.x*16+8,p.y*16+16-104,"#ffd43b"); }
+function libVillage(m){
+  for(var x=4;x<=9;x++) setG(m,x,20,"stone"); for(var y=17;y<=20;y++) setG(m,10,y,"stone"); setG(m,11,17,"stone"); setG(m,12,17,"stone");
+  addObj(m,"library",3,19,{bw:7,bh:4});
+  m.portals.push({x:6,y:19,land:"library",color:"#ffd97a",label:"THE LIBRARY",door:true}); }
+function genLibrary(){
+  var arch=libArchived(), n=arch.length, R=Math.max(1,Math.ceil(n/4)), W=24, yL=6+5*(R-1), H=yL+7, x,y;
+  var m=newMap("library",W,H,"library","wood"); m.library=true;
+  for(y=0;y<H;y++) for(x=0;x<W;x++) if(x===0||x===W-1||y<3||y===H-1){ setG(m,x,y,"lwall"); m.blk[y*W+x]=1; }
+  for(y=3;y<H-1;y++){ setG(m,11,y,"carpet"); setG(m,12,y,"carpet"); }
+  var XS=[7,16,3,20], SH=[[1,2],[4,3],[8,2],[14,2],[17,3],[21,2]];
+  for(var r=0;r<R;r++){ var py=6+5*r;
+    SH.forEach(function(sh){ addObj(m,"bshelf",sh[0],py,{bw:sh[1],bh:1}); });
+    for(var k=0;k<4;k++){ var L=arch[r*4+k], px=XS[k];
+      if(L){ m.portals.push({x:px,y:py,land:L.id,color:L.color,label:L.name}); m.blk[py*W+px]=1; }
+      else addObj(m,"bshelf",px,py,{bw:1,bh:1}); } }
+  addObj(m,"rtable",5,H-4,{bw:2,bh:1,kind:"desk"}); addObj(m,"rtable",15,H-4,{bw:2,bh:1}); addObj(m,"rtable",18,H-4,{bw:2,bh:1});
+  m.npcs.push({id:"librarian",x:7,y:H-4,hero:{o:3,s:2},name:"Librarian Paige",face:"down"});
+  [11,12].forEach(function(dx){ m.portals.push({x:dx,y:H-1,land:"village",color:"#ffd43b",label:"",ret:true,door:true,exit:true,main:dx===11}); });
+  m.spawn=[11,H-2];
+  return m; }
+function libTalk(n,face){ var arch=libArchived();
+  qwSay(n.name,face,arch.length?["Welcome to the Library! When a test date passes, its portal moves in here from the village. Your level and everything you earned in that land is saved.",
+    "On the shelves right now: "+arch.map(function(L){ return L.name+" ("+L.guide.title+")"; }).join(", ")+". Step into any portal to review!"]:
+    ["Welcome to the Library! When a test date passes, its portal moves in here from the village, so you can still review it anytime.","No tests are archived yet."]); }
 function genVillage(){
   var m=newMap("village",32,25,"village","grass"), r=rng(77), x,y;
   for(y=0;y<m.H;y++) for(x=0;x<m.W;x++) if(x<3||y<3||x>m.W-4||y>m.H-4){ if(r()<.92) treeObj(m,r()<.6?"pine":"oak",x,y); else m.blk[y*m.W+x]=1; }
@@ -10394,12 +10479,13 @@ function genVillage(){
   /* portal plaza */
   var slots=[[11,6],[21,6],[6,8],[26,8],[6,12],[26,12]];
   carveLine(m,[6,10],[25,10],null,"stone");
-  LANDS.forEach(function(L,i){ var s=slots[i]; if(!s) return; carveLine(m,[s[0],s[1]+1],[s[0],10],null,"stone"); m.portals.push({x:s[0],y:s[1],land:L.id,color:L.color,label:L.name}); });
+  LANDS.filter(function(L){ return !isArchived(L.guide); }).forEach(function(L,i){ var s=slots[i]; if(!s) return; carveLine(m,[s[0],s[1]+1],[s[0],10],null,"stone"); m.portals.push({x:s[0],y:s[1],land:L.id,color:L.color,label:L.name}); });
   m.portals.forEach(function(p){ m.blk[p.y*m.W+p.x]=1; setG(m,p.x,p.y,"stone"); setG(m,p.x+1,p.y,"stone"); setG(m,p.x-1,p.y,"stone"); });
   if(caveLand()){ for(var hy=2;hy<=8;hy++) for(var hx=12;hx<=20;hx++){ if(Math.abs(hx-16)/4+Math.abs(hy-5)/2.6<=1.05) setG(m,hx,hy,"stone"); } carveLine(m,[16,6],[16,9],null,"stone"); addObj(m,"fountain",15,5,{bw:3,bh:2});
     m.portals.push({x:16,y:14,land:CAVE_ID,color:"#ffd43b",label:"THE HOLLOW",big:true}); [15,16,17].forEach(function(bx){ for(var by2=11;by2<=14;by2++) m.blk[by2*m.W+bx]=1; }); }
   else addObj(m,"fountain",15,14,{bw:3,bh:2});
-  [[5,15],[25,15],[7,20],[23,20]].forEach(function(h,i){ addObj(m,"house",h[0],h[1],{bw:2,bh:2,roof:["#c0392b","#2f6fd0","#2f9e44","#8a4fd8"][i],roofD:["#8e2a1f","#1f4f9a","#1f6e30","#5f339a"][i]}); });
+  [[25,15,"#2f6fd0","#1f4f9a"],[23,20,"#8a4fd8","#5f339a"]].forEach(function(h){ addObj(m,"house",h[0],h[1],{bw:2,bh:2,roof:h[2],roofD:h[3]}); });
+  libVillage(m);
   m.lampsAt.forEach(function(l){ addObj(m,"lamp",l[0],l[1]); });
   m.npcs.push({id:"elder",x:12,y:16,spr:["elder","elder"],name:"Professor Hoot"},{id:"shop",x:20,y:16,spr:["merchant","merchant"],name:"Mo the Merchant"});
   m.npcs.push({id:"sage",x:16,y:18,hero:{o:5,s:0},name:"Study Sage",tutor:true,face:"down"});
@@ -10846,7 +10932,7 @@ var MAPS={}, MAP=null, QP=null, QMODE="walk", SC=3, QDPR=1, qwCv=null, qwCx=null
 function getMap(id){
   if(MAPS[id]) return MAPS[id];
   var sv=AREA_OVR; AREA_OVR=null;
-  var m=id==="village"?genVillage():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):dgIsId(id)?genDungeon(id):dgAddToLand(genLand(landById(id)));
+  var m=id==="village"?genVillage():id==="library"?genLibrary():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):dgIsId(id)?genDungeon(id):dgAddToLand(genLand(landById(id)));
   AREA_OVR=sv;
   if(m.quests) m.quests.forEach(function(q){ q.land=m.id; });
   MAPS[id]=m; return m;
@@ -10970,7 +11056,7 @@ function qwDraw(now){
   if(MAP.big) qwDrawGround(now,vw,vh);
   if(MAP.dungeon) dgDrawFloor(now);
   MAP.objs.forEach(function(o){
-    if(o.x*16<qwCam.x-64||o.x*16>qwCam.x+vw+64||o.y*16<qwCam.y-16||o.y*16>qwCam.y+vh+80) return;
+    if(o.x*16+(o.bw||1)*16<qwCam.x-48||o.x*16>qwCam.x+vw+64||o.y*16<qwCam.y-16||o.y*16>qwCam.y+vh+112) return;
     add(o.y*16+15,function(){
       if(o.k==="pine"||o.k==="oak"||o.k==="bush"||o.k==="rock"||o.k==="cactus"||o.k==="pillar"||CAVE_OBJ[o.k]){ if(o.k==="well"&&caveWellReady()){ var wg=Math.sin(now/260)*.5+.5; wrect(o.x*16+4,o.y*16+5,8,2,"rgba(255,212,59,"+(.45+wg*.4)+")"); if(Math.random()<.2) qwParts.push({x:o.x*16+6+Math.random()*4,y:o.y*16+4,vx:0,vy:-.3,life:700,max:700,s:1,col:"#ffd43b"}); } var sp=bake(o.k+JSON.stringify(o.pal||""),SPR[o.k],o.pal||SPAL[o.k]); shadow(o.x*16+8,o.y*16+15,6); drawSpr(sp,o.x*16+8-sp.width/2,o.y*16+16-sp.height); }
       else if(o.k==="house"){ var hs=houseSprite(o.roof,o.roofD); drawSpr(hs,o.x*16,(o.y+1)*16-hs.height); }
@@ -10982,6 +11068,7 @@ function qwDraw(now){
       else if(o.k==="shrine"){ var shs=bake("shrine",SPR.shrine,SPAL.shrine); shadow(o.x*16+8,o.y*16+15,8); drawSpr(shs,o.x*16+8-shs.width/2,o.y*16+16-shs.height); if(Math.random()<.12) qwParts.push({x:o.x*16+8,y:o.y*16-10,vx:(Math.random()-.5)*.3,vy:-.25,life:900,max:900,s:1,col:"#ff8fab"}); }
       else if(o.k==="fire"){ var fx0=o.x*16, fy0=o.y*16; wrect(fx0+2,fy0+12,12,3,"#6b4226"); wrect(fx0+4,fy0+10,8,2,"#8b5a2b"); for(var fl=0;fl<6;fl++){ var fh=4+((now/80+fl*5)%6|0); wrect(fx0+4+fl*1.5,fy0+11-fh,2,fh,fl%2?"#ff922b":"#ffd43b"); } if(Math.random()<.3) qwParts.push({x:fx0+8,y:fy0+3,vx:(Math.random()-.5)*.3,vy:-.5,life:600,max:600,s:1,col:"#ff922b"}); }
       else if(o.k==="dgate"){ dgDrawGate(o,now,s); }
+      else if(o.k==="library"||o.k==="bshelf"||o.k==="rtable"){ libDrawObj(o,now); }
       else if(o.k==="tent"){ var tsp=tentSprite(); drawSpr(tsp,o.x*16,(o.y+1)*16-tsp.height); }
       else if(o.k==="sign"){ var sgn=bake("sign",SPR.sign,SPAL.sign); shadow(o.x*16+8,o.y*16+15,6); drawSpr(sgn,o.x*16+8-sgn.width/2,o.y*16+16-sgn.height); }
     });
@@ -11047,6 +11134,7 @@ function qwDrawGround(now,vw,vh){
 function drawBubble(wx,wy,now,ch){ var b=Math.round(Math.sin(now/220)); wrect(wx,wy+b,9,8,"#1a1c2c"); wrect(wx+1,wy+1+b,7,6,"#f4f1e8"); wrect(wx+3,wy+8+b,2,2,"#1a1c2c"); qwCx.font="700 "+Math.round(7*SC)+"px "+PXF; qwCx.textAlign="center"; qwCx.fillStyle=ch==="$"?"#2f9e44":ch==="?"?"#1c7ed6":ch==="i"?"#7048e8":"#e8590c"; qwCx.fillText(ch,(wx+4.5-qwCam.x)*SC,(wy+6.5+b-qwCam.y)*SC); }
 function drawPortal(p,now,s){
   if(p.big) return drawBigPortal(p,now,s);
+  if(p.door) return libDrawDoor(p,now,s);
   var cx=p.x*16+8, by=p.y*16+16, fr=portalFrame(), locked=p.final&&qwBadges(s)<LANDS.length, col=locked?"#5a5468":p.color;
   var ins=[cx,by-17]; var rings=9;
   for(var r=rings;r>=1;r--){ var rx=r*.95, ry=r*1.45, n=Math.round(r*5); for(var i=0;i<n;i++){ var a=i/n*Math.PI*2+(locked?0:now/(300+r*40))*(r%2?1:-1); var px=ins[0]+Math.cos(a)*rx, py=ins[1]+Math.sin(a)*ry; wrect(Math.round(px),Math.round(py),1,1,locked?(r%2?"#4a4458":"#3a3448"):(r%3===0?"#ffffff":r%2?col:shade(col,-.35))); } }
@@ -11063,7 +11151,7 @@ function qwAtmos(now,vw,vh){
   var c=qwCx, B=MAP.B, W=qwCv.width, H=qwCv.height;
   if(B.tint){ c.fillStyle=B.tint; c.fillRect(0,0,W,H); }
   /* cloud shadows live on the ground (world space): they drift slowly and stay put when you walk */
-  c.fillStyle="rgba(0,0,10,.07)"; var cdx=Math.floor(now/90/4)*4, CWD=300, CHT=220, cx0=qwCam.x, cy0=qwCam.y, noCl=MAP.B===BIOME.tower||!!MAP.cave;
+  c.fillStyle="rgba(0,0,10,.07)"; var cdx=Math.floor(now/90/4)*4, CWD=300, CHT=220, cx0=qwCam.x, cy0=qwCam.y, noCl=MAP.B===BIOME.tower||!!MAP.cave||!!MAP.library;
   for(var gx=Math.floor((cx0-cdx-160)/CWD);gx<=Math.floor((cx0-cdx+vw+160)/CWD);gx++) for(var gy=Math.floor((cy0-80)/CHT);gy<=Math.floor((cy0+vh+80)/CHT);gy++){
     var ch=(Math.imul(gx,73856093)^Math.imul(gy,19349663))>>>0; if(noCl||ch%3===0) continue;
     var cwx=gx*CWD+ch%180+cdx, cwy=gy*CHT+(ch>>>8)%160, crw=52+(ch>>>16)%26;
@@ -11093,7 +11181,7 @@ var qwMiniBase=null;
 function qwMiniBuild(){ var mc=$("#qw-mini"); if(!mc) return; mc.hidden=!qwMiniOn; var sc=MAP.big?1:2; mc.width=MAP.W*sc; mc.height=MAP.H*sc; mc.classList.toggle("big",!!MAP.big); mc.classList.toggle("dg",!!MAP.dungeon); mc.classList.toggle("cave",!!MAP.cave);
   qwMiniBase=pxCanvas(mc.width,mc.height,function(x,p){ for(var i=0;i<MAP.W*MAP.H;i++){ var X=i%MAP.W, Y=(i-X)/MAP.W, g=MAP.g[i], n=GT[g];
     if(MAP.cave){ p(X*sc,Y*sc,caveMiniColor(g,i),sc,sc); continue; }
-    p(X*sc,Y*sc,g===GI.water?"#3a7bd5":MAP.blk[i]?"#1f3d24":g===GI.path||g===GI.bridge?"#d8b47a":(TEXC[n]?TEXC[n][0]:TEXB[n]?TEXB[n][0]:n==="carpet"?"#a8323a":"#7a6a5a"),sc,sc); } }); }
+    p(X*sc,Y*sc,g===GI.water?"#3a7bd5":MAP.blk[i]?(MAP.library?"#3d2616":"#1f3d24"):g===GI.path||g===GI.bridge?"#d8b47a":(TEXC[n]?TEXC[n][0]:TEXB[n]?TEXB[n][0]:n==="carpet"?"#a8323a":n==="wood"?"#8a5a34":"#7a6a5a"),sc,sc); } }); }
 function qwMiniDot(now){ var mc=$("#qw-mini"); if(!mc||mc.hidden||!qwMiniBase) return; var m=mc.getContext("2d"), sc=MAP.big?1:2, s=QS(); m.drawImage(qwMiniBase,0,0);
   function dot(x,y,col,sz){ m.fillStyle=col; m.fillRect(Math.round(x*sc+sc/2-sz/2),Math.round(y*sc+sc/2-sz/2),sz,sz); }
   if(MAP.dgs) MAP.dgs.forEach(function(g){ dot(g.x,g.y,"#b197fc",4); });
@@ -11125,7 +11213,7 @@ function qwHud(){
       '<button class="pxwin qh-pill" id="qh-bag">'+icon("bag")+' BAG</button><button class="pxwin qh-pill" id="qh-log">LOG</button><button class="pxwin qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'">MAP</button>'+
       mpPill()+'<button class="pxwin qh-pill" id="qh-set" aria-label="Settings">⚙</button></div>';
 }
-function mapTitle(){ if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
+function mapTitle(){ if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.library) return ["The Library","Every test you’ve already taken. Step into a portal to review anytime."]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
   if(MAP.cave){ var a0=caveArea(QP?QP.y:MAP.spawn[1]); return ["The Hollow",CZ[a0].n+" · "+CZ[a0].sub+" · press L for your Ledger"]; }
   var L=landById(MAP.id), s=QS(), k=s.kills[L.id]||0; return [L.name,L.guide.title+" · "+L.guide.sub+" · "+(s.badges[L.id]?"Badge earned!":k>=KILLS_FOR_BOSS?"The boss awaits at the top!":"Monsters beaten "+k+"/"+KILLS_FOR_BOSS)]; }
 function qwBanner(){ var b=$("#qw-banner"), t=mapTitle(); b.classList.remove("danger"); b.innerHTML='<b>'+t[0]+'</b><span>'+t[1]+'</span>'; b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },2800); }
@@ -11157,7 +11245,7 @@ function qwNextGoal(){
   var s=QS(), todo=LANDS.filter(function(L){ return !s.badges[L.id]; }); todo.sort(function(a,b){ return isArchived(a.guide)-isArchived(b.guide); });
   if(!todo.length) return "You beat every land! You are a Study Quest legend. Keep leveling up and hunting chests.";
   var L=todo[0], k=s.kills[L.id]||0;
-  return "Take the "+L.name+" portal ("+L.guide.title+"). "+(k<KILLS_FOR_BOSS?"Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" there to wake the boss.":"The boss at the top of the land is ready for you!");
+  return "Take the "+L.name+" portal"+(isArchived(L.guide)?" in the Library":"")+" ("+L.guide.title+"). "+(k<KILLS_FOR_BOSS?"Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" there to wake the boss.":"The boss at the top of the land is ready for you!");
 }
 function qwNpc(n){
   if(n.cave) return caveNpc(n);
@@ -11169,7 +11257,8 @@ function qwNpc(n){
     return qwSay(n.name,face,[qwNextGoal()],[["Thanks!",null],["📖 How to play",function(){ qwHowTo("Basics"); }],["💾 Save",function(){ openSaves("quest"); }]]);
   }
   if(n.id==="shop") return qwShop();
-  var lines={kid1:["I heard one of the bosses is a DRAGON. Good luck!","Did you know? Combos keep going between battles!","Some chests are MIMICS. The Owl Eye charm shows which ones!"],
+  if(n.id==="librarian") return libTalk(n,face);
+  var lines={kid1:["Old tests go to the Library, the big building by the pond. All their portals are inside!","I heard one of the bosses is a DRAGON. Good luck!","Did you know? Combos keep going between battles!","Some chests are MIMICS. The Owl Eye charm shows which ones!"],
     kid2:["Every portal is a different class. I'm scared of the grammar slimes...","If you run out of hearts, you wake up by the fountain.","Cracked ground out there is a hidden pit. Don't say I didn't warn you!"]}[n.id]||["Hi!"];
   qwSay(n.name,face,[lines[Math.random()*lines.length|0]]);
 }
@@ -11180,7 +11269,8 @@ function qwFountain(){
 function qwPortal(p){
   var s=QS();
   if(p.dgExit) return dgExit(p);
-  if(p.ret) return qwTravel("village",null,p.color);
+  if(p.door&&!p.ret) return qwTravel("library",null,"#ffd97a");
+  if(p.ret){ var L0=MAP.cave?null:landById(MAP.id); return qwTravel(L0&&isArchived(L0.guide)?"library":"village",null,p.color); }
   if(p.final&&qwBadges(s)<LANDS.length) return qwSay("Sealed portal",null,["The portal is sealed. It needs every badge ("+qwBadges(s)+"/"+LANDS.length+"). Beat the boss in each land!"]);
   qwTravel(p.land,null,p.color);
 }
@@ -11189,7 +11279,7 @@ function qwTravel(id,pos,col){
   snd(220,0,.4,"sawtooth",.03); snd(440,.1,.35,"triangle",.04); snd(880,.2,.3,"triangle",.03);
   var from=MAP.id;
   qwFade={t0:performance.now(),dur:420,out:true,col:col||"#ffffff",cb:function(){
-    var back=null; if(id==="village"){ var pt=getMap("village").portals.filter(function(q){ return q.land===from; })[0]; if(pt) back=[pt.x,pt.y+1]; }
+    var back=null; if(id==="village"||id==="library"){ var pt=getMap(id).portals.filter(function(q){ return q.land===from; })[0]; if(pt) back=[pt.x,pt.y+(pt.exit?-1:1)]; }
     qwEnterMap(id,pos||back,true); qwHud();
     qwFade={t0:performance.now(),dur:420,out:false,col:col||"#ffffff",cb:function(){ QMODE="walk"; qwBanner(); qwMusicFor(); }};
   }};
@@ -11626,7 +11716,7 @@ function qbBar(){ var s=QS(), max=qwMaxHp(s), b=$(".qb2-bar"); if(!b||!QB) retur
   var dis=QB.done||QB.dodging||QB.striking, inv=s.inv||{};
   b.innerHTML=[["potion","Potion",s.potions,s.hp>=max],["mega","Mega",inv.mega||0,s.hp>=max],["gem","Gem",inv.gem||0,(s.pw||0)>=PW_MAX],["smoke","Smoke",inv.smoke||0,!!QB.smoke]].filter(function(x){ return x[0]==="potion"||x[2]>0; })
     .map(function(x){ return '<button class="pxbtn" data-bitem="'+x[0]+'"'+(dis||!x[2]||x[3]?' disabled':'')+'>'+icon(ITEMS[x[0]].ic)+' '+x[1]+' ('+x[2]+')</button>'; }).join("")+
-    (QB.boss||QB.elite?'':'<button class="pxbtn" id="bs-run"'+(QB.done?' disabled':'')+'>Run away</button>'); }
+    ''; }
 function qbItem(id){ var s=QS(), now=performance.now(); if(!QB||QB.done||QB.dodging||QB.striking) return;
   if(id==="lens"||id==="graph") return;
   if(id==="potion"){ if(qwDrink(true)){ BS.heal=now; bsFx("heal"); bsCall("+3 HEARTS","#69db7c"); } }
@@ -11818,7 +11908,7 @@ function qbDone(){
     var ok=$("#lv-ok"); if(ok) ok.addEventListener("click",function(){ setTimeout(after,60); },{once:true});
   } else after();
 }
-function qbRun(){ if(!QB||QB.boss||QB.elite||QB.done) return; QB.foe.stun=performance.now()+4000; QS().combo=0; qbClose(); toast("You got away!"); }
+function qbRun(){ return; if(!QB||QB.boss||QB.elite||QB.done) return; QB.foe.stun=performance.now()+4000; QS().combo=0; qbClose(); toast("You got away!"); }
 $("#qw-battle").addEventListener("click",function(e){
   var t;
   if(e.target.closest("#bs-dodge")||e.target.closest("#bs-strike")||(QB&&(QB.dodging||QB.striking)&&e.target.closest("#bs-wrap"))){ qbTimingPress(); return; }
@@ -11951,7 +12041,7 @@ function mpClean(t,n){ return String(t==null?"":t).replace(/[\u0000-\u001f\u007f
 var MP_BAD=/\b(f+u+c+k+\w*|s+h+i+t+\w*|b+i+t+c+h+\w*|a+s+s+h+o+l+e+\w*|d+i+c+k+\w*|c+u+n+t+\w*|p+u+s+s+y+\w*|w+h+o+r+e+\w*|s+l+u+t+\w*)/gi;
 function mpFilter(t){ return ST.mpClean===false?t:t.replace(MP_BAD,function(w){ return w[0]+new Array(w.length).join("*"); }); }
 function mpShort(t){ return t.length>40?t.slice(0,39)+"…":t; }
-function mpWhere(m){ if(dgIsId(m)) return dgName(m); return m==="village"?"Village":((landById(m)||{}).name||"Somewhere"); }
+function mpWhere(m){ if(dgIsId(m)) return dgName(m); return m==="village"?"Village":m==="library"?"The Library":((landById(m)||{}).name||"Somewhere"); }
 function mpName(id){ return id===MP.me?(QS().name||"You"):(MP.players[id]&&MP.players[id].n)||"Friend"; }
 function mpCount(){ return 1+Object.keys(MP.players).length; }
 /* ---------- connection ---------- */
@@ -12094,7 +12184,7 @@ function mpPlayer(id,p){
     if(p.tl!=null) o.tl=Math.max(1,Math.min(999,p.tl|0));
     if(p.lv!=null) o.lv=Math.max(1,Math.min(99,p.lv|0));
     var moved=false;
-    if(p.m!=null){ var m=typeof p.m==="string"&&(p.m==="village"||landById(p.m)||dgIsId(p.m))?p.m:"village"; if(m!==o.m){ o.m=m; moved=true; } }
+    if(p.m!=null){ var m=typeof p.m==="string"&&(p.m==="village"||p.m==="library"||landById(p.m)||dgIsId(p.m))?p.m:"village"; if(m!==o.m){ o.m=m; moved=true; } }
     if(p.x!=null&&p.y!=null){ var nx=Math.max(0,Math.min(999,p.x|0)), ny=Math.max(0,Math.min(999,p.y|0));
       if(nx!==o.x||ny!==o.y||moved){ var jump=moved||Math.abs(nx-o.x)+Math.abs(ny-o.y)>2; o.px=jump?nx:o.x; o.py=jump?ny:o.y; o.x=nx; o.y=ny; o.t0=performance.now(); } }
     if(typeof p.fx==="number"&&typeof p.fy==="number"&&isFinite(p.fx)&&isFinite(p.fy)){ o.fx=Math.max(0,Math.min(999,p.fx)); o.fy=Math.max(0,Math.min(999,p.fy)); if(moved) o.dx=null; } else if(moved){ o.fx=null; o.dx=null; }
@@ -12755,7 +12845,7 @@ var SONGS={
   boss:{ms:120,lead:[57,0,60,57,63,62,60,0,57,0,60,57,64,63,62,60, 57,60,63,66,64,63,62,60,59,62,65,64,62,60,59,57],harm:[45,48,51,48,44,47,50,47],bass:[33,33,33,33,33,33,36,36,31,31,31,31,32,32,32,32],type:"sawtooth",v:.011,drum:true},
   final:{ms:115,lead:[62,65,69,74,72,69,65,69,60,64,67,72,70,67,64,67, 62,65,69,74,77,76,74,72,70,69,67,65,64,65,67,0],harm:[50,53,57,53,48,52,55,52],bass:[38,38,38,38,36,36,36,36,34,34,34,34,33,33,36,36],type:"sawtooth",v:.011,drum:true}
 };
-function qwMusicFor(){ if(!MAP) return; if(!MAP.big){ var v=MAP.id==="village"?"village":MAP.dungeon?dgSong():"final"; if(QM.song!==v||!QM.timer) qwMusic(v); return; }
+function qwMusicFor(){ if(!MAP) return; if(!MAP.big){ var v=MAP.id==="village"||MAP.library?"village":MAP.dungeon?dgSong():"final"; if(QM.song!==v||!QM.timer) qwMusic(v); return; }
   var key=qwSongKey(), sk="g:"+MAP.id+":"+key; if(!SONGS[sk]) SONGS[sk]=makeSong(hstr(sk),SONGDEF[key]||SONGDEF.ar_0); if(QM.song===sk&&QM.timer) return; qwMusic(sk); }
 function qwMusic(song){
   clearInterval(QM.timer); QM.timer=0; QM.song=song;
