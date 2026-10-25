@@ -886,6 +886,30 @@ em.locked{color:#ffd43b}em.solid{color:#69db7c}em.shaky{color:#ff8787}em.new{col
 .qw-battle .lsn-btn.slow{color:#f4f1e8}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rd-pass{background:rgba(255,255,255,.07)}}
 :root[data-theme="dark"] .rd-pass{background:rgba(255,255,255,.07)}
+
+.hdp{display:grid;gap:8px;max-width:560px}
+.hdp h2{margin:0}
+.hdp-hint{font-family:var(--font-body,system-ui),sans-serif;font-size:14px;line-height:1.45;color:#c8cce8;margin:0}
+.hdp-msg{font-family:var(--font-body,system-ui),sans-serif;font-size:14.5px;line-height:1.45;color:#ffe08a;margin:2px 0}
+.hp-echo{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,300px);margin:4px auto}
+.hp-crys{display:block;width:100%;height:auto;min-height:100px;aspect-ratio:1;padding:0;border:3px solid #1a1424;border-radius:18px;background:var(--c);opacity:.45;cursor:pointer;transition:transform .08s,opacity .08s,box-shadow .08s}
+.hp-crys.lit{opacity:1;transform:scale(1.06);box-shadow:0 0 0 4px #fff,0 0 28px var(--c)}
+.hp-crys:disabled{cursor:default}
+.hp-lights{display:grid;gap:8px;width:min(100%,320px);margin:4px auto}
+.hp-rune{display:block;width:100%;height:auto;min-height:56px;aspect-ratio:1;padding:0;border:3px solid #1a1424;border-radius:10px;background:#2b2440;color:#5a5468;font:700 26px/1 "Pixelify Sans",monospace;cursor:pointer}
+.hp-rune.on{background:#e599f7;color:#fff;box-shadow:0 0 16px rgba(229,153,247,.7)}
+.hp-slots{margin:0;padding-left:22px;display:grid;gap:6px}
+.hp-slots li{font-family:var(--font-body,system-ui),sans-serif;font-size:14.5px;line-height:1.4;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.07);color:#f4f1e8}
+.hp-slots li.empty{color:#6a7090;background:transparent;border:2px dashed #3b4170}
+.hp-slots li.bad{background:rgba(255,107,107,.22);outline:2px solid #ff6b6b}
+.hp-opts{display:grid;gap:6px}
+.hp-sent{text-align:left;font-family:var(--font-body,system-ui),sans-serif;font-size:14.5px;line-height:1.4;padding:9px 11px;border-radius:6px;border:2px solid #5a62a0;background:#2b3160;color:#f4f1e8;cursor:pointer}
+.hp-sent:hover,.hp-sent:focus-visible{border-color:#ffd43b;outline:none}
+.hp-laser{width:min(100%,340px);height:auto;display:block;margin:4px auto;touch-action:manipulation}
+.hp-eq{font:700 30px/1.2 "Pixelify Sans",monospace;color:#ffd43b;text-align:center;padding:10px;border-radius:8px;background:rgba(255,255,255,.06)}
+.hp-eq span{color:#f4f1e8;margin:0 6px}
+.hp-hist{margin:0;padding-left:22px;font:14px/1.5 "Pixelify Sans",monospace;color:#8a90b8}
+.hp-ops{display:flex;flex-wrap:wrap;gap:8px}
 /* ---- save files ---- */
 .savebtn{display:inline-flex;align-items:center;gap:6px;font:800 15px/1 var(--font-display);background:var(--sheet);color:var(--ink);border:1.5px solid var(--rule);border-radius:999px;padding:9px 13px;cursor:pointer}
 .homebar-r{display:flex;gap:8px;align-items:center}
@@ -11069,7 +11093,7 @@ var MAPS={}, MAP=null, QP=null, QMODE="walk", SC=3, QDPR=1, qwCv=null, qwCx=null
 function getMap(id){
   if(MAPS[id]) return MAPS[id];
   var sv=AREA_OVR; AREA_OVR=null;
-  var m=id==="village"?genVillage():id==="library"?genLibrary():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):dgIsId(id)?genDungeon(id):dgAddToLand(genLand(landById(id)));
+  var m=id==="village"?genVillage():id==="library"?genLibrary():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):hdIsId(id)?genDelve(id):dgIsId(id)?genDungeon(id):dgAddToLand(genLand(landById(id)));
   AREA_OVR=sv;
   if(m.quests) m.quests.forEach(function(q){ q.land=m.id; });
   MAPS[id]=m; return m;
@@ -11151,6 +11175,7 @@ function qwStep(d){ QP.dir=d==="left"||d==="right"?"side":d; QP.flip=d==="left";
   /* a quick tap toward something next to you still opens it, just like walking into it */
   var v=DIRV[d], tx=Math.floor(pcx()+v[0]*.75), ty=Math.floor(pcy()+v[1]*.75); if((tx!==QP.x||ty!==QP.y)&&(pSolid(tx,ty,QP.y)||(MAP.blocks&&dgBlockAt(tx,ty)))) pBump(tx,ty,v); }
 function qwInteract(th){
+  if(th.k==="hdgate") return hdGate(th.v);
   if(th.k==="well"||th.k==="blantern"||th.k==="crack"||th.k==="dock"||th.k==="bbridge") return caveInteract(th);
   if(th.k==="portal") return qwPortal(th.v);
   if(th.k==="boss") return qwBossTalk(th.v);
@@ -11205,6 +11230,7 @@ function qwDraw(now){
       else if(o.k==="shrine"){ var shs=bake("shrine",SPR.shrine,SPAL.shrine); shadow(o.x*16+8,o.y*16+15,8); drawSpr(shs,o.x*16+8-shs.width/2,o.y*16+16-shs.height); if(Math.random()<.12) qwParts.push({x:o.x*16+8,y:o.y*16-10,vx:(Math.random()-.5)*.3,vy:-.25,life:900,max:900,s:1,col:"#ff8fab"}); }
       else if(o.k==="fire"){ var fx0=o.x*16, fy0=o.y*16; wrect(fx0+2,fy0+12,12,3,"#6b4226"); wrect(fx0+4,fy0+10,8,2,"#8b5a2b"); for(var fl=0;fl<6;fl++){ var fh=4+((now/80+fl*5)%6|0); wrect(fx0+4+fl*1.5,fy0+11-fh,2,fh,fl%2?"#ff922b":"#ffd43b"); } if(Math.random()<.3) qwParts.push({x:fx0+8,y:fy0+3,vx:(Math.random()-.5)*.3,vy:-.5,life:600,max:600,s:1,col:"#ff922b"}); }
       else if(o.k==="dgate"){ dgDrawGate(o,now,s); }
+      else if(o.k==="hdgate"){ hdDrawGate(o,now,s); }
       else if(o.k==="library"||o.k==="bshelf"||o.k==="rtable"){ libDrawObj(o,now); }
       else if(o.k==="tent"){ var tsp=tentSprite(); drawSpr(tsp,o.x*16,(o.y+1)*16-tsp.height); }
       else if(o.k==="sign"){ var sgn=bake("sign",SPR.sign,SPAL.sign); shadow(o.x*16+8,o.y*16+15,6); drawSpr(sgn,o.x*16+8-sgn.width/2,o.y*16+16-sgn.height); }
@@ -11227,9 +11253,9 @@ function qwDraw(now){
       if(!ready){ qwCx.strokeStyle="rgba(190,170,255,"+(.5+Math.sin(now/300)*.25)+")"; qwCx.lineWidth=SC; qwCx.beginPath(); qwCx.ellipse((cx-qwCam.x)*SC,(by-h/2-qwCam.y)*SC,(w/2+6)*SC,(h/2+8)*SC,0,0,7); qwCx.stroke(); }
       label(b.name+(b.final?"":" · LV "+(b.lv||BOSS_LV)),cx,by-h-12+bob,ready?"#ff8fa3":"#d0c8ff"); }); }
   MAP.mons.forEach(function(m){ if(!qwAlive(m)) return; var mx=(m.fx!=null?m.fx:m.x)*16, my=(m.fy!=null?m.fy:m.y)*16;
-    add(my+15,function(){ var hop=m.moving?-Math.round(Math.abs(Math.sin(now/95+m.hx))*2):Math.round(Math.sin(now/260+m.hx)); if(m.elite){ var esp=mobSprite(m.kind,m.pal,m.face<0), ez=1.7, gx=(mx+8-qwCam.x)*SC, gy=(my+4-qwCam.y)*SC, g2=qwCx.createRadialGradient(gx,gy,2,gx,gy,24*SC); g2.addColorStop(0,"rgba(255,60,60,.42)"); g2.addColorStop(1,"rgba(255,60,60,0)"); qwCx.fillStyle=g2; qwCx.fillRect(gx-24*SC,gy-24*SC,48*SC,48*SC); shadow(mx+8,my+15,9); drawSpr(esp,mx+8-esp.width*ez/2,my+16-esp.height*ez+hop,ez); label("★ "+m.name+" Lv"+m.lv,mx+8,my-14+hop,"#ff8fa3"); }
+    add(my+15,function(){ var hop=m.moving?-Math.round(Math.abs(Math.sin(now/95+m.hx))*2):Math.round(Math.sin(now/260+m.hx)); if(m.elite){ var esp=mobSprite(m.kind,m.pal,m.face<0), ez=1.7, gx=(mx+8-qwCam.x)*SC, gy=(my+4-qwCam.y)*SC, g2=qwCx.createRadialGradient(gx,gy,2,gx,gy,24*SC); g2.addColorStop(0,"rgba(255,60,60,.42)"); g2.addColorStop(1,"rgba(255,60,60,0)"); qwCx.fillStyle=g2; qwCx.fillRect(gx-24*SC,gy-24*SC,48*SC,48*SC); shadow(mx+8,my+15,9); drawSpr(esp,mx+8-esp.width*ez/2,my+16-esp.height*ez+hop,ez); label("★ "+m.name+" Lv"+mLv(m),mx+8,my-14+hop,"#ff8fa3"); }
       else if(m.mini) miniDraw(m,mx,my,hop,now);
-      else { shadow(mx+8,my+15,6); if(m.echo){ qwCx.globalAlpha=.55+Math.sin(now/240)*.2; } drawSpr(mobSprite(m.kind,m.pal,m.face<0),mx,my+hop); qwCx.globalAlpha=1; if(m.echo&&Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=9) label(m.name,mx+8,my-11+hop,"#a5d8ff"); if(m.lv&&Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=6){ var dl=m.lv-s.lvl; label("Lv"+m.lv,mx+8,my-3+hop,dl>=3?"#ff6b6b":dl>=1?"#ffd43b":"#8ce99a"); } }
+      else { shadow(mx+8,my+15,6); if(m.echo){ qwCx.globalAlpha=.55+Math.sin(now/240)*.2; } drawSpr(mobSprite(m.kind,m.pal,m.face<0),mx,my+hop); qwCx.globalAlpha=1; if(m.echo&&Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=9) label(m.name,mx+8,my-11+hop,"#a5d8ff"); if(m.lv&&Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=6){ var dl=mLv(m)-s.lvl; label("Lv"+mLv(m),mx+8,my-3+hop,dl>=3?"#ff6b6b":dl>=1?"#ffd43b":"#8ce99a"); } }
       var px=QP.moving?QP.tx:QP.x, py=QP.moving?QP.ty:QP.y; if(Math.abs(px-m.x)+Math.abs(py-m.y)<=4&&now>m.stun) drawSpr(bake("excl",SPR.excl,{}),mx+11,my-8+Math.round(Math.sin(now/90))); }); });
   add(hy+15,function(){ var sp=heroSprite(s.look,QP.dir,QP.frame,QP.flip), hoy=sp.height-16;
     if(QP.fall){ var ft=Math.min(1,(now-QP.fall)/600), fz=1-ft*.85; qwCx.globalAlpha=1-ft*.6; drawSpr(sp,hx+8-sp.width*fz/2,hy+16-sp.height*fz+ft*6,fz); qwCx.globalAlpha=1; return; }
@@ -11354,7 +11380,7 @@ function qwHud(){
       '<button class="pxwin qh-pill" id="qh-bag">'+icon("bag")+' BAG</button><button class="pxwin qh-pill" id="qh-log">LOG</button><button class="pxwin qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'">MAP</button>'+
       mpPill()+'<button class="pxwin qh-pill" id="qh-set" aria-label="Settings">⚙</button></div>';
 }
-function mapTitle(){ if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.library) return ["The Library","Every test you’ve already taken. Step into a portal to review anytime."]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
+function mapTitle(){ if(MAP.hdg) return [esc(MAP.name),"Hollow Delve · "+CZ[MAP.z].n+" · 1 player · LV "+hdLv(MAP.z)]; if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.library) return ["The Library","Every test you’ve already taken. Step into a portal to review anytime."]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
   if(MAP.cave){ var a0=caveArea(QP?QP.y:MAP.spawn[1]); return ["The Hollow",CZ[a0].n+" · "+CZ[a0].sub+" · press L for your Ledger"]; }
   var L=landById(MAP.id), s=QS(), k=s.kills[L.id]||0; return [L.name,L.guide.title+" · "+L.guide.sub+" · "+(s.badges[L.id]?"Badge earned!":k>=KILLS_FOR_BOSS?"The boss awaits at the top!":"Monsters beaten "+k+"/"+KILLS_FOR_BOSS)]; }
 function qwBanner(){ var b=$("#qw-banner"), t=mapTitle(); b.classList.remove("danger"); b.innerHTML='<b>'+t[0]+'</b><span>'+t[1]+'</span>'; b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },2800); }
@@ -11498,7 +11524,7 @@ function lvS(lv,id){ id=id||(MAP&&(MAP.land||MAP.id)); var mx=id===CAVE_ID?CAVE_
 function landLvl(id){ var s=QS(); return id===s.cur?s.lvl:(s.lands[id]&&s.lands[id].lvl)||1; }
 function totalLvl(){ return 1+GUIDES.reduce(function(n,g){ return n+Math.max(0,landLvl(g.id)-1); },0); }
 function landSwap(id){
-  var P0=dgParse(id); if(P0) id=P0.L.id;
+  var P0=dgParse(id); if(P0) id=P0.L.id; if(hdIsId(id)) id=CAVE_ID;
   var s=QS(), isLand=!!landById(id);
   if(s.cur&&landById(s.cur)){ var r=landRec(s.cur); LFIELDS.forEach(function(k){ r[k]=s[k]; }); }
   s.cur=id;
@@ -11509,9 +11535,9 @@ function landSwap(id){
 }
 function qwAreaCheck(){
   if(!MAP.areas) return; var a=areaIdx(QP.y); if(QP.area===a) return; var first=QP.area==null; QP.area=a; if(first) return;
-  var A=MAP.areas[a], s=QS(), b=$("#qw-banner"), danger=s.lvl<A.lv[0];
+  var A=MAP.areas[a], s=QS(), b=$("#qw-banner"), danger=!MAP.cave&&s.lvl<A.lv[0];
   if(MAP.cave){ caveS().vis[a]=1; save(); }
-  b.innerHTML='<b>'+esc(A.name)+'</b><span>'+(MAP.cave?esc(CZ[a].sub)+' · '+(a?'LV '+A.lv[0]+'–'+A.lv[1]:'safe'):'')+(MAP.cave?'':a===3?'Boss area · Boss LV '+A.lv[0]:'Monsters LV '+A.lv[0]+'–'+A.lv[1])+(danger?' · ⚠ You’re only LV '+s.lvl+' here. Careful!':'')+'</span>';
+  b.innerHTML='<b>'+esc(A.name)+'</b><span>'+(MAP.cave?esc(CZ[a].sub)+' · '+(a?'monsters match your level':'safe'):'')+(MAP.cave?'':a===3?'Boss area · Boss LV '+A.lv[0]:'Monsters LV '+A.lv[0]+'–'+A.lv[1])+(danger?' · ⚠ You’re only LV '+s.lvl+' here. Careful!':'')+'</span>';
   b.classList.toggle("danger",danger); b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },2600);
   snd(danger?220:520,0,.14,"triangle",.04); snd(danger?180:780,.12,.18,"triangle",.04);
 }
@@ -11627,7 +11653,7 @@ function trapSeen(t){ var s=QS(); return !!(s.pitSeen[t.id]||s.scroll[MAP.id]||g
 function spikeUp(t,now){ return ((now+t.off)%2600)<1000; }
 function qwTrapCheck(now){
   if(!MAP.trap||QMODE!=="walk") return; var t=MAP.trap[QP.y*MAP.W+QP.x]; if(!t) return;
-  if(t.spike){ if(spikeUp(t,now)&&now-(QP.spikeT||0)>1100){ QP.spikeT=now; if(ghas(QS(),"iron")){ qwText(QP.x,QP.y,"IRON BOOTS!","#c3c6ce"); snd(1400,0,.05,"triangle",.03); return; } qwHurt(3+(MAP.cave?caveTier(caveArea(QP.y)):areaIdx(QP.y)),"Spike trap!"); } return; }
+  if(t.spike){ if(spikeUp(t,now)&&now-(QP.spikeT||0)>1100){ QP.spikeT=now; if(ghas(QS(),"iron")){ qwText(QP.x,QP.y,"IRON BOOTS!","#c3c6ce"); snd(1400,0,.05,"triangle",.03); return; } qwHurt(3+(MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(QS().lvl/10)):areaIdx(QP.y)),"Spike trap!"); } return; }
   qwFall(t);
 }
 function qwHurt(n,why){ var s=QS(); n=cutHit(s,n); s.hp=Math.max(0,s.hp-n); save(); qwHud(); sfx("wrong"); qwShakeT=performance.now();
@@ -11637,7 +11663,7 @@ function qwFall(t){
   var s=QS(); QMODE="busy"; qwDirs=[]; qwPad=null; QP.fall=performance.now(); s.pitSeen[t.id]=1; save();
   snd(700,0,.5,"triangle",.04); snd(350,.2,.5,"triangle",.04); snd(160,.45,.4,"square",.04);
   setTimeout(function(){
-    var n=cutHit(s,3+(MAP.cave?caveTier(caveArea(QP.y)):areaIdx(QP.y))); s.hp=Math.max(0,s.hp-n); QP.fall=0; save(); qwAch("trapped");
+    var n=cutHit(s,3+(MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(s.lvl/10)):areaIdx(QP.y))); s.hp=Math.max(0,s.hp-n); QP.fall=0; save(); qwAch("trapped");
     if(s.hp<=0){ QMODE="walk"; qwWorldFaint(); return; }
     var w=MAP.ways.filter(function(x){ return x.id===s.lastWay[MAP.id]&&s.ways[x.id]; })[0], pos=w?[w.x,w.y+1]:MAP.spawn;
     qwFade={t0:performance.now(),dur:260,out:true,col:"#000000",cb:function(){ qwEnterMap(MAP.id,pos,true); qwHud(); qwShakeT=performance.now();
@@ -11648,7 +11674,7 @@ function qwWorldFaint(){
   var s=QS();
   if(s.inv.feather){ s.inv.feather--; s.hp=Math.ceil(qwMaxHp(s)/2); save(); qwHud(); sfx("fanfare"); qwBurst(QP.x,QP.y,["#ff922b","#ffd43b","#ffffff"],50); qwText(QP.x,QP.y,"PHOENIX REVIVE!","#ffa94d"); toast("Your Phoenix Feather saved you!"); return; }
   var lost=Math.floor(s.coins*.25); s.coins-=lost; s.combo=0; s.hp=qwMaxHp(s); save();
-  var inCave=!!MAP.cave; if(inCave) qwEnterMap(CAVE_ID,MAP.spawn,false); else qwEnterMap("village",getMap("village").spawn,false); qwHud(); qwMusic(null);
+  if(MAP.hdg) dgFaint(); var inCave=!!(MAP.cave||MAP.hdg); if(inCave) qwEnterMap(CAVE_ID,getMap(CAVE_ID).spawn,false); else qwEnterMap("village",getMap("village").spawn,false); qwHud(); qwMusic(null);
   qwPanel('<div class="loot-card"><p class="pxlabel red">You fainted…</p><h2>Ouch.</h2><p>You wake up by '+(inCave?'the Great Lantern':'the village fountain')+' with full hearts'+(lost?' but dropped '+lost+' coins':'')+'. Watch out for traps!</p><button class="pxbtn go" data-close>▶ Get up</button></div>');
 }
 function qwPickup(){
@@ -11809,7 +11835,7 @@ function qbBossTurn(){ if(!QB||QB.done) return; var m=QB.mech;
     bsFx("storm","#ffe066"); if(qbHurtHero(4,"SUNBEAM")) return; return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1100); }
   qbNext(); }
 function qwBattle(foe,boss){
-  var s=QS(), region=foe.final?"all":boss?foe.land:(MAP.land||MAP.id), pool=MAP.cave&&!foe.final?lgPool():qbPool(region), lv=foe.final?MAX_LV:boss?(foe.lv||BOSS_LV):foe.mimic?(MAP.cave?caveTierLv(Math.max(1,caveTier(caveArea(foe.y))))[1]:Math.min(MAX_LV-1,AREA_LV[areaIdx(foe.y)][1]+1)):(foe.lv||1), mb=monDmg(lv);
+  var s=QS(), region=foe.final?"all":boss?foe.land:(MAP.land||MAP.id), pool=(MAP.cave||MAP.hdg)&&!foe.final?lgPool():qbPool(region), lv=foe.final?MAX_LV:boss?(foe.lv||BOSS_LV):foe.mimic?(MAP.cave?caveTierLv(Math.max(1,caveTier(caveArea(foe.y))))[1]:Math.min(MAX_LV-1,AREA_LV[areaIdx(foe.y)][1]+1)):(foe.lv||1); if((MAP.cave||MAP.hdg)&&!foe.final) lv=Math.min(lv,Math.max(1,s.lvl+(foe.proctor||foe.warden||foe.dgBoss||foe.elite?2:1))); var mb=monDmg(lv);
   var hp=foe.final?mb*16:foe.proctor?mb*12:foe.echo?Math.round(mb*2.5):boss?mb*8:foe.dgBoss?mb*8:foe.elite?mb*7:foe.mini?mb*6:foe.mimic?mb*5:mb*4;
   var def=boss?foe.def:foe.mimic?["mimic","mimic","Mimic Lv"+lv]:[foe.kind,foe.pal,foe.name+" Lv"+lv];
   var big=boss||!!foe.elite||!!foe.mini;
@@ -12023,7 +12049,7 @@ function qbWin(){
   setTimeout(function(){ if(!QB) return;
     $("#bs-q").innerHTML='<div class="qb-win"><h2 class="pxtitle">'+(QB.boss?'BOSS DEFEATED!':QB.elite?'ELITE DEFEATED!':QB.mini?'MINI BOSS DEFEATED!':'VICTORY!')+'</h2><p class="pxsmall">'+esc(QB.def[2])+' · '+QB.hits+' hits · '+QB.misses+' misses</p>'+
       '<div class="loot">'+loot.map(function(l){ return '<div class="lt '+l[0]+'">'+l[1]+'</div>'; }).join("")+'</div>'+
-      (MAP.cave?caveWinHTML(QB):landById(MAP.id)?'<p class="pxsmall">'+capLine(MAP.id)+'</p>':'')+'<div class="qb-xp"><span>LV '+lvS(s.lvl)+(lv>L0+1?' · tough foe: bonus XP':lv<L0-1?' · easy foe: less XP':'')+'</span><div class="bar"><i id="qb-xpfill" style="width:'+pct0+'%"></i></div><span>'+s.xp+'/'+qwNeed(s.lvl)+'</span></div>'+
+      ((MAP.cave||MAP.hdg)?caveWinHTML(QB):landById(MAP.id)?'<p class="pxsmall">'+capLine(MAP.id)+'</p>':'')+'<div class="qb-xp"><span>LV '+lvS(s.lvl)+(lv>L0+1?' · tough foe: bonus XP':lv<L0-1?' · easy foe: less XP':'')+'</span><div class="bar"><i id="qb-xpfill" style="width:'+pct0+'%"></i></div><span>'+s.xp+'/'+qwNeed(s.lvl)+'</span></div>'+
       (QB.missed.length?'<details class="qb-miss"><summary>Review what you missed ('+QB.missed.length+')</summary><ul class="review">'+QB.missed.map(function(i){ var q=QB.pool.qs[i]; return '<li><span class="rq">'+q.q+'</span><span class="ra">✓ '+q.right+'</span></li>'; }).join("")+'</ul></details>':'')+
       '<button class="pxbtn go big" id="bs-done">▶ Continue</button></div>';
     var bar=$(".qb2-bar"); if(bar) bar.hidden=true;
@@ -12169,7 +12195,7 @@ function qbFaint(){
     '<button class="pxbtn go big" id="bs-wake">▶ Wake up</button></div>';
   var bar=$(".qb2-bar"); if(bar) bar.hidden=true; qwMusic(null);
 }
-function qbWake(){ var s=QS(); if(MAP&&MAP.dungeon) dgFaint(); var inCave=!!(MAP&&MAP.cave); qbClose(); s.hp=qwMaxHp(s); if(inCave) qwEnterMap(CAVE_ID,getMap(CAVE_ID).spawn,false); else qwEnterMap("village",getMap("village").spawn,false); qwHud(); }
+function qbWake(){ var s=QS(); if(MAP&&MAP.dungeon) dgFaint(); var inCave=!!(MAP&&(MAP.cave||MAP.hdg)); qbClose(); s.hp=qwMaxHp(s); if(inCave) qwEnterMap(CAVE_ID,getMap(CAVE_ID).spawn,false); else qwEnterMap("village",getMap("village").spawn,false); qwHud(); }
 
 /* ================= online play: room codes, friends in the world, chat, team battles, quiz duels =================
    Works on the website (it needs the free PeerJS connection service). The host's browser is the hub: everyone sends
@@ -12584,7 +12610,7 @@ function dgParse(id){ var p=String(id||"").split("|"); if(p.length!==4||p[0]!=="
 function dgIsId(id){ return typeof id==="string"&&!!dgParse(id); }
 function dgName(id){ var P=dgParse(id); if(!P) return "Dungeon"; return "The "+pickH(id+"p",DG_PRE[P.L.biome]||DG_PRE.forest)+" "+pickH(id+"n",DG_NOUN); }
 function dgLv(a){ return AREA_LV[a][1]; }
-function dgCooldown(id){ var s=QS(); if(!s.dgCool) s.dgCool={}; return Math.max(0,(s.dgCool[id]||0)+DG_COOL-Date.now()); }
+function dgCooldown(id){ var s=QS(); if(!s.dgCool) s.dgCool={}; return Math.max(0,(s.dgCool[id]||0)+(hdIsId(id)?HD_COOL:DG_COOL)-Date.now()); }
 function dgMins(ms){ return Math.max(1,Math.ceil(ms/60000)); }
 /* ---------- the gates out in the world ---------- */
 function dgAddToLand(m){
@@ -12643,8 +12669,8 @@ function dgEnter(id,run,leader,lead){
   delete MAPS[id]; qwTravel(id,null,"#9775fa");
   if(!lead) mpSend({t:"dg",e:"req",map:id,run:run});
 }
-function dgExit(p){ var P=dgParse(MAP.id); if(!P) return qwTravel("village",null,p.color); qwTravel(P.L.id,dgGatePos(MAP.id),"#9775fa"); }
-function dgFaint(){ var s=QS(); if(!MAP||!MAP.dungeon) return; if(!s.dgCool) s.dgCool={}; s.dgCool[MAP.id]=Date.now(); save(); toast("You fainted in the dungeon. It’s locked for you for 30 minutes."); }
+function dgExit(p){ if(MAP.hdg) return qwTravel(CAVE_ID,hdGatePos(MAP.id),"#b197fc"); var P=dgParse(MAP.id); if(!P) return qwTravel("village",null,p.color); qwTravel(P.L.id,dgGatePos(MAP.id),"#9775fa"); }
+function dgFaint(){ var s=QS(); if(!MAP||!MAP.dungeon) return; if(!s.dgCool) s.dgCool={}; s.dgCool[MAP.id]=Date.now(); save(); toast("You fainted in the dungeon. It’s locked for you for "+(MAP.hdg?dgMins(HD_COOL):30)+" minutes."); }
 function dgKeeperTalk(n){ var face=portraitOf(n), id=n.keeper, cd=dgCooldown(id);
   qwSay(n.name,face,[cd>0?"You did it! "+dgName(id)+" is resetting. It opens again in "+dgMins(cd)+" min.":"Your key opens "+dgName(id)+", right behind me. Bring a friend: the door needs 2 heroes.","Tip: puzzle rooms need teamwork. One room has two plates, and both need someone standing on them at the same time."]); }
 function dgDrawGate(o,now,s){
@@ -12706,7 +12732,7 @@ function genDungeon(id){
   return m;
 }
 function dgOnEnter(){
-  if(!DG||DG.map!==MAP.id){ setTimeout(function(){ var P=dgParse(MAP.id); qwEnterMap(P?P.L.id:"village",P?dgGatePos(MAP.id):null,false); qwHud(); toast("That dungeon run is over."); },50); return; }
+  if(!DG||DG.map!==MAP.id){ setTimeout(function(){ if(hdIsId(MAP.id)){ qwEnterMap(CAVE_ID,hdGatePos(MAP.id),false); qwHud(); toast("That Delve run is over."); return; } var P=dgParse(MAP.id); qwEnterMap(P?P.L.id:"village",P?dgGatePos(MAP.id):null,false); qwHud(); toast("That dungeon run is over."); },50); return; }
   MAP.chests.forEach(function(c){ if(c.dgChest) c.id=MAP.id+"-chest-"+DG.run; });
   dgApply(); if(DG.asked) mpSend({t:"dg",e:"req",map:DG.map,run:DG.run});
 }
@@ -12720,8 +12746,8 @@ function dgSolve(r,quiet){ if(!DG||DG.solved[r]) return; DG.solved[r]=1; dgApply
   if(!quiet) dgSend("ev",{k:"solve",r:r});
   var d=MAP.doors&&MAP.doors[r]; if(d&&MAP.dungeon){ sfx("streak"); qwShakeT=performance.now(); qwText(9,d.y,r===5?"TREASURE ROOM OPEN!":"THE DOOR OPENS!","#ffd43b"); qwBurst(9,d.y,["#b197fc","#ffd43b","#ffffff"],30); }
   if(MAP.rooms&&MAP.rooms[r]&&MAP.rooms[r].kind==="boss") dgCleared(); }
-function dgCleared(){ if(!DG||DG.cleared) return; DG.cleared=true; var s=QS(); if(!s.dgCool) s.dgCool={}; s.dgCool[DG.map]=Date.now(); s.dgDone=(s.dgDone||0)+1; save(); qwAch("dungeon"); confetti(200); sfx("fanfare");
-  var b=$("#qw-banner"); b.classList.remove("danger"); b.innerHTML='<b>DUNGEON CLEARED!</b><span>Grab the treasure. '+esc(MAP.name)+' resets in 30 min.</span>'; b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },3600); }
+function dgCleared(){ if(!DG||DG.cleared) return; DG.cleared=true; if(MAP&&MAP.hdg) hdCleared(); var s=QS(); if(!s.dgCool) s.dgCool={}; s.dgCool[DG.map]=Date.now(); s.dgDone=(s.dgDone||0)+1; save(); qwAch("dungeon"); confetti(200); sfx("fanfare");
+  var b=$("#qw-banner"); b.classList.remove("danger"); b.innerHTML='<b>DUNGEON CLEARED!</b><span>Grab the treasure. '+esc(MAP.name)+' resets in '+(MAP.hdg?dgMins(HD_COOL):30)+' min.</span>'; b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },3600); }
 function dgPlayersAt(x,y){ var n=0; if(!QP.moving&&QP.x===x&&QP.y===y) n++; if(MP.on) Object.keys(MP.players).forEach(function(k){ var p=MP.players[k]; if(p.m===MAP.id&&p.x===x&&p.y===y) n++; }); return n; }
 function dgBlockAt(x,y){ var b=null; (MAP.blocks||[]).forEach(function(o){ if(o.x===x&&o.y===y) b=o; }); return b; }
 function dgPlatePressed(p){ return p.need==="player"?dgPlayersAt(p.x,p.y)>0:!!dgBlockAt(p.x,p.y)||dgPlayersAt(p.x,p.y)>0; }
@@ -12730,7 +12756,7 @@ function dgTick(now){ if(!DG||DG.map!==MAP.id||now-dgTickT<200) return; dgTickT=
   MAP.rooms.forEach(function(R){ if(DG.solved[R.i]) return;
     if(R.kind==="enemy"||R.kind==="boss"){ var left=MAP.mons.filter(function(o){ return o.room===R.i&&!DG.dead[o.id]; }).length; if(!left) dgSolve(R.i); }
     else if(R.kind==="twin"||(R.kind==="puzzle"&&MAP.blocks.length)){ var ps=MAP.plates.filter(function(p){ return p.room===R.i; }); if(ps.length&&ps.every(dgPlatePressed)) dgSolve(R.i); }
-    else if(R.kind==="puzzle"&&(DG.torch[R.i]||0)>=3) dgSolve(R.i); });
+    else if((R.kind==="puzzle"||R.kind==="riddle")&&(DG.torch[R.i]||0)>=3) dgSolve(R.i); });
 }
 /* pushing boulders */
 function dgPush(tx,ty,v){ var b=dgBlockAt(tx,ty); if(!b) return false; var nx=tx+v[0], ny=ty+v[1], W=MAP.W, i=ny*W+nx;
@@ -12746,7 +12772,7 @@ function dgReset(o){ if(!DG) return; if(DG.solved[o.room]) return qwSay("Blue cr
   MAP.blocks.forEach(function(b){ if(b.room!==o.room) return; var t=DG.blocks[b.id]||{v:0}; DG.blocks[b.id]={x:b.x0,y:b.y0,v:(t.v||0)+1}; dgSend("ev",{k:"block",id:b.id,x:b.x0,y:b.y0,v:DG.blocks[b.id].v}); });
   dgApply(); sfx("blip"); qwText(o.x,o.y,"RESET!","#74c0fc"); }
 /* the riddle stone */
-function dgRiddle(o){ if(!DG) return; var face=bake("lore-on",SPR.lore,SPAL.loreOn).toDataURL(), n=DG.torch[o.room]||0;
+function dgRiddle(o){ if(!DG) return; if(MAP.hdg) return hdRiddle(o); var face=bake("lore-on",SPR.lore,SPAL.loreOn).toDataURL(), n=DG.torch[o.room]||0;
   if(DG.solved[o.room]) return qwSay("Riddle stone",face,["All three torches burn bright. The way is open!"]);
   var pool=qbPool(MAP.land), qs=pool.qs; if(!qs.length) return dgSolve(o.room);
   var Q=qs[Math.random()*qs.length|0], opts=shuffle(Q.opts.slice()), mk=mastOf(MAP.land); DG.lastQ=Q;
@@ -12872,7 +12898,7 @@ function pSolid(tx,ty,fromY){
   return false; }
 function pBox(cx,cy,fn){ var x0=Math.floor(cx-MV.hw), x1=Math.floor(cx+MV.hw-1e-4), y0=Math.floor(cy-MV.top), y1=Math.floor(cy+MV.bot-1e-4);
   for(var y=y0;y<=y1;y++) for(var x=x0;x<=x1;x++){ var r=fn(x,y); if(r) return r; } return null; }
-function pBump(tx,ty,v){ var now=performance.now(), key=tx+","+ty;
+function pBump(tx,ty,v){ var now=performance.now(), key=tx+","+ty; if(MAP.cave||MAP.hdg) hdChime(tx,ty);
   if(MAP.blocks&&MAP.blocks.length&&dgBlockAt(tx,ty)){ if(now-MV.pushT>230&&(v[0]===0||v[1]===0)){ MV.pushT=now; dgPush(tx,ty,v); } return; }
   var th=thingAt(tx,ty); if(!th||th.k==="mon") return;
   if(MV.bumpK===key&&now-MV.bumpT<900) return; MV.bumpK=key; MV.bumpT=now;
@@ -12950,7 +12976,7 @@ function miniDraw(m,mx,my,hop,now){
   var sc=1.6, sp=mobSprite(m.kind,m.pal,m.face<0), w=sp.width*sc, h=sp.height*sc, cx=mx+8, by=my+16;
   var gx=(cx-qwCam.x)*SC, gy=(by-10-qwCam.y)*SC, g=qwCx.createRadialGradient(gx,gy,2,gx,gy,22*SC); g.addColorStop(0,"rgba(255,146,43,.38)"); g.addColorStop(1,"rgba(255,146,43,0)"); qwCx.fillStyle=g; qwCx.fillRect(gx-22*SC,gy-22*SC,44*SC,44*SC);
   shadow(cx,by-1,9); drawSpr(sp,cx-w/2,by-h+hop,sc); drawSpr(bake("crown",SPR.crown,{}),cx-6,by-h-7+hop,1.5);
-  if(Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=12){ var dl=m.lv-QS().lvl; label("★ "+m.name+" · Lv"+m.lv,cx,by-h-10+hop,dl>=3?"#ff6b6b":dl>=1?"#ffd43b":"#ffc078"); }
+  if(Math.abs(QP.x-m.x)+Math.abs(QP.y-m.y)<=12){ var dl=mLv(m)-QS().lvl; label("★ "+m.name+" · Lv"+mLv(m),cx,by-h-10+hop,dl>=3?"#ff6b6b":dl>=1?"#ffd43b":"#ffc078"); }
 }
 /* ---------- friends move smoothly too ---------- */
 function mpSmooth(p){ var tx=p.fx!=null?p.fx:p.x, ty=p.fy!=null?p.fy:p.y; if(p.dx==null||Math.abs(p.dx-tx)+Math.abs(p.dy-ty)>4){ p.dx=tx; p.dy=ty; }
@@ -12977,6 +13003,242 @@ $("#qw-panel").addEventListener("click",function(e){
   else if(e.target.closest("[data-set]")){ sfx("blip"); qwSettings(); } });
 $("#qw-panel").addEventListener("keydown",function(e){ if(e.target&&e.target.id==="set-name"&&e.key==="Enter"){ e.preventDefault(); qwSetName(); } });
 $("#qw-hud").addEventListener("click",function(e){ if(e.target.closest("#qh-set")&&(QMODE==="walk"||QMODE==="chat")){ if(typeof mpChatClose==="function") mpChatClose(); sfx("blip"); qwSettings(); } });
+/* ================= 🔮 Hollow Delves: every zone of The Hollow hides a sealed rune door. Solve its puzzle to break the seal,
+   then go in alone: monster rooms, a boulder puzzle, a riddle stone with PSAT questions, the Guardian, then treasure. ================= */
+var HD_COOL=10*60000;
+var HD_NAME=["","The Echo Vault","The Ink Archive","The Hinge Catacomb","The Evidence Crypt","The Storm Spire","The Variable Mine","The Forge Vault","The Sunken Archive","The Prism Labyrinth","The Ember Sanctum"];
+var HD_PUZ=[null,{t:"echo",r:[3,4,5]},{t:"lights",n:3},{t:"order"},{t:"laser",n:5},{t:"echo",r:[4,5,6],fast:1},{t:"balance",k:1},{t:"balance",k:2},{t:"lights",n:4},{t:"laser",n:6},{t:"balance",k:3}];
+var HD_PUZN={echo:"Echo sequence",lights:"Rune lights",order:"Sentence bridge",laser:"Light the crystal",balance:"Balance the equation"};
+var HD_HINT={echo:"Watch the crystals light up, then tap them in the same order. Clear every round.",
+  lights:"Tap a rune to flip it and the runes touching it (up, down, left and right). Light every rune.",
+  order:"Tap the sentences in the order that makes the paragraph make sense. Transition words (however, for example, as a result) connect to the sentence before them.",
+  laser:"Tap a mirror to turn it. Bounce the beam of light into the crystal on the edge.",
+  balance:"Whatever you do to one side, you do to the other. Get x alone to break the seal."};
+ACH.delve="Delver: clear a Hollow Delve"; ACH.delve10="Master Delver: clear all 10 Hollow Delves"; ACH.hdpuz="Seal Breaker: open 5 Delve seals";
+function hdIsId(id){ return typeof id==="string"&&/^hd\|([1-9]|10)$/.test(id); }
+function hdZ(id){ return +String(id).split("|")[1]; }
+function hdSt(z){ var s=QS(); if(!s.cave) s.cave={}; if(!s.cave.hd) s.cave.hd={}; return s.cave.hd[z]||(s.cave.hd[z]={}); }
+function hdGatePos(id){ var g=(getMap(CAVE_ID).hdgates||[]).filter(function(o){ return o.id===id; })[0]; return g?[g.x,g.y+1]:null; }
+function hdLv(z){ return Math.min(caveTierLv(CZ[z].t)[1],Math.max(1,QS().lvl+1)); }
+/* ---------- the rune door out in the zone ---------- */
+function hdGate(o){ var z=o.z, st=hdSt(z), P=HD_PUZ[z], nm=HD_NAME[z], face=bake("lore-on",SPR.lore,SPAL.loreOn).toDataURL(), lv=hdLv(z);
+  if(!st.o) return qwSay(nm,face,["A sealed rune door. Glowing runes swirl across the stone.","To break the seal, solve the "+HD_PUZN[P.t]+" puzzle. Behind it: a 1-player Delve with LV "+lv+" monsters, a riddle stone and treasure."],[["🔮 Try the puzzle",function(){ hpOpen(z); }],["Not now",null]]);
+  var cd=dgCooldown(o.id); if(cd>0) return qwSay(nm,face,["The Delve is resetting.","You can go in again in "+dgMins(cd)+" min."]);
+  qwSay(nm,face,["The seal is broken. "+nm+" waits below.","1 player · monsters LV "+lv+" · a boulder puzzle, a riddle stone, the Guardian, then treasure. If you faint inside, it locks for "+dgMins(HD_COOL)+" min."],[["Enter!",function(){ hdEnter(o.id); }],["Not yet",null]]); }
+function hdEnter(id){ if(dgCooldown(id)>0) return toast("That Delve is resetting. Try again in "+dgMins(dgCooldown(id))+" min.");
+  DG={map:id,run:"s"+Date.now().toString(36),leader:null,dead:{},solved:{0:1},torch:{},blocks:{},cleared:false,asked:false,solo:true};
+  delete MAPS[id]; qwTravel(id,null,"#b197fc"); }
+function hdDrawGate(o,now,s){ var X=o.x*16, Y=o.y*16, open=!!hdSt(o.z).o, cd=open&&dgCooldown(o.id)>0, col=open?(cd?"#868e96":"#b197fc"):"#e599f7", i;
+  shadow(X+8,Y+15,12);
+  wrect(X-7,Y-18,30,34,"#1a1424"); wrect(X-6,Y-17,28,33,"#3a3048");
+  for(var row=0;row<8;row++){ var off=row%2?4:0; for(var bx=-6+off;bx<21;bx+=8) wrect(X+bx,Y-17+row*4,7,1,"#4a405a"); }
+  wrect(X-1,Y-9,18,25,"#120e1a"); wrect(X+2,Y-12,12,3,"#120e1a"); wrect(X+4,Y-13,8,1,"#120e1a");
+  if(!open){ var p=.55+Math.sin(now/260)*.35, cx=X+8, cy=Y+3; wrect(X,Y-8,16,24,"rgba(229,153,247,.10)"); qwCx.globalAlpha=p;
+    for(i=0;i<12;i++){ var a=i/12*Math.PI*2+now/1400; wrect(Math.round(cx+Math.cos(a)*6)-1,Math.round(cy+Math.sin(a)*6)-1,2,2,col); }
+    wrect(cx-2,cy-2,4,4,"#ffffff"); qwCx.globalAlpha=1; }
+  else { qwCx.globalAlpha=cd?.2:.35+Math.sin(now/300)*.2; for(i=0;i<6;i++){ var yy=Y-6+((now/70+i*7)%20|0); wrect(X+3+((i*5)%10),yy,2,2,col); } qwCx.globalAlpha=1; }
+  wrect(X+6,Y-21,4,4,col); wrect(X+7,Y-20,2,2,"#ffffff");
+  if(Math.abs(QP.x-o.x)+Math.abs(QP.y-o.y)<=10){ label(HD_NAME[o.z],X+8,Y-26,"#e5dbff"); label(open?(cd?"⏳ "+dgMins(dgCooldown(o.id))+" min":"OPEN · 1 player"):"🔮 "+HD_PUZN[HD_PUZ[o.z].t],X+8,Y-34,col); } }
+/* crystals chime and stalagmites thud when you bump into them */
+function hdChime(tx,ty){ var o=null, i; for(i=0;i<MAP.objs.length;i++){ var b=MAP.objs[i]; if(b.x===tx&&b.y===ty&&(b.k==="crys"||b.k==="stal")){ o=b; break; } } if(!o) return;
+  var now=performance.now(); if(now-(o.cht||0)<450) return; o.cht=now;
+  if(o.k==="crys"){ var notes=[523,587,659,784,880,988], n=notes[(tx*7+ty*3)%notes.length]; snd(n,0,.35,"triangle",.05); snd(n*2,.05,.25,"sine",.02); qwBurst(tx,ty,["#a5d8ff","#ffffff","#e599f7"],10); }
+  else { snd(110,0,.08,"square",.03); qwShakeT=now; } }
+/* ---------- the Delve itself (1 player) ---------- */
+var HD_ROOMS=["entry","enemy","puzzle","riddle","enemy","boss","treasure"], HD_H=[7,9,9,9,9,11,7];
+function genDelve(id){
+  var z=hdZ(id), Z=CZ[z], r=rng(hstr(id+"#hd1")), W=19, H=1, i, x, y, rw=z<=5;
+  HD_H.forEach(function(h){ H+=h+1; });
+  var m=newMap(id,W,H,"cv"+z,"cwall"); m.dungeon=true; m.hdg=true; m.land=CAVE_ID; m.dg=id; m.name=HD_NAME[z]; m.a=z; m.z=z;
+  m.roomOf=new Int8Array(W*H).fill(-1); m.rooms=[]; m.doors=[]; m.plates=[]; m.blocks=[]; m.torches=[]; m.inter={}; m.lampsAt=[];
+  for(i=0;i<W*H;i++) m.blk[i]=1;
+  var floor=rw?"moss":"cave", yy=1;
+  for(i=HD_ROOMS.length-1;i>=0;i--){ m.rooms[i]={i:i,kind:HD_ROOMS[i],y0:yy,y1:yy+HD_H[i]-1}; yy+=HD_H[i]+1; }
+  m.rooms.forEach(function(R){ for(y=R.y0;y<=R.y1;y++) for(x=1;x<W-1;x++){ setG(m,x,y,floor); m.blk[y*W+x]=0; m.roomOf[y*W+x]=R.i; } });
+  for(i=0;i<m.rooms.length-1;i++){ var dy=m.rooms[i].y0-1; m.doors.push({i:i,y:dy,xs:[8,9,10]}); [8,9,10].forEach(function(dx){ setG(m,dx,dy,"cpath"); m.blk[dy*W+dx]=1; }); }
+  function sign(x0,y0,txt){ var o=addObj(m,"sign",x0,y0,{txt:txt}); m.inter[y0*W+x0]=o; }
+  var mobs=CAVE_MOBS[z], lv=hdLv(z), mi=0, rock=SPAL[rw?"stalM":"stalR"], gem=SPAL[["crys","crysP","crysG","crysY"][z%4]];
+  function mon(R,x0,y0,boss){ var d=boss?mobs[2]:mobs[(r()*mobs.length)|0], mid=id+"-m"+R.i+"-"+(mi++);
+    var o={id:mid,x:x0,y:y0,hx:x0,hy:y0,tx:x0,ty:y0,t:1,moving:false,kind:d[0],pal:d[1],name:boss?"Guardian "+d[2]:d[2],lv:boss?Math.min(CAVE_MAX,lv+2):lv,next:0,stun:0,face:1,dg:true,room:R.i,ca:z};
+    if(boss){ o.elite=true; o.dgBoss=true; o.dgLand=CAVE_ID; o.face=-1; }
+    m.mons.push(o); return o; }
+  m.rooms.forEach(function(R){
+    if(R.kind==="entry"){ m.spawn=[9,R.y1]; m.portals.push({x:4,y:R.y1,land:CAVE_ID,color:"#b197fc",label:"EXIT",ret:true,dgExit:true}); m.blk[R.y1*W+4]=1;
+      addObj(m,"crys",2,R.y0+1,{pal:gem}); addObj(m,"crys",16,R.y0+1,{pal:gem});
+      sign(14,R.y1,["Welcome to "+m.name+"! This Delve is for 1 player.","Beat every monster in a room to open the next door. A boulder puzzle and a riddle stone guard the way to the Guardian and the treasure.","Every fight asks questions from "+Z.n+", and your Ledger keeps track. Good luck!"]); }
+    else if(R.kind==="enemy"){
+      var spots=[]; for(y=R.y0+1;y<=R.y1-2;y++) for(x=2;x<=16;x++) spots.push([x,y,r()]); spots.sort(function(p,q){ return p[2]-q[2]; });
+      var pil=0; spots.forEach(function(s2){ if(pil>=4) return; if(s2[0]>=6&&s2[0]<=12) return; if(m.blk[s2[1]*W+s2[0]]) return; addObj(m,pil%2?"crys":"stal",s2[0],s2[1],{pal:pil%2?gem:rock}); pil++; });
+      var n=0, want=R.i>=4?5:4; spots.forEach(function(s2){ if(n>=want) return; var X=s2[0], Y=s2[1]; if(m.blk[Y*W+X]||Y>R.y1-2) return; if(m.mons.some(function(o){ return Math.abs(o.x-X)+Math.abs(o.y-Y)<3; })) return; mon(R,X,Y,false); n++; }); }
+    else if(R.kind==="puzzle"){
+      var flip=r()<.5, fx=function(v){ return flip?18-v:v; };
+      if(z%2){ /* push both boulders onto the plates */
+        [[fx(4),R.y0+1,fx(4),R.y0+5],[fx(14),R.y0+7,fx(14),R.y0+3]].forEach(function(p,bi){ m.plates.push({x:p[0],y:p[1],room:R.i,need:"block"}); m.blocks.push({id:"b"+bi,x:p[2],y:p[3],x0:p[2],y0:p[3],room:R.i}); m.blk[p[3]*W+p[2]]=1; });
+        sign(fx(16),R.y1,["Push both boulders onto the glowing plates to open the door.","Walk into a boulder to push it. Stuck? Touch the blue crystal to reset them."]); }
+      else { /* one boulder on one plate, and you stand on the other */
+        m.plates.push({x:fx(4),y:R.y0+2,room:R.i,need:"block"},{x:fx(14),y:R.y0+6,room:R.i,need:"player"});
+        m.blocks.push({id:"b0",x:fx(4),y:R.y0+5,x0:fx(4),y0:R.y0+5,room:R.i}); m.blk[(R.y0+5)*W+fx(4)]=1;
+        sign(fx(16),R.y1,["Two plates: one for the boulder, one for you.","Push the boulder onto the green plate, then stand on the gold plate. Stuck? Touch the blue crystal to reset."]); }
+      var rc=addObj(m,"dreset",fx(2),R.y1,{room:R.i}); m.inter[R.y1*W+fx(2)]=rc; }
+    else if(R.kind==="riddle"){
+      var st=addObj(m,"riddle",9,R.y0+2,{room:R.i}); m.inter[(R.y0+2)*W+9]=st;
+      [6,9,12].forEach(function(tx2,t){ var o=addObj(m,"dtorch",tx2,R.y0+5,{room:R.i,n:t}); m.torches.push(o); });
+      addObj(m,"crys",2,R.y0+1,{pal:gem}); addObj(m,"crys",16,R.y0+1,{pal:gem});
+      sign(14,R.y1,["The riddle stone asks 3 questions from "+Z.n+".","Get all 3 right in a row to light the torches. Miss one and they go out, but you can try again."]); }
+    else if(R.kind==="boss"){ blob(m,9,R.y0+3,4,2.4,"arena"); for(y=R.y0+6;y<=R.y1;y++) setG(m,9,y,"cpath");
+      [[2,R.y0+1],[16,R.y0+1],[2,R.y1-1],[16,R.y1-1]].forEach(function(b){ addObj(m,"brazier",b[0],b[1]); });
+      mon(R,9,R.y0+3,true); }
+    else if(R.kind==="treasure"){ for(y=R.y0;y<=R.y1;y++) setG(m,9,y,"cpath");
+      m.chests.push({id:id+"-chest",x:9,y:R.y0+4,min:"epic",dgChest:true}); m.blk[(R.y0+4)*W+9]=1;
+      m.portals.push({x:9,y:R.y0+1,land:CAVE_ID,color:"#ffd43b",label:"EXIT",ret:true,dgExit:true}); m.blk[(R.y0+1)*W+9]=1;
+      [3,15].forEach(function(cx){ addObj(m,"crys",cx,R.y0+2,{pal:gem}); });
+      sign(4,R.y1,["You cleared "+m.name+"!","Open the chest, then take the portal back to The Hollow. This Delve resets in "+dgMins(HD_COOL)+" minutes."]); }
+  });
+  return m;
+}
+/* the riddle stone in a Delve uses the Ledger: 3 concepts from this zone, 3 right in a row */
+function hdRiddle(o){ var face=bake("lore-on",SPR.lore,SPAL.loreOn).toDataURL();
+  if(DG.solved[o.room]) return qwSay("Riddle stone",face,["All three torches burn bright. The way is open!"]);
+  var z=MAP.z, used=[], list=[], i;
+  for(i=0;i<3;i++){ var c=lgChoose(z,used)||PSATC.filter(function(x){ return x.z===z; })[i%2]; if(!c) break; used.push(c.id); list.push({c:c}); }
+  if(!list.length) return dgSolve(o.room);
+  qwSay("Riddle stone",face,["Three riddles from "+CZ[z].n+". Answer all 3 right in a row to light the torches.","Miss one and the torches go out, but you can try again."],[["Begin",function(){
+    DG.torch[o.room]=0;
+    cqStart(list,{title:"Riddle stone",stopOnMiss:true,each:function(ok){ if(DG) DG.torch[o.room]=ok?(DG.torch[o.room]||0)+1:0; },
+      done:function(res,stopped){ var n=DG?DG.torch[o.room]||0:0;
+        if(n>=3){ qwPanelClose(); sfx("streak"); toast("🔥 All 3 torches are lit!"); }
+        else { if(DG) DG.torch[o.room]=0; qwPanel('<div class="loot-card"><p class="pxlabel">Riddle stone</p><h2>The torches went out</h2><p>'+(stopped?'You stopped early.':'Get all 3 right in a row to light them. Your Ledger noted what you missed.')+'</p><div class="cq-bot"><button class="pxbtn go" data-close>▶ Back</button></div></div>'); } }}); }],["Not yet",null]]); }
+function hdCleared(){ var z=MAP&&MAP.z; if(!z) return; var st=hdSt(z); st.c=(st.c||0)+1; qwAch("delve"); var all=true; for(var i=1;i<=10;i++) if(!hdSt(i).c) all=false; if(all) qwAch("delve10"); save(); }
+
+/* ================= the entrance puzzles ================= */
+var HP=null, HP_NOTE=[523,659,784,988], HP_COL=["#66d9e8","#f783ac","#ffd43b","#69db7c"];
+var HD_PARA=[
+ ["Honeybees pollinate many of the crops people eat.","Almonds, for example, depend almost entirely on bees.","In recent decades, however, bee populations have dropped sharply.","As a result, many farmers now rent hives each spring to pollinate their trees."],
+ ["Marie Curie was the first person to win Nobel Prizes in two different sciences.","Her first prize, in 1903, was for physics.","Eight years later, she won a second prize, this time in chemistry.","Even today, she is the only woman to have won Nobel Prizes in two sciences."],
+ ["Before a storm, the air pressure around you usually drops.","This drop happens because warm, moist air is rising.","As that air rises, it cools and forms clouds.","Eventually, the clouds grow heavy enough to release rain."],
+ ["Octopuses are known for their intelligence.","In labs, for instance, they have learned to open jars to reach food inside.","Some have even escaped their tanks at night and climbed back in before morning.","Because of behaviors like these, scientists study octopuses to learn how intelligence evolves."],
+ ["The Great Wall of China was not built all at once.","Its earliest sections were built more than 2,000 years ago.","Later dynasties added new walls and connected the older ones.","The most famous parts that tourists visit today were built much later, during the Ming dynasty."],
+ ["Many students think cramming the night before a test is the best way to study.","Research, however, shows that spreading study sessions out works better.","In one study, students who reviewed a little each day remembered far more a week later.","Therefore, short daily reviews are a smarter plan than one long session."]];
+function hpTone(k){ snd(HP_NOTE[k],0,.25,"triangle",.05); }
+function hpOpen(z){ var P=HD_PUZ[z]; HP={z:z,t:P.t,msg:""};
+  if(P.t==="echo"){ HP.round=0; }
+  else if(P.t==="lights") hpLightsNew();
+  else if(P.t==="order") hpOrderNew();
+  else if(P.t==="laser") hpLaserNew();
+  else if(P.t==="balance") hpBalNew();
+  qwPanel('<div class="hdp" id="hdp"></div>'); hpRender();
+  if(P.t==="echo") hpEchoNew(); }
+function hpRender(){ var el=document.getElementById("hdp"); if(!el||!HP) return; var P=HD_PUZ[HP.z], h='<p class="pxlabel">🔮 '+esc(HD_NAME[HP.z])+' · the seal</p><h2>'+HD_PUZN[P.t]+'</h2><p class="hdp-hint">'+HD_HINT[P.t]+'</p>';
+  if(HP.t==="echo") h+=hpEchoHTML(); else if(HP.t==="lights") h+=hpLightsHTML(); else if(HP.t==="order") h+=hpOrderHTML(); else if(HP.t==="laser") h+=hpLaserHTML(); else if(HP.t==="balance") h+=hpBalHTML();
+  if(HP.msg) h+='<p class="hdp-msg">'+HP.msg+'</p>';
+  h+='<div class="cq-bot"><button class="pxbtn" data-close>Leave</button></div>'; el.innerHTML=h; }
+function hpSolved(){ if(!HP) return; var z=HP.z, s=QS(), st=hdSt(z), first=!st.o, t=CZ[z].t; HP=null; st.o=1; var nOpen=0; for(var i=1;i<=10;i++) if(hdSt(i).o) nOpen++; if(nOpen>=5) qwAch("hdpuz");
+  var xp=first?xpGain(s,40+15*t):0, ups=xp?qwXp(xp):0; if(first) s.coins+=20+10*t; save(); qwHud(); sfx("fanfare"); confetti(120);
+  qwPanel('<div class="loot-card rare hdp-win"><p class="pxlabel">🔮 Seal broken!</p><h2>'+esc(HD_NAME[z])+' is open</h2>'+(first?'<p>+'+xp+' XP · +'+(20+10*t)+' coins'+(ups?' · LEVEL UP!':'')+'</p>':'')+'<p class="pxsmall">A 1-player Delve: monster rooms, a boulder puzzle, a riddle stone with PSAT questions, the Guardian, then treasure.</p><div class="cq-bot"><button class="pxbtn go" data-hpenter="'+z+'">▶ Enter the Delve</button><button class="pxbtn" data-close>Later</button></div></div>'); }
+/* --- echo sequence --- */
+function hpEchoNew(){ if(!HP) return; var n=HD_PUZ[HP.z].r[HP.round]; HP.seq=[]; for(var i=0;i<n;i++){ var k; do { k=Math.random()*4|0; } while(i>1&&k===HP.seq[i-1]&&k===HP.seq[i-2]); HP.seq.push(k); } HP.pos=0; HP.busy=true; hpRender(); setTimeout(hpEchoPlay,600); }
+function hpEchoPlay(){ if(!HP||HP.t!=="echo") return; HP.busy=true; HP.pos=0; HP.lit=-1; hpRender(); var i=0, gap=HD_PUZ[HP.z].fast?420:580, mine=HP;
+  (function step(){ if(HP!==mine||!document.getElementById("hdp")) return; if(i>=HP.seq.length){ HP.lit=-1; HP.busy=false; HP.msg="Your turn: tap the crystals in the same order."; hpRender(); return; }
+    HP.lit=HP.seq[i]; hpRender(); hpTone(HP.seq[i]); setTimeout(function(){ if(HP!==mine) return; HP.lit=-1; hpRender(); i++; setTimeout(step,gap*.35); },gap*.65); })(); }
+function hpEchoTap(k){ if(!HP||HP.busy) return; hpTone(k); var mine=HP; HP.lit=k; setTimeout(function(){ if(HP===mine&&!HP.busy){ HP.lit=-1; hpRender(); } },180);
+  if(k!==HP.seq[HP.pos]){ sfx("wrong"); HP.msg="✗ Wrong crystal! Watch again."; HP.busy=true; hpRender(); setTimeout(hpEchoPlay,1000); return; }
+  HP.pos++; if(HP.pos>=HP.seq.length){ HP.round++; if(HP.round>=HD_PUZ[HP.z].r.length) return setTimeout(hpSolved,300); sfx("right"); HP.msg="✓ Round "+HP.round+" cleared! Here comes a longer echo…"; hpEchoNew(); return; }
+  hpRender(); }
+function hpEchoHTML(){ var R=HD_PUZ[HP.z].r, h='<p class="pxsmall">Round '+Math.min(HP.round+1,R.length)+' of '+R.length+' · '+(HP.seq?HP.pos+'/'+HP.seq.length:'')+'</p><div class="hp-echo">';
+  for(var k=0;k<4;k++) h+='<button type="button" class="hp-crys'+(HP.lit===k?' lit':'')+'" data-hp="echo" data-k="'+k+'" style="--c:'+HP_COL[k]+'"'+(HP.busy?' disabled':'')+' aria-label="Crystal '+(k+1)+'"></button>';
+  return h+'</div><button type="button" class="pxbtn" data-hp="echo-replay"'+(HP.busy?' disabled':'')+'>↻ Watch again</button>'; }
+/* --- rune lights (lights out) --- */
+function hpLightsNew(){ var n=HD_PUZ[HP.z].n, i; HP.n=n; HP.on=[]; for(i=0;i<n*n;i++) HP.on.push(1); HP.sol=[];
+  var k=n===3?4:7; for(var t=0;t<k;t++){ var j=Math.random()*n*n|0; hpLFlip(j); HP.sol.push(j); }
+  if(HP.on.every(Boolean)){ var mid=Math.floor(n*n/2); hpLFlip(mid); HP.sol.push(mid); }
+  HP.start=HP.on.slice(); HP.moves=0; }
+function hpLFlip(i){ var n=HP.n, x=i%n, y=(i/n)|0; [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var X=x+d[0], Y=y+d[1]; if(X>=0&&Y>=0&&X<n&&Y<n) HP.on[Y*n+X]^=1; }); }
+function hpLPress(i){ if(!HP) return; hpLFlip(i); HP.moves++; hpTone(HP.on[i]?2:0); if(HP.on.every(Boolean)){ hpRender(); return setTimeout(hpSolved,350); } hpRender(); }
+function hpLightsHTML(){ var n=HP.n, lit=HP.on.filter(Boolean).length, h='<p class="pxsmall">'+lit+' of '+n*n+' lit · '+HP.moves+' moves</p><div class="hp-lights" style="grid-template-columns:repeat('+n+',1fr)">';
+  HP.on.forEach(function(v,i){ h+='<button type="button" class="hp-rune'+(v?' on':'')+'" data-hp="lights" data-k="'+i+'" aria-label="Rune '+(i+1)+(v?', lit':', dark')+'">'+(v?'✦':'·')+'</button>'; });
+  return h+'</div><button type="button" class="pxbtn" data-hp="lights-reset">↺ Reset</button>'; }
+/* --- sentence bridge (put the paragraph in order) --- */
+function hpOrderNew(){ HP.para=HD_PARA[Math.random()*HD_PARA.length|0]; do { HP.idx=shuffle([0,1,2,3]); } while(HP.idx.join()==="0,1,2,3"); HP.pick=[]; HP.bad=-1; }
+function hpOrderTap(k){ if(!HP||HP.pick.indexOf(k)>=0) return; HP.bad=-1; HP.pick.push(k); snd(520+HP.pick.length*90,0,.08,"triangle",.04);
+  if(HP.pick.length===4){ var bad=-1; HP.pick.forEach(function(v,i){ if(bad<0&&v!==i) bad=i; });
+    if(bad<0){ HP.msg="✓ The bridge holds! That paragraph flows."; hpRender(); return setTimeout(hpSolved,500); }
+    HP.bad=bad; sfx("wrong"); HP.msg="✗ Sentence "+(bad+1)+" is out of place. "+(bad===0?"Start with the one that introduces the topic, with no transition word.":"Look at its first words: what does it connect back to?")+" Tap Undo or Clear to fix it."; }
+  hpRender(); }
+function hpOrderHTML(){ var P=HP.para, h='<p class="pxsmall">Your paragraph</p><ol class="hp-slots">';
+  for(var i=0;i<4;i++){ var k=HP.pick[i]; h+='<li class="'+(k==null?'empty':(HP.bad===i?'bad':''))+'">'+(k==null?'…':esc(P[k]))+'</li>'; }
+  h+='</ol><p class="pxsmall">Tap the next sentence</p><div class="hp-opts">';
+  HP.idx.forEach(function(k){ if(HP.pick.indexOf(k)>=0) return; h+='<button type="button" class="hp-sent" data-hp="order" data-k="'+k+'">'+esc(P[k])+'</button>'; });
+  return h+'</div><div class="cq-bot"><button type="button" class="pxbtn" data-hp="order-undo"'+(HP.pick.length?'':' disabled')+'>↶ Undo</button><button type="button" class="pxbtn" data-hp="order-clear"'+(HP.pick.length?'':' disabled')+'>Clear</button></div>'; }
+/* --- light the crystal (rotate mirrors to steer a beam) --- */
+function hpLaserNew(){ var N=HD_PUZ[HP.z].n, i, tries;
+  for(tries=0;tries<600;tries++){ var g=[]; for(i=0;i<N*N;i++) g.push(0);
+    var sy=1+(Math.random()*(N-2)|0), x=0, y=sy, dx=1, dy=0, seen={}, turns=0, ok=true, steps=0;
+    while(x>=0&&y>=0&&x<N&&y<N){ var k=y*N+x; if(seen[k]){ ok=false; break; } seen[k]=1; steps++;
+      if(steps>1&&turns<N+1&&Math.random()<.45){ var nd=dx!==0?(Math.random()<.5?[0,-1]:[0,1]):(Math.random()<.5?[-1,0]:[1,0]); g[k]=(nd[0]===-dy&&nd[1]===-dx)?1:2; dx=nd[0]; dy=nd[1]; turns++; }
+      x+=dx; y+=dy; }
+    if(!ok||turns<3||(x===-1&&y===sy)) continue;
+    HP.N=N; HP.sy=sy; HP.tx=x; HP.ty=y; HP.sol=g.slice();
+    var empties=[]; for(i=0;i<N*N;i++) if(!g[i]&&!seen[i]) empties.push(i); empties=shuffle(empties);
+    var nd2=N===5?2:3, nb=N===5?2:3; for(i=0;i<nd2&&empties.length;i++) g[empties.pop()]=1+(Math.random()*2|0); for(i=0;i<nb&&empties.length;i++) g[empties.pop()]=3;
+    HP.g=g; HP.sol=g.map(function(v,j){ return HP.sol[j]||v; });
+    for(var t2=0;t2<30;t2++){ for(i=0;i<N*N;i++) if(g[i]===1||g[i]===2) g[i]=Math.random()<.5?1:2; if(!hpTrace().hit) break; }
+    if(hpTrace().hit) continue;
+    HP.moves=0; return; }
+}
+function hpTrace(){ var N=HP.N, g=HP.g, x=0, y=HP.sy, dx=1, dy=0, pts=[[-1,y]], n=0;
+  while(n++<300){ if(x<0||y<0||x>=N||y>=N){ pts.push([x,y]); return {pts:pts,hit:x===HP.tx&&y===HP.ty}; }
+    var c=g[y*N+x]; if(c===3){ pts.push([x-dx*.45,y-dy*.45]); return {pts:pts,hit:false}; }
+    if(c===1||c===2){ pts.push([x,y]); var ndx=c===1?-dy:dy, ndy=c===1?-dx:dx; dx=ndx; dy=ndy; }
+    x+=dx; y+=dy; }
+  return {pts:pts,hit:false}; }
+function hpLaserTap(i){ if(!HP||(HP.g[i]!==1&&HP.g[i]!==2)) return; HP.g[i]=HP.g[i]===1?2:1; HP.moves++; snd(700,0,.05,"square",.03); var T=hpTrace(); hpRender(); if(T.hit){ sfx("streak"); setTimeout(hpSolved,700); } }
+function hpLaserHTML(){ var N=HP.N, S=40, T=hpTrace(), W=(N+2)*S, h='<svg class="hp-laser" viewBox="0 0 '+W+' '+W+'" role="img" aria-label="Mirror grid">', i;
+  function C(v){ return (v+1)*S+S/2; }
+  h+='<rect x="'+S+'" y="'+S+'" width="'+N*S+'" height="'+N*S+'" rx="6" fill="#1b1730" stroke="#4a405a" stroke-width="2"/>';
+  for(i=0;i<N*N;i++){ var x=i%N, y=(i/N)|0, X=(x+1)*S, Y=(y+1)*S, c=HP.g[i];
+    h+='<rect x="'+(X+2)+'" y="'+(Y+2)+'" width="'+(S-4)+'" height="'+(S-4)+'" rx="4" fill="#241e3a"/>';
+    if(c===3) h+='<rect x="'+(X+5)+'" y="'+(Y+5)+'" width="'+(S-10)+'" height="'+(S-10)+'" rx="3" fill="#5a5468" stroke="#1a1424" stroke-width="2"/>';
+    if(c===1||c===2){ var a=c===1?[X+7,Y+S-7,X+S-7,Y+7]:[X+7,Y+7,X+S-7,Y+S-7]; h+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+a[2]+'" y2="'+a[3]+'" stroke="#dbe4ff" stroke-width="5" stroke-linecap="round"/>'; } }
+  h+='<polyline points="'+T.pts.map(function(p){ return C(p[0])+','+C(p[1]); }).join(' ')+'" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity=".95"/>';
+  h+='<circle cx="'+C(-1)+'" cy="'+C(HP.sy)+'" r="11" fill="#ffd43b" stroke="#fff3bf" stroke-width="3"/>';
+  var tx=C(HP.tx), ty=C(HP.ty); h+='<polygon points="'+tx+','+(ty-14)+' '+(tx+11)+','+ty+' '+tx+','+(ty+14)+' '+(tx-11)+','+ty+'" fill="'+(T.hit?'#69db7c':'#e599f7')+'" stroke="#fff" stroke-width="2"/>';
+  for(i=0;i<N*N;i++) if(HP.g[i]===1||HP.g[i]===2){ var x2=i%N, y2=(i/N)|0; h+='<rect data-hp="laser" data-k="'+i+'" x="'+((x2+1)*S)+'" y="'+((y2+1)*S)+'" width="'+S+'" height="'+S+'" fill="transparent" style="cursor:pointer"><title>Turn this mirror</title></rect>'; }
+  return h+'</svg><p class="pxsmall">'+HP.moves+' turns · the gold orb shoots the beam, the diamond is the crystal</p>'; }
+/* --- balance the equation (a·x + b = c·x + d) --- */
+function hpBalNew(){ var k=HD_PUZ[HP.z].k, x0=2+(Math.random()*8|0), a, b, c, d;
+  if(k===1){ a=2+(Math.random()*4|0); b=1+(Math.random()*12|0); c=0; d=a*x0+b; }
+  else { a=3+(Math.random()*5|0); c=1+(Math.random()*(a-2)|0); b=1+(Math.random()*9|0); if(k===3){ b=-b; if(Math.random()<.5) x0=-x0; } d=(a-c)*x0+b; }
+  HP.e={a:a,b:b,c:c,d:d}; HP.x0=x0; HP.start={a:a,b:b,c:c,d:d}; HP.hist=[]; HP.moves=0; }
+function hpSide(cx,n){ var s="";
+  if(cx){ s=(cx===1?"":cx===-1?"−":(cx<0?"−"+(-cx):cx))+"x"; }
+  if(n){ s+=s?(n<0?" − "+(-n):" + "+n):(n<0?"−"+(-n):""+n); }
+  return s||"0"; }
+function hpBalOps(){ var e=HP.e, ops=[];
+  if(e.c) ops.push({t:"x",v:e.c,good:1}); if(e.b) ops.push({t:"n",v:e.b,good:1}); if(!e.c&&!e.b&&e.a!==1) ops.push({t:"d",v:e.a,good:1});
+  if(e.b) ops.push({t:"n",v:-e.b}); if(e.a!==1&&(e.b||e.c)) ops.push({t:"d",v:e.a}); if(e.a>0&&e.c===0&&e.b) ops.push({t:"x",v:-1});
+  var seen={}; ops=ops.filter(function(o){ var k=o.t+o.v; if(seen[k]) return false; seen[k]=1; return true; });
+  if(!HP.opsOrder||HP.opsKey!==JSON.stringify(e)){ HP.opsKey=JSON.stringify(e); HP.opsOrder=shuffle(ops.map(function(_,i){ return i; })); }
+  return HP.opsOrder.map(function(i){ return ops[i]; }).filter(Boolean); }
+function hpOpLabel(o){ if(o.t==="x") return o.v>0?"Subtract "+(o.v===1?"":o.v)+"x":"Add "+(o.v===-1?"":-o.v)+"x"; if(o.t==="n") return o.v>0?"Subtract "+o.v:"Add "+(-o.v); return "Divide by "+o.v; }
+function hpBalDo(i){ if(!HP) return; var o=hpBalOps()[i]; if(!o) return; var e=HP.e, n={a:e.a,b:e.b,c:e.c,d:e.d};
+  if(o.t==="x"){ n.a-=o.v; n.c-=o.v; } else if(o.t==="n"){ n.b-=o.v; n.d-=o.v; }
+  else { if([n.a,n.b,n.c,n.d].some(function(v){ return v%o.v!==0; })){ sfx("wrong"); HP.msg="✗ Dividing now would leave fractions. Get the x-term alone first (move the plain number to the other side)."; return hpRender(); } n.a/=o.v; n.b/=o.v; n.c/=o.v; n.d/=o.v; }
+  if(n.a===0&&n.c===0){ sfx("wrong"); HP.msg="✗ That would cancel x out completely! Try a different step."; return hpRender(); }
+  HP.hist.push(e); HP.e=n; HP.moves++; snd(o.good?660:330,0,.08,"triangle",.04); HP.msg=o.good?"":"Hmm, that's allowed, but it didn't get x any closer to being alone. Tap Undo.";
+  if(n.a===1&&n.b===0&&n.c===0){ var A=HP.start; HP.msg="✓ x = "+n.d+". Check: "+hpSide(A.a,A.b).replace(/x/g,"("+n.d+")")+" = "+(A.a*n.d+A.b)+" and "+hpSide(A.c,A.d).replace(/x/g,"("+n.d+")")+" = "+(A.c*n.d+A.d)+". Balanced!"; hpRender(); return setTimeout(hpSolved,1400); }
+  hpRender(); }
+function hpBalHTML(){ var e=HP.e, h='<div class="hp-eq">'+hpSide(e.a,e.b)+' <span>=</span> '+hpSide(e.c,e.d)+'</div>';
+  if(HP.hist.length) h+='<ol class="hp-hist">'+HP.hist.map(function(q){ return '<li>'+hpSide(q.a,q.b)+' = '+hpSide(q.c,q.d)+'</li>'; }).join("")+'</ol>';
+  h+='<p class="pxsmall">Do this to BOTH sides:</p><div class="hp-ops">'+hpBalOps().map(function(o,i){ return '<button type="button" class="pxbtn" data-hp="bal" data-k="'+i+'">'+hpOpLabel(o)+'</button>'; }).join("")+'</div>';
+  return h+'<div class="cq-bot"><button type="button" class="pxbtn" data-hp="bal-undo"'+(HP.hist.length?'':' disabled')+'>↶ Undo</button><button type="button" class="pxbtn" data-hp="bal-reset">↺ Start over</button></div>'; }
+document.addEventListener("click",function(e){ var en=e.target.closest("[data-hpenter]"); if(en){ e.preventDefault(); e.stopPropagation(); qwPanelClose(); hdEnter("hd|"+en.dataset.hpenter); return; }
+  var t=e.target.closest("[data-hp]"); if(!t||!HP) return; e.preventDefault(); e.stopPropagation(); if(t.disabled) return; var a=t.getAttribute("data-hp"), k=+t.getAttribute("data-k");
+  if(a==="echo") hpEchoTap(k); else if(a==="echo-replay"){ HP.msg=""; hpEchoPlay(); }
+  else if(a==="lights") hpLPress(k); else if(a==="lights-reset"){ HP.on=HP.start.slice(); HP.moves=0; hpRender(); }
+  else if(a==="order") hpOrderTap(k); else if(a==="order-undo"){ HP.pick.pop(); HP.bad=-1; HP.msg=""; hpRender(); } else if(a==="order-clear"){ HP.pick=[]; HP.bad=-1; HP.msg=""; hpRender(); }
+  else if(a==="laser") hpLaserTap(k);
+  else if(a==="bal") hpBalDo(k); else if(a==="bal-undo"){ HP.e=HP.hist.pop()||HP.e; HP.msg=""; hpRender(); } else if(a==="bal-reset"){ HP.e=Object.assign({},HP.start); HP.hist=[]; HP.msg=""; hpRender(); } },true);
+function mLv(m){ var lv=m.lv||1; if(MAP&&(MAP.cave||MAP.hdg)&&!m.final) lv=Math.min(lv,Math.max(1,QS().lvl+(m.proctor||m.warden||m.dgBoss||m.elite?2:1))); return lv; }
 /* ================= chiptune soundtrack ================= */
 var QM={timer:0,step:0,song:null};
 var NOTE=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
@@ -13024,7 +13286,7 @@ var CZ=[
 ];
 function caveArea(y){ for(var i=0;i<CZ.length;i++) if(y>=CZ[i].y0&&y<CZ[i].y1) return i; return y<250?5:10; }
 function caveTierLv(t){ return t===0?[1,1]:[10*t-9,10*t]; }
-function caveReq(t){ return t<=1?1:10*(t-1)+1; }
+function caveReq(t){ return 1; }
 function caveTier(a){ return CZ[a]?CZ[a].t:0; }
 /* the land record for the cave (it is not one of the village portals, so it is not in LANDS) */
 function caveLand(){
@@ -13226,6 +13488,9 @@ function CAVE_BUILD(m,zones,hub,reach,r,R,isF,ell,tunnel,brX){
     var wc=a===10?zl[zl.length-2]:zl[zl.length-1], side=wc.x<caveCX(wc.y)?1:-1, wpos=near(wc.x+side*Math.max(3,wc.rx-3),wc.y,8,true);
     if(wpos){ var wd=CAVE_WARDEN[a]; m.wardens.push({id:CAVE_ID+"-warden"+a,x:wpos[0],y:wpos[1],hx:wpos[0],hy:wpos[1],tx:wpos[0],ty:wpos[1],t:1,moving:false,kind:wd[0],pal:wd[1],name:wd[2],lv:Math.min(CAVE_MAX,lv[1]+(a===5||a===10?0:1)),elite:true,warden:a,next:0,stun:0,face:-1});
       res(wpos[0],wpos[1],3); m.lights.push({x:wpos[0],y:wpos[1],r:60,s:.8,c:"#ff6b6b"}); }
+    /* the Delve: a sealed rune door; solve its puzzle to open a 1-player dungeon */
+    var dzc=zl[Math.min(zl.length-2,Math.max(1,Math.floor(zl.length/2)))], dzp=near(dzc.x+(up?-4:4),dzc.y-1,10,true);
+    if(dzp){ var dzo=inter(addObj(m,"hdgate",dzp[0],dzp[1],{id:"hd|"+a,z:a})); if(!m.hdgates) m.hdgates=[]; m.hdgates.push(dzo); res(dzp[0],dzp[1],3); m.lights.push({x:dzp[0],y:dzp[1]-.5,r:56,s:.8,c:"#b197fc"}); }
     /* chests in the chambers */
     zl.forEach(function(c,n6){ if(n6%2===0&&!c.core){ var cp=near(c.x+R(-c.rx+2,c.rx-2),c.y+R(-2,2),6); if(cp){ m.chests.push({id:CAVE_ID+"-k"+m.chests.length,x:cp[0],y:cp[1],min:n6>=4?"rare":null,mimic:(a+n6)%7===3}); m.blk[cp[1]*W+cp[0]]=1; res(cp[0],cp[1],1.5); } } });
   }
@@ -13631,7 +13896,7 @@ function caveEdge(m,p,X,Y,g,nb,sx,sy,hh){ var W2=GI.cwall, solid=function(v){ re
   if(g===GI.cpath&&(hh%5===0)) p(sx+(hh%12),sy+((hh>>3)%12),"#7a7290",2,1); }
 function caveMiniColor(g,i){ if(g===GI.cwall) return "#0b0910"; if(g===GI.water) return "#1971c2"; if(g===GI.lava) return "#e8590c"; if(g===GI.chasm) return "#000000"; if(g===GI.bridge) return "#c9a46a"; if(g===GI.cpath) return "#8f86aa";
   if(MAP.blk[i]) return "#2a2436"; var y=Math.floor(i/MAP.W), a=caveArea(y); return ["#6a5f4a","#3f5a52","#5a4a3a","#4a3f6a","#555066","#6a7a99","#5a4a3a","#5a2a1e","#2a5560","#3f3f8a","#3a2a35"][a]; }
-function caveMiniDots(m,dot,now){ var pulse=Math.floor(now/300)%2;
+function caveMiniDots(m,dot,now){ var pulse=Math.floor(now/300)%2; (MAP.hdgates||[]).forEach(function(g){ dot(g.x,g.y,hdSt(g.z).o?"#b197fc":"#e599f7",4); });
   for(var a=1;a<=10;a++){ var sh=lgZone(a).filter(function(c){ return lgSt(c.id)===1; }).length; if(!sh) continue; var Z=CZ[a]; m.fillStyle="rgba(255,60,80,"+(pulse?.22:.12)+")"; m.fillRect(0,Z.y0,3,Z.y1-Z.y0); m.fillRect(MAP.W-3,Z.y0,3,Z.y1-Z.y0); }
   MAP.mons.forEach(function(mn){ if(!qwAlive(mn)) return; if(mn.echo) dot(mn.fx!=null?Math.round(mn.fx):mn.x,mn.fy!=null?Math.round(mn.fy):mn.y,pulse?"#74c0fc":"#ff6b6b",4); else if(mn.warden) dot(mn.x,mn.y,lgZoneReady(mn.warden)?"#ffd43b":"#ff3b5c",5); else if(mn.proctor) dot(mn.x,mn.y,"#ffd43b",6); }); }
 /* music for every zone */
@@ -13641,8 +13906,10 @@ function caveMiniDots(m,dot,now){ var pulse=Math.floor(now/300)%2;
 function caveHowTo(){ if(HOWTO["The Hollow"]||!caveS().found) return;
   HOWTO["The Hollow"]=["<b>The Hollow</b> is the PSAT 8/9 cave behind the big golden portal in the middle of the village. Up (the Spire) is Reading & Writing. Down (the Deep) is Math. Your level here goes to <b>50</b>.",
     "<b>The Ledger</b> (press <b>L</b> or tap 📒) tracks every concept: <b>New → Shaky → Solid → Locked in</b>. Right the first time = Solid. Miss it = Shaky until you get 2 <i>different</i> versions right in a row.",
-    "A Shaky concept haunts its zone as a see-through <b>Echo ghost</b>. Beat it to fix that concept. Your 2nd miss on a concept shows its <b>rule card</b> and a worked example.",
+    "A Shaky concept haunts its zone as a see-through <b>Echo ghost</b>. Beat it to fix that concept. Every miss shows the concept's <b>rule card</b> and a worked example.",
     "Solid concepts get a surprise <b>lock-in check</b> 2+ days later.",
+    "🔮 <b>Delves</b>: every zone has a sealed rune door. Solve its puzzle (echo sequence, rune lights, sentence bridge, light the crystal, or balance the equation) to break the seal, then go in alone: monster rooms, a boulder puzzle, a riddle stone with that zone's PSAT questions, the Guardian, then treasure. It resets 10 minutes after you clear it.",
+    "Bump into a crystal to make it ring. Every crystal plays a note.",
     "<b>Wardens</b> guard each zone and only fight you when every concept there is Solid. The <b>Proctor</b> at the very bottom wants everything Locked in.",
     "The Summit and the Magma Core run on real test time: about <b>71 s</b> per Reading & Writing question and <b>95 s</b> per Math question. Some questions are typed, like the real test."];
 }
