@@ -910,6 +910,45 @@ em.locked{color:#ffd43b}em.solid{color:#69db7c}em.shaky{color:#ff8787}em.new{col
 .hp-eq span{color:#f4f1e8;margin:0 6px}
 .hp-hist{margin:0;padding-left:22px;font:14px/1.5 "Pixelify Sans",monospace;color:#8a90b8}
 .hp-ops{display:flex;flex-wrap:wrap;gap:8px}
+
+#pace{margin:0 0 16px}
+.pace-card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;display:grid;gap:10px}
+.pace-top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.pace-top b{font:700 17px/1.2 var(--font-display)}
+.pace-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.pace-l{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pace-l b{font:700 15px/1.2 var(--font-body)}
+.pace-st{font:700 13px/1.2 var(--font-body);color:var(--ink-soft)}
+.pace-st.timed{color:var(--bad)}.pace-st.ok{color:var(--good)}
+.pace-n{text-align:right}
+.pace-n b{display:block;font:700 24px/1 var(--font-mono);color:var(--good)}
+.pace-row.over .pace-n b{color:var(--bad)}
+.pace-n small{font:12px/1.2 var(--font-body);color:var(--ink-soft)}
+.pace-bar{grid-column:1/-1;position:relative;height:8px;border-radius:99px;background:var(--rule);overflow:visible}
+.pace-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--good)}
+.pace-row.over .pace-bar i{background:var(--bad)}
+.pace-bar u{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px}
+.pace-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pace-mode .chipbtn{padding:7px 11px;font-size:13px}
+.pace-note{margin:0;font-family:var(--font-body);line-height:1.45}
+.pace-live{position:sticky;top:72px;z-index:3;height:26px;margin:10px 0 12px;box-shadow:0 2px 8px var(--shadow);border-radius:8px;background:var(--rule);overflow:hidden}
+.pace-live i{position:absolute;left:0;top:0;bottom:0;background:var(--good-bg);transition:width .2s linear}
+.pace-live.over i{background:var(--bad-bg)}
+.pace-live.timed i{background:var(--hi)}
+.pace-live.timed.hurry i{background:var(--bad);opacity:.55}
+.pace-live span{position:relative;display:block;padding:5px 10px;font:13px/16px var(--font-body);color:var(--ink)}
+.pace-live b{font-family:var(--font-mono)}
+.pace-took{margin:10px 0 0;font:13px/1.3 var(--font-body);color:var(--good)}
+.pace-took.over{color:var(--bad)}
+.lgpace{display:grid;gap:4px;margin:8px 0;padding:8px 10px;border:2px solid #5a62a0;border-radius:6px;background:rgba(255,255,255,.05)}
+.lgpace-r{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font:13px/1.35 "Pixelify Sans",monospace;color:#f4f1e8}
+.lgpace-r b{color:#8ce99a}.lgpace-r em{font-style:normal;color:#8a90b8}
+.lgpace-r.timed b,.lgpace-r.timed em{color:#ff8787}.lgpace-r.ok em{color:#8ce99a}
+.lgpace-m{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}
+.lgpace-m .pxbtn{padding:4px 8px;font-size:12px}
+.lgpace-m .pxbtn.on{background:#ffd43b;border-color:#ffd43b;color:#1a1424}
+.lgtimer.pace i{background:linear-gradient(90deg,#e8590c,#fcc419)}
+.lgtimer.hurry i{filter:brightness(1.25)}
 /* ---- save files ---- */
 .savebtn{display:inline-flex;align-items:center;gap:6px;font:800 15px/1 var(--font-display);background:var(--sheet);color:var(--ink);border:1.5px solid var(--rule);border-radius:999px;padding:9px 13px;cursor:pointer}
 .homebar-r{display:flex;gap:8px;align-items:center}
@@ -1086,6 +1125,7 @@ body.save-open{overflow:hidden}
 
       <section class="panel" id="panel-quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
         <div class="qmode" id="qmode" role="group" aria-label="Quiz style" hidden></div>
+        <div id="pace" hidden></div>
         <div id="quiz"></div>
         <div id="typed" hidden></div>
       </section>
@@ -2318,6 +2358,86 @@ var GUIDES=[
   ]
 }
 ];
+
+/* ================= ⏱ PSAT pace: your average time per question, and a timed mode when you're slower than the real test =================
+   Real PSAT 8/9 pace (College Board): Reading & Writing is 54 questions in 64 min (about 1:11 each), Math is 44 questions in 70 min (about 1:35 each).
+   Auto mode: once your last-20 average in a section is over that pace, every question in that section gets a clock, and running out counts as wrong.
+   The clock turns off again once your average is PACE_OFF seconds under the goal. Time with the tab hidden doesn't count. */
+var PSQ={};
+var PACE_GOAL={rw:71,math:95}, PACE_N=20, PACE_MIN=5, PACE_OFF=4, PACE_NAME={rw:"Reading & Writing",math:"Math"};
+var PACE_HID=0, PACE_HAT=0, PACE_A=null, PACE_CQ=0;
+document.addEventListener("visibilitychange",function(){ var t=performance.now(); if(document.hidden) PACE_HAT=t; else if(PACE_HAT){ PACE_HID+=t-PACE_HAT; PACE_HAT=0; } });
+function paceNow(){ var t=performance.now(); return t-PACE_HID-(PACE_HAT?t-PACE_HAT:0); }
+function paceS(){ if(!ST.pace||typeof ST.pace!=="object") ST.pace={}; var P=ST.pace;
+  if(!Array.isArray(P.rw)) P.rw=[]; if(!Array.isArray(P.math)) P.math=[];
+  if(!P.n||typeof P.n!=="object") P.n={rw:0,math:0}; if(!P.on||typeof P.on!=="object") P.on={};
+  if(P.mode!=="always"&&P.mode!=="off") P.mode="auto"; return P; }
+function paceAvg(sec){ var a=paceS()[sec]; return a&&a.length?a.reduce(function(n,x){ return n+x; },0)/a.length:null; }
+function paceFmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+":"+("0"+s%60).slice(-2); }
+function paceOn(sec){ var P=paceS(); return P.mode==="always"?true:P.mode==="off"?false:!!P.on[sec]; }
+function paceLimit(sec){ return sec&&PACE_GOAL[sec]&&paceOn(sec)?PACE_GOAL[sec]:0; }
+function paceSecOf(text){ return text&&Object.prototype.hasOwnProperty.call(PSQ,text)?PSQ[text]:null; }
+function paceRecord(sec,ms,out){ if(!sec||!PACE_GOAL[sec]||!(ms>=0)) return; var P=paceS(), g=PACE_GOAL[sec], t=Math.min(ms/1000,g*3);
+  if(out) t=Math.max(t,g); t=Math.round(t*10)/10;
+  P[sec].push(t); if(P[sec].length>PACE_N) P[sec].splice(0,P[sec].length-PACE_N); P.n[sec]=(P.n[sec]||0)+1;
+  var avg=paceAvg(sec), was=!!P.on[sec];
+  if(P[sec].length>=PACE_MIN){ if(!was&&avg>g) P.on[sec]=1; else if(was&&avg<=g-PACE_OFF) P.on[sec]=0; }
+  save(); paceRefresh();
+  if(P.mode==="auto"&&!!P.on[sec]!==was) setTimeout(function(){ toast(P.on[sec]?"⏱ "+PACE_NAME[sec]+" average "+paceFmt(avg)+" is over "+paceFmt(g)+". Timed mode ON.":"⏱ "+PACE_NAME[sec]+" is back on pace ("+paceFmt(avg)+"). Timed mode off."); },700); }
+function paceStatus(sec){ var P=paceS(), n=P[sec].length, avg=paceAvg(sec), g=PACE_GOAL[sec];
+  if(paceOn(sec)) return {k:"timed",t:"⏱ Timed: "+paceFmt(g)+" max"};
+  if(P.mode==="off") return {k:"off",t:"Clock off"};
+  if(!n) return {k:"none",t:"No answers yet"};
+  if(n<PACE_MIN) return {k:"few",t:(PACE_MIN-n)+" more to check your pace"};
+  return avg>g?{k:"few",t:"Over pace"}:{k:"ok",t:"✓ On pace"}; }
+
+/* ---------- the pace card on the PSAT 8/9 guide ---------- */
+function paceRowHTML(sec){ var avg=paceAvg(sec), g=PACE_GOAL[sec], st=paceStatus(sec), w=avg==null?0:Math.min(100,avg/(g*2)*100);
+  return '<div class="pace-row'+(avg!=null&&avg>g?' over':'')+'"><div class="pace-l"><b>'+PACE_NAME[sec]+'</b><span class="pace-st '+st.k+'">'+st.t+'</span></div>'+
+    '<div class="pace-n"><b>'+(avg==null?'–':paceFmt(avg))+'</b><small>average · goal '+paceFmt(g)+'</small></div>'+
+    '<div class="pace-bar" aria-hidden="true"><i style="width:'+w+'%"></i><u title="goal"></u></div></div>'; }
+function paceModeBtns(cls){ var P=paceS(); return [["auto","Auto"],["always","Always timed"],["off","Off"]].map(function(m){ return '<button type="button" class="'+cls+(P.mode===m[0]?' on':'')+'" data-pacemode="'+m[0]+'" aria-pressed="'+(P.mode===m[0])+'">'+m[1]+'</button>'; }).join(""); }
+function paceCardHTML(){ var P=paceS();
+  return '<div class="pace-card"><div class="pace-top"><b>⏱ Your PSAT pace</b><span class="small">Average of your last '+PACE_N+' answers in each section</span></div>'+paceRowHTML("rw")+paceRowHTML("math")+
+    '<div class="pace-mode" role="group" aria-label="PSAT timer"><span class="small">Timer:</span>'+paceModeBtns("chipbtn")+'</div>'+
+    '<p class="small pace-note">'+(P.mode==="auto"?'If your average is slower than the real test (Reading &amp; Writing: 54 questions in 64 min ≈ 1:11 each · Math: 44 in 70 min ≈ 1:35 each), every question in that section gets a clock. Run out and it counts wrong. The clock turns off once your average is '+PACE_OFF+' seconds under the goal.':
+      P.mode==="always"?'Every PSAT question gets a clock: 1:11 for Reading &amp; Writing, 1:35 for Math. Run out and it counts wrong.':'No clocks. Your average still shows here.')+'</p></div>'; }
+/* the Hollow's Ledger gets a pixel version */
+function paceHollowHTML(){ return '<div class="lgpace">'+["rw","math"].map(function(sec){ var avg=paceAvg(sec), g=PACE_GOAL[sec], st=paceStatus(sec);
+    return '<div class="lgpace-r '+st.k+'"><span>⏱ '+(sec==="rw"?"R&amp;W":"Math")+' average <b>'+(avg==null?'–':paceFmt(avg))+'</b> · goal '+paceFmt(g)+'</span><em>'+st.t+'</em></div>'; }).join("")+
+  '<div class="lgpace-m"><span class="pxsmall">Timer:</span>'+paceModeBtns("pxbtn")+'</div></div>'; }
+function paceRefresh(){ var pc=document.getElementById("pace"); if(pc&&!pc.hidden) pc.innerHTML=paceCardHTML();
+  var lp=document.querySelector(".lgpace"); if(lp) lp.outerHTML=paceHollowHTML(); }
+document.addEventListener("click",function(e){ var b=e.target.closest("[data-pacemode]"); if(!b) return; e.preventDefault();
+  var P=paceS(); if(P.mode===b.dataset.pacemode) return; P.mode=b.dataset.pacemode; save(); sfx("blip"); paceRefresh();
+  toast(P.mode==="always"?"⏱ Every PSAT question is timed now.":P.mode==="off"?"⏱ PSAT clocks are off.":"⏱ Auto: clocks turn on when you’re slower than the real test."); });
+
+/* ---------- the live clock under a question (guide quiz + quick Boss Battle) ---------- */
+function paceLiveHTML(sec,lim,done,took){ if(!sec) return ""; var g=PACE_GOAL[sec];
+  if(done) return took!=null?'<p class="pace-took'+(took>g?' over':'')+'">⏱ '+paceFmt(took)+' on this one · goal '+paceFmt(g)+'</p>':'';
+  return '<div class="pace-live'+(lim?' timed':'')+'" id="pace-live"><i></i><span></span></div>'; }
+function paceLiveFill(el,A){ var t=(paceNow()-A.t0)/1000, i=el.firstChild, s=el.lastChild;
+  if(A.lim){ var f=Math.min(1,t/A.lim); i.style.width=(100-f*100)+"%"; s.innerHTML='⏱ <b>'+paceFmt(Math.ceil(Math.max(0,A.lim-t)))+'</b> left · timed mode: run out and it counts wrong'; el.classList.toggle("hurry",f>.75); }
+  else { i.style.width=Math.min(100,t/A.goal*100)+"%"; s.innerHTML='⏱ <b>'+paceFmt(t)+'</b> · goal '+paceFmt(A.goal); el.classList.toggle("over",t>A.goal); }
+  return t; }
+function paceArm(t0,lim,goal,onOut){ if(!PACE_A||PACE_A.t0!==t0){ paceDisarm(); PACE_A={t0:t0,lim:lim,goal:goal,onOut:onOut}; PACE_A.iv=setInterval(paceTick,200); } paceTick(); }
+function paceDisarm(){ if(PACE_A){ clearInterval(PACE_A.iv); PACE_A=null; } }
+function paceTick(){ var A=PACE_A; if(!A) return; var el=document.getElementById("pace-live"); if(!el||!el.offsetParent) return; var t=paceLiveFill(el,A);
+  if(A.lim&&t>=A.lim){ var cb=A.onOut; paceDisarm(); if(cb) cb(); } }
+/* time ran out on a guide quiz question: answer it as wrong */
+function paceGuideOut(t0){ return function(){ if(!Q||Q.pick!==null||Q.pt0!==t0) return; Q.ptout=true; var b=document.createElement("button"); b.setAttribute("data-k","-1"); b.hidden=true; $("#quiz").appendChild(b); b.click(); }; }
+function paceGuideDraw(q,done){ var pc=document.getElementById("pace"), on=!!(G&&/^psat89-/.test(G.id));
+  if(pc){ pc.hidden=!on; if(on) pc.innerHTML=paceCardHTML(); }
+  if(on&&Q.psec&&!done) paceArm(Q.pt0,Q.plim,PACE_GOAL[Q.psec],paceGuideOut(Q.pt0)); else paceDisarm(); }
+function paceBtOut(t0){ return function(){ if(BT&&BT.pick===null&&BT.pt0===t0){ BT.ptout=true; battleAnswer(-1); } }; }
+
+/* ---------- Study Quest battles outside the Hollow (like the Final Exam Tower) time PSAT questions too ---------- */
+function paceQbPrep(){ var q=QB.pool.qs[QB.cur]; if(!q||QB.pool.cave) return; q.psec=paceSecOf(q.q); q.zt=paceLimit(q.psec); q.pace=q.zt?1:0; }
+/* ---------- the Hollow's quick-quiz panels (riddles, drills, lock-in checks) ---------- */
+function paceCqStart(){ clearInterval(PACE_CQ); if(!CQ||!CQ.plim) return; var C=CQ, q=CQ.q, lim=CQ.plim*1000;
+  PACE_CQ=setInterval(function(){ var b=document.getElementById("cq-timer"); if(!CQ||CQ!==C||CQ.q!==q||CQ.done||!b){ clearInterval(PACE_CQ); return; }
+    var el=paceNow()-C.pt0, f=Math.min(1,el/lim); b.firstChild.style.width=(f*100)+"%"; var tl=document.getElementById("cq-tleft"); if(tl) tl.textContent=Math.max(0,Math.ceil((lim-el)/1000))+"s"; b.classList.toggle("hurry",f>.8);
+    if(f>=1){ clearInterval(PACE_CQ); C.timeout=true; cqAnswer(q.typed?-1:-2,""); } },200); }
 
 /* ================= PSAT 8/9 question bank (The Hollow) ================= */
 /* ================= PSAT 8/9 content helpers (shared by every zone bank) =================
@@ -8735,7 +8855,7 @@ PSATZ[10]={
     zs.forEach(function(z){ var Z=PSATZ[z]||{};
       (Z.cards||[]).forEach(function(c){ cards.push([c[0],c[1],c[2]]); });
       (Z.cheat||[]).forEach(function(h){ cheat.push({h:ZN[z]+" · "+h.h,say:h.h,items:(h.items||[]).slice()}); });
-      PSATC.filter(function(c){ return c.z===z; }).forEach(function(c){ samples(c).forEach(function(v){ quiz.push([v.q,v.o.slice(),v.why||"","",c.rule||""]); }); }); });
+      PSATC.filter(function(c){ return c.z===z; }).forEach(function(c){ samples(c).forEach(function(v){ PSQ[v.q]=id; quiz.push([v.q,v.o.slice(),v.why||"","",c.rule||""]); }); }); });
     return {id:id,name:name,note:note,key:"psat89-"+id,cards:cards,quiz:quiz,cheat:cheat}; }
   if(!PSATC.length) return;
   var rw=part("rw","Reading & Writing","54 Q · 64 min",[1,2,3,4,5]), m=part("math","Math","44 Q · 70 min",[6,7,8,9,10]);
@@ -9634,7 +9754,7 @@ function draw(){
 
   var red=Q.phase==="redeem";
   var q=QUIZ[red?Q.queue[0]:Q.order[Q.i]];
-  if(!Q.opts) Q.opts=shuffle(q[1].map(function(t,k){ return {t:t,ok:k===0}; }));
+  if(!Q.opts){ Q.opts=shuffle(q[1].map(function(t,k){ return {t:t,ok:k===0}; })); Q.psec=paceSecOf(q[0]); Q.plim=paceLimit(Q.psec); Q.pt0=paceNow(); Q.ptout=false; Q.ptook=null; }
   var done=Q.pick!==null, ok=done&&Q.lastOk;
   var head, bar, chip, fb, nextLabel;
   if(red){
@@ -9642,19 +9762,20 @@ function draw(){
     head='<span class="badge">Redemption · '+Q.queue.length+' left</span>'+ptsHud();
     bar='<div class="progress red"><i style="width:'+(Q.redeemed/total*100)+'%"></i></div>';
     chip='<span class="streak on">Redeem it for +50</span>';
-    fb=ok?'<b>Redeemed! +50</b> '+q[2]:'<b>Not yet.</b> This one will come back.'+explHTML(explItem(q),Q.pick!==null&&Q.opts[Q.pick]?Q.opts[Q.pick].t:null);
+    fb=ok?'<b>Redeemed! +50</b> '+q[2]:(Q.ptout?'<b>⏱ Time’s up!</b> ':'<b>Not yet.</b> ')+'This one will come back.'+explHTML(explItem(q),Q.pick!==null&&Q.opts[Q.pick]?Q.opts[Q.pick].t:null);
     nextLabel=(ok&&Q.queue.length===1)?"Go to the bonus":"Next";
   } else {
     head='<span class="small">Question '+(Q.i+1)+' of '+n+'</span>'+ptsHud();
     bar='<div class="progress"><i style="width:'+(Q.i/n*100)+'%"></i></div>';
     chip=streakChip(Q.streak);
-    fb=ok?'<b>'+(Q.milestone?'🔥 '+Q.streak+' in a row! ':'Correct! ')+'+'+Q.gained+' pts · +'+Q.starsNow+' ⭐</b> '+q[2]:'<b>Not quite.</b> You’ll get a redemption shot at the end.'+explHTML(explItem(q),Q.pick!==null&&Q.opts[Q.pick]?Q.opts[Q.pick].t:null);
+    fb=ok?'<b>'+(Q.milestone?'🔥 '+Q.streak+' in a row! ':'Correct! ')+'+'+Q.gained+' pts · +'+Q.starsNow+' ⭐</b> '+q[2]:(Q.ptout?'<b>⏱ Time’s up!</b> Going over counts as wrong. ':'<b>Not quite.</b> ')+'You’ll get a redemption shot at the end.'+explHTML(explItem(q),Q.pick!==null&&Q.opts[Q.pick]?Q.opts[Q.pick].t:null);
     nextLabel=Q.i+1<n?"Next":(Q.queue.length?"Go to redemption":"Go to the bonus");
   }
-  root.innerHTML='<div class="top-row">'+head+'</div>'+bar+'<div class="qtools">'+chip+bmTag(bmKey(q[0],q[1][0]))+enToggle()+'</div>'+
+  root.innerHTML='<div class="top-row">'+head+'</div>'+bar+(done?'':paceLiveHTML(Q.psec,Q.plim,false))+'<div class="qtools">'+chip+bmTag(bmKey(q[0],q[1][0]))+enToggle()+'</div>'+
     '<h3 class="q" id="qh" tabindex="-1">'+q[0]+'</h3>'+(enOn()&&q[3]?'<p class="en"><span>EN</span>'+q[3]+'</p>':'')+
-    '<div class="opts">'+optButtons(Q.opts,Q.pick,"data-k")+'</div>'+
+    '<div class="opts">'+optButtons(Q.opts,Q.pick,"data-k")+'</div>'+(done?paceLiveHTML(Q.psec,Q.plim,true,Q.ptook):'')+
     (done?'<div class="fb '+(ok?"ok":"no")+'" role="status">'+fb+'</div>'+bmBtn(bmKey(q[0],q[1][0]),GUIDE?GUIDE.id:"",ok)+'<button class="btn primary next" id="go">'+nextLabel+'</button>':"");
+  paceGuideDraw(q,done);
   afterDraw();
 }
 function afterDraw(){ if(Q.fresh){ countUp($("#pts"),Q.prevPts,Q.pts); Q.fresh=false; } }
@@ -9664,7 +9785,7 @@ $("#quiz").addEventListener("click",function(e){
   if(e.target.closest("#en-toggle")){ ST.en=!ST.en; save(); Q.fresh=false; draw(); var t=$("#en-toggle"); if(t) t.focus({preventScroll:true}); return; }
   var b=e.target.closest("[data-k]");
   if(b&&Q.pick===null&&(Q.phase==="main"||Q.phase==="redeem")){
-    Q.pick=+b.dataset.k; Q.lastOk=Q.opts[Q.pick].ok; Q.prevPts=Q.pts; Q.gained=0; Q.milestone=false; Q.fresh=true;
+    Q.pick=+b.dataset.k; if(Q.psec){ var pms=paceNow()-Q.pt0; if(Q.plim&&pms>=Q.plim*1000){ Q.pick=-1; Q.ptout=true; } Q.ptook=pms/1000; paceRecord(Q.psec,pms,Q.ptout); paceDisarm(); } Q.lastOk=!!(Q.opts[Q.pick]&&Q.opts[Q.pick].ok); Q.prevPts=Q.pts; Q.gained=0; Q.milestone=false; Q.fresh=true;
     var bq=G.quiz[Q.phase==="redeem"?Q.queue[0]:Q.order[Q.i]]; if(bq) bmResult(bmKey(bq[0],bq[1][0]),Q.lastOk);
     if(Q.phase==="main"){
       var cur=Q.order[Q.i];
@@ -9951,21 +10072,22 @@ function nextQ(){
   if(!BT.queue.length) BT.queue=shuffle(BT.qs.map(function(_,i){ return i; }));
   if(!BT.bk) BT.bk=BT.qs.map(function(q){ return bmKey(q.q,q.right); });
   var bi=bmPick(BT.bk,BT.cur); if(bi>=0) BT.cur=bi; else BT.cur=BT.queue.shift(); BT.pick=null; BT.hold=false;
-  BT.opts=shuffle(BT.qs[BT.cur].opts); BT.t0=performance.now();
+  BT.opts=shuffle(BT.qs[BT.cur].opts); BT.t0=performance.now(); var pq0=BT.qs[BT.cur]; BT.psec=pq0.card?null:paceSecOf(pq0.q); BT.plim=paceLimit(BT.psec); BT.pt0=paceNow(); BT.ptout=false; BT.ptook=null;
   drawQ();
 }
 function drawQ(){
   var q=BT.qs[BT.cur], done=BT.pick!==null, ok=done&&BT.opts[BT.pick]===q.right;
-  $("#bt-q").innerHTML=(done?'':'<div class="speed" aria-hidden="true"><i></i></div>')+
+  $("#bt-q").innerHTML=(done?'':'<div class="speed" aria-hidden="true"><i></i></div>'+paceLiveHTML(BT.psec,BT.plim,false))+
     bmTag(bmKey(q.q,q.right))+'<h3 class="q">'+q.q+'</h3>'+(q.en&&BT.lvl!==4?(ST.en?'<p class="en"><span>EN</span>'+q.en+'</p>':'')+'<button class="chipbtn bt-en" id="bt-en" aria-pressed="'+!!ST.en+'">English help: '+(ST.en?'On':'Off')+'</button>':'')+
     '<div class="opts">'+BT.opts.map(function(o,k){
       var cls="opt", m="";
       if(done){ if(o===q.right){ cls+=" right"; m='<span class="mark">✓</span>'; } else if(k===BT.pick){ cls+=" wrong"; m='<span class="mark">✗</span>'; } else cls+=" dim"; }
       return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'>'+m+'<span class="kn" aria-hidden="true">'+(k+1)+'</span>'+o+'</button>';
     }).join("")+'</div>'+
-    (done&&!ok?'<div class="fb no" role="status"><b>'+(BT.hp>0?'Ouch!':'Knocked out!')+'</b>'+explHTML(q,BT.opts[BT.pick])+'</div>'+bmBtn(bmKey(q.q,q.right),BT.world||"",false)+'<button class="btn primary next" id="bt-go">'+(BT.hp>0?'Keep fighting':'See results')+'</button>':'')+
+    (done?paceLiveHTML(BT.psec,BT.plim,true,BT.ptook):'')+(done&&!ok?'<div class="fb no" role="status"><b>'+(BT.ptout?'⏱ Time’s up! ':'')+(BT.hp>0?'Ouch!':'Knocked out!')+'</b>'+explHTML(q,BT.opts[BT.pick])+'</div>'+bmBtn(bmKey(q.q,q.right),BT.world||"",false)+'<button class="btn primary next" id="bt-go">'+(BT.hp>0?'Keep fighting':'See results')+'</button>':'')+
     (done&&ok?'<p class="fb ok" role="status"><b>Hit!</b> '+(q.why||'')+'</p>'+bmBtn(bmKey(q.q,q.right),BT.world||"",true):'');
   if(done&&!ok){ var g=$("#bt-go"); if(g) g.focus({preventScroll:true}); }
+  if(!done&&BT.psec) paceArm(BT.pt0,BT.plim,PACE_GOAL[BT.psec],paceBtOut(BT.pt0)); else if(done) paceDisarm();
 }
 function dmgPop(text,cls){
   var a=$("#arena"), m=$("#bt-mob"); if(!a||!m) return;
@@ -9976,7 +10098,7 @@ function dmgPop(text,cls){
 }
 function battleAnswer(k){
   if(!BT||BT.pick!==null||!BT.mob||BT.mob.hp<=0) return;
-  var q=BT.qs[BT.cur]; BT.pick=k;
+  var q=BT.qs[BT.cur]; if(BT.psec){ var pms=paceNow()-BT.pt0; if(BT.plim&&pms>=BT.plim*1000){ k=-1; BT.ptout=true; } BT.ptook=pms/1000; paceRecord(BT.psec,pms,BT.ptout); paceDisarm(); } BT.pick=k;
   var ok=BT.opts[k]===q.right, fast=performance.now()-BT.t0<FAST_MS; bmResult(BT.bk?BT.bk[BT.cur]:bmKey(q.q,q.right),ok);
   if(ok){
     BT.right++; BT.streak++; BT.bestStreak=Math.max(BT.bestStreak,BT.streak);
@@ -11894,7 +12016,7 @@ function qbItem(id){ var s=QS(), now=performance.now(); if(!QB||QB.done||QB.dodg
   save(); qwHud(); qbBar(); if(QB.choosing) qbDraw(); }
 function qbNext(){ if(!QB||QB.done) return;
   if(QB.poison>0&&QB.qn>0){ QB.poison--; var pd=QB.pdmg||5; QB.hp=Math.max(0,QB.hp-pd); BS.hit=performance.now(); bsFx("poison"); bsFloat("-"+pd+" POISON","#69db7c"); if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,700); return; } }
-  QB.cur=QB.pool.cave?lgNext(QB):qbNextIndex(QB.pool); QB.timeout=false; QB.typedRaw=null; QB.lensUsed=QB.lensUsed||false; QB.lensOut=-1; QB.pick=null; QB.dodgeRes=null; QB.choosing=false; QB.qn++; QB.opts=shuffle(QB.pool.qs[QB.cur].opts); QB.t0=performance.now(); qbDraw(); qbBar(); if(QB.pool.cave){ lgTimerStart(); var ti=$("#bs-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },80); } }
+  QB.cur=QB.pool.cave?lgNext(QB):qbNextIndex(QB.pool); QB.timeout=false; QB.typedRaw=null; QB.lensUsed=QB.lensUsed||false; QB.lensOut=-1; QB.pick=null; QB.dodgeRes=null; QB.choosing=false; QB.qn++; QB.opts=shuffle(QB.pool.qs[QB.cur].opts); QB.t0=performance.now(); QB.pt0=paceNow(); paceQbPrep(); qbDraw(); qbBar(); lgTimerStart(); if(QB.pool.cave){ var ti=$("#bs-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },80); } }
 function qbMastNote(){ if(!QB||QB.region==="all"||!QB.mnote) return "";
   var nd=capNeed(QB.region), t=QB.mnote==="mastered"?'📖 <b class="okc">Mastered!</b> Right twice in a row.':QB.mnote==="once"?'📖 Right once. It’ll come back soon: get it right again to master it.':'📖 This one was mastered. Get it right twice in a row again.';
   return '<p class="pxsmall mnote">'+t+'</p>'; }
@@ -11915,14 +12037,16 @@ function qbDraw(){
     (QB.pool.cave?'<div class="bsq lgq">'+q.q+'</div>'+(!done&&!q.typed&&ghas(s,"lens")&&!QB.lensUsed&&q.c.z<=5?'<button class="pxbtn lgl" id="bs-lens">🔍 Evidence Lens</button>':'')+(!done&&ghas(s,"desmos")&&q.c.z>=6?'<button class="pxbtn lgl" id="bs-graph">📈 Graph it</button>':''):'<h3 class="bsq">'+q.q+'</h3>')+(q.en&&ST.en&&!QB.boss?'<p class="bsq-en"><span>EN</span>'+q.en+'</p>':'')+
     (q.typed?lgTypedHTML(q,done):'<div class="bsopts">'+QB.opts.map(function(o,k){ var cls="bsopt", m=""; if(!done&&QB.lensOut===k) cls+=" lensed";
       if(done){ if(o===q.right){ cls+=" right"; m="✓ "; } else if(k===QB.pick){ cls+=" wrong"; m="✗ "; } else cls+=" dim"; }
-      return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'><span class="kn">'+(k+1)+'</span><span>'+m+o+'</span></button>'; }).join("")+'</div>')+(QB.pool.cave?lgTimerHTML(q,done):'')+
+      return '<button class="'+cls+'" data-bk="'+k+'"'+(done?' disabled':'')+'><span class="kn">'+(k+1)+'</span><span>'+m+o+'</span></button>'; }).join("")+'</div>')+(QB.pool.cave||q.pace?lgTimerHTML(q,done):'')+
     (done&&!ok?'<div class="bsfb '+(QB.dodgeRes&&QB.dodgeRes!=="hit"?'dodge':'no')+'" role="status"><b>'+(QB.timeout?'⏱ TIME’S UP! ':'')+head+'</b>'+explHTML(q,QB.timeout||q.typed?null:QB.opts[QB.pick],{noAnswer:!!q.typed})+'</div>'+(QB.pool.cave?lgAfterHTML(q,false):qbMastNote()+bmBtn(qKey(q),QB.region,false))+'<button class="pxbtn go" id="bs-go">▶ '+(s.hp>0?'Keep fighting':'Continue')+'</button>':'')+
     (done&&ok&&QB.lastAtk?'<p class="bsfb ok" role="status"><b>'+esc(QB.lastAtk).toUpperCase()+'!</b> '+(q.why||'')+'</p>':'');
   if(done&&!ok){ var g=$("#bs-go"); if(g) g.focus({preventScroll:true}); }
 }
 function qbAnswer(k){
   if(!QB||QB.pick!==null||QB.done||QB.cur<0||QB.dodging||QB.striking) return;
-  var q=QB.pool.qs[QB.cur], s=QS(), now=performance.now(); QB.pick=k; QB.lastAtk=null;
+  var q=QB.pool.qs[QB.cur], s=QS(), now=performance.now(), pms=paceNow()-(QB.pt0||0);
+  if(q.zt&&!QB.timeout&&pms>=q.zt*1000){ QB.timeout=true; if(q.typed){ QB.typedRaw=QB.typedRaw||""; QB.opts=["\u0000"]; k=0; } else k=-1; }
+  if(q.psec) paceRecord(q.psec,pms,QB.timeout); QB.pick=k; QB.lastAtk=null;
   var ok=QB.opts[k]===q.right, fast=now-QB.t0<(QB.pool.cave?lgFastMs(q):clsOf(s).fast);
   if(QB.pool.cave){ clearInterval(LGT); q.res=lgAnswer(q,ok,now-QB.t0,QB.timeout?null:q.typed?QB.typedRaw:QB.opts[k]); (QB.lgLog=QB.lgLog||[]).push(q.res); QB.pool.lastOk=ok; }
   else { var mk=mastOf(QB.region), kk=qKey(q), was=mk[kk]||0, cap0=QB.region!=="all"?lvCap(QB.region):0; mk[kk]=ok?Math.min(3,was+1):0;
@@ -13624,7 +13748,7 @@ function lgNext(QB){ var foe=QB.foe, P=QB.pool, a=foe.ca!=null?foe.ca:caveArea(f
   if(!c) c=PSATC[0];
   if(!lgRec(c.id).la&&!opt.hard) opt.easy=true;
   var pick=lgPickVariant(c,opt); if(!pick){ pick=lgPickVariant(PSATC[0],{}); c=PSATC[0]; }
-  var q=lgQ(c,pick); q.lock=lgDue(c); q.zt=lgZoneTimer(foe,a,c); if(foe.warden||foe.proctor) q.mod=opt.harder?"HARD MODULE":opt.softer?"EASIER MODULE":"MODULE";
+  var q=lgQ(c,pick); q.lock=lgDue(c); q.zt=lgZoneTimer(foe,a,c); q.ztz=!!q.zt; q.psec=c.z<=5?"rw":"math"; var pzl=paceLimit(q.psec); q.pace=0; if(pzl&&(!q.zt||pzl<q.zt)){ q.zt=pzl; q.pace=1; } if(foe.warden||foe.proctor) q.mod=opt.harder?"HARD MODULE":opt.softer?"EASIER MODULE":"MODULE";
   P.qs.push(q); P.keys.push(pick.key); P.asked.push(c.id); return P.qs.length-1; }
 /* the rising-water / rising-lava clock: the Summit, the Magma Core, wardens and the Proctor run on real PSAT time */
 function lgZoneTimer(foe,a,c){ var sec=c.z<=5?71:95, s=QS(), extra=ghas(s,"watch")?20:0;
@@ -13664,12 +13788,12 @@ function lgAfterHTML(q,ok){ var R=q.res; if(!R) return ""; var c=q.c, t;
 function lgTypedHTML(q,done){ var v=q.tv;
   if(!done) return '<form class="bstyped" id="bs-typed" autocomplete="off"><label class="sr-only" for="bs-tin">Your answer</label><input id="bs-tin" class="pxin" '+(v.num!=null?'inputmode="decimal"':'')+' maxlength="24" placeholder="'+(v.num!=null?'Type a number, like 3/4 or −2.5':'Type your answer')+'" spellcheck="false"><button class="pxbtn go" type="submit">Enter ⏎</button></form>'+(v.num!=null?'<p class="pxsmall lghint">Typed answer, like the real test: fractions or decimals are fine. Negative answers allowed.</p>':'');
   var ok=QB&&QB.opts[0]===q.right; return '<div class="bstyped-res '+(ok?'ok':'no')+'"><span>You typed: <b>'+esc(QB&&QB.typedRaw!=null?QB.typedRaw:"")+'</b></span><span>Answer: <b>'+q.right+'</b></span></div>'; }
-function lgTimerHTML(q,done){ var lim=q.zt||q.sec; if(!lim||done) return ""; var kind=q.zt?(q.c.z<=5?"water":"lava"):"clock";
-  return '<div class="lgtimer '+kind+'" id="lg-timer"><i style="width:0%"></i><span>'+(kind==="water"?'🌊 The water is rising':kind==="lava"?'🌋 The lava is rising':'⏱ Beat the clock')+' · <b id="lg-tleft">'+lim+'s</b></span></div>'; }
+function lgTimerHTML(q,done){ var lim=q.zt||q.sec; if(!lim||done) return ""; var kind=q.zt&&!q.ztz?"pace":q.zt?(q.c.z<=5?"water":"lava"):"clock";
+  return '<div class="lgtimer '+kind+'" id="lg-timer"><i style="width:0%"></i><span>'+(kind==="pace"?'⏱ Pace mode: run out and it counts wrong':kind==="water"?'🌊 The water is rising':kind==="lava"?'🌋 The lava is rising':'⏱ Beat the clock')+' · <b id="lg-tleft">'+lim+'s</b></span></div>'; }
 var LGT=0;
-function lgTimerStart(){ clearInterval(LGT); LGT=0; if(!QB||!QB.pool.cave) return; var q=QB.pool.qs[QB.cur], lim=(q.zt||q.sec)*1000; if(!lim) return; var cur=QB.cur;
+function lgTimerStart(){ clearInterval(LGT); LGT=0; if(!QB) return; var q=QB.pool.qs[QB.cur], lim=(q.zt||q.sec)*1000; if(!lim) return; var cur=QB.cur;
   LGT=setInterval(function(){ if(!QB||QB.cur!==cur||QB.pick!==null||QB.done){ clearInterval(LGT); return; } if(QB.dodging||QB.striking) return;
-    var el=performance.now()-QB.t0, f=Math.min(1,el/lim), b=$("#lg-timer"); if(b){ b.firstChild.style.width=(f*100)+"%"; var tl=$("#lg-tleft"); if(tl) tl.textContent=Math.max(0,Math.ceil((lim-el)/1000))+"s"; b.classList.toggle("hurry",f>.8); }
+    var el=paceNow()-QB.pt0, f=Math.min(1,el/lim), b=$("#lg-timer"); if(b){ b.firstChild.style.width=(f*100)+"%"; var tl=$("#lg-tleft"); if(tl) tl.textContent=Math.max(0,Math.ceil((lim-el)/1000))+"s"; b.classList.toggle("hurry",f>.8); }
     if(f>=1){ clearInterval(LGT); QB.timeout=true; if(q.typed){ QB.typedRaw=""; QB.opts=["\u0000"]; } qbAnswer(q.typed?0:-1); } },200); }
 function qbTyped(val){ if(!QB||QB.pick!==null||QB.done||QB.cur<0) return; var q=QB.pool.qs[QB.cur]; val=String(val||"").trim(); if(!val) return;
   QB.typedRaw=val; var ok=psCheck(q.tv,val); QB.opts=[ok?q.right:val]; qbAnswer(0); }
@@ -13677,19 +13801,20 @@ function qbTyped(val){ if(!QB||QB.pick!==null||QB.done||QB.cur<0) return; var q=
 var CQ=null;
 function cqStart(items,opt){ if(!items.length) return; CQ={items:items,i:0,opt:opt||{},res:[],q:null}; cqShow(); }
 function cqShow(){ var it=CQ.items[CQ.i], pick=it.pick||lgPickVariant(it.c,CQ.opt.vopt||{}); if(!pick){ CQ.i++; if(CQ.i>=CQ.items.length) return cqEnd(); return cqShow(); }
-  var q=lgQ(it.c,pick); q.lock=lgDue(it.c); CQ.q=q; CQ.done=false; CQ.t0=Date.now(); CQ.opts=q.typed?[]:shuffle(q.opts);
+  var q=lgQ(it.c,pick); q.lock=lgDue(it.c); CQ.q=q; CQ.done=false; CQ.t0=Date.now(); CQ.opts=q.typed?[]:shuffle(q.opts); CQ.pt0=paceNow(); CQ.psec=it.c.z<=5?"rw":"math"; CQ.plim=paceLimit(CQ.psec); CQ.timeout=false;
   qwPanel('<div class="cq"><div class="cq-top"><span class="pxlabel">'+esc(CQ.opt.title||"Practice")+' · '+(CQ.i+1)+'/'+CQ.items.length+'</span>'+lgChip(q)+'</div><div class="bsq lgq">'+q.q+'</div>'+
     (q.typed?'<form class="bstyped" id="cq-typed" autocomplete="off"><input id="cq-tin" class="pxin" '+(q.tv.num!=null?'inputmode="decimal"':'')+' maxlength="24" placeholder="Type your answer" spellcheck="false"><button class="pxbtn go" type="submit">Enter ⏎</button></form>':
     '<div class="bsopts">'+CQ.opts.map(function(o,k){ return '<button class="bsopt" data-cq="'+k+'"><span class="kn">'+(k+1)+'</span><span>'+o+'</span></button>'; }).join("")+'</div>')+
-    '<div id="cq-fb"></div><div class="cq-bot"><button class="pxbtn" data-cqstop>Stop for now</button></div></div>');
-  var ti=$("#cq-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },60); }
-function cqAnswer(k,val){ if(!CQ||CQ.done) return; var q=CQ.q, ok, given; CQ.done=true;
+    (CQ.plim?'<div class="lgtimer pace" id="cq-timer"><i style="width:0%"></i><span>⏱ Pace mode: run out and it counts wrong · <b id="cq-tleft">'+CQ.plim+'s</b></span></div>':'')+'<div id="cq-fb"></div><div class="cq-bot"><button class="pxbtn" data-cqstop>Stop for now</button></div></div>');
+  var ti=$("#cq-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },60); paceCqStart(); }
+function cqAnswer(k,val){ if(!CQ||CQ.done) return; var q=CQ.q, ok, given, pms=paceNow()-(CQ.pt0||0); CQ.done=true; if(CQ.plim&&pms>=CQ.plim*1000) CQ.timeout=true;
   if(q.typed){ given=String(val||"").trim(); ok=psCheck(q.tv,given); } else { given=CQ.opts[k]; ok=given===q.right; }
+  if(CQ.timeout){ ok=false; given=null; } paceRecord(CQ.psec,pms,CQ.timeout);
   var res=CQ.opt.ledger===false?{ok:ok,c:q.c,was:lgSt(q.c.id),st:lgSt(q.c.id)}:lgAnswer(q,ok,Date.now()-CQ.t0,given); q.res=res; CQ.res.push({c:q.c,ok:ok,res:res});
   if(ok) sfx("right"); else sfx("wrong");
   document.querySelectorAll("[data-cq]").forEach(function(b){ var o=CQ.opts[+b.dataset.cq]; b.disabled=true; if(o===q.right) b.classList.add("right"); else if(+b.dataset.cq===k) b.classList.add("wrong"); else b.classList.add("dim"); });
-  var f=$("#cq-typed"); if(f){ f.outerHTML='<div class="bstyped-res '+(ok?'ok':'no')+'"><span>You typed: <b>'+esc(given)+'</b></span><span>Answer: <b>'+q.right+'</b></span></div>'; }
-  $("#cq-fb").innerHTML='<div class="bsfb '+(ok?'ok':'no')+'"><b>'+(ok?'✓ Right!':'✗ Not quite.')+'</b>'+(ok?' '+q.why:explHTML(q,q.typed?null:given,{noAnswer:!!q.typed}))+'</div>'+(CQ.opt.ledger===false?'':lgAfterHTML(q,ok))+'<button class="pxbtn go" data-cqnext>▶ '+(CQ.i+1<CQ.items.length?'Next':'Finish')+'</button>';
+  var f=$("#cq-typed"); if(f){ f.outerHTML='<div class="bstyped-res '+(ok?'ok':'no')+'"><span>You typed: <b>'+esc(given==null?"(time ran out)":given)+'</b></span><span>Answer: <b>'+q.right+'</b></span></div>'; }
+  $("#cq-fb").innerHTML='<div class="bsfb '+(ok?'ok':'no')+'"><b>'+(ok?'✓ Right!':CQ.timeout?'⏱ Time’s up!':'✗ Not quite.')+'</b>'+(ok?' '+q.why:explHTML(q,q.typed?null:given,{noAnswer:!!q.typed}))+'</div>'+(CQ.opt.ledger===false?'':lgAfterHTML(q,ok))+'<button class="pxbtn go" data-cqnext>▶ '+(CQ.i+1<CQ.items.length?'Next':'Finish')+'</button>';
   var nb=$("[data-cqnext]"); if(nb) nb.focus({preventScroll:true}); if(CQ.opt.each) CQ.opt.each(ok,q); }
 function cqNext(){ if(!CQ) return; CQ.i++; if(CQ.i>=CQ.items.length||(CQ.opt.stopOnMiss&&CQ.res.length&&!CQ.res[CQ.res.length-1].ok)) return cqEnd(); cqShow(); }
 function cqEnd(stopped){ var C=CQ; CQ=null; if(C&&C.opt.done) C.opt.done(C.res,!!stopped); else qwPanelClose(); }
@@ -13727,7 +13852,7 @@ function lgPanel(tab,openZone){ if(tab) LGTAB=tab; var s=QS(), n=lgCounts(), tot
     body='<p class="pxsmall">A Solid concept gets a surprise check 2+ days later. Pass it and it’s <b>Locked in</b>. The Proctor only fights you when every concept is Locked in.</p>'+
       (due.length?'<button class="pxbtn go" data-lgdrill="due">🔒 Take '+Math.min(8,due.length)+' lock-in checks now</button>':'<p>No checks due right now.</p>')+
       (soon.length?'<ul class="lglist">'+soon.slice(0,20).map(function(x){ var h=Math.max(1,Math.round(x[1]/36e5)); return '<li><button class="lgc solid" data-lgc="'+x[0].id+'"><span class="lgi">✔</span><span>'+esc(x[0].n)+'</span><small>check in '+(h>=24?Math.round(h/24)+' day'+(Math.round(h/24)>1?'s':''):h+' h')+'</small></button></li>'; }).join("")+'</ul>':''); }
-  qwPanel('<div class="lgp"><p class="pxlabel">📒 The Ledger · PSAT 8/9</p><h2>'+n[3]+' locked · '+n[2]+' solid · '+n[1]+' shaky · '+n[0]+' new</h2>'+bar+
+  qwPanel('<div class="lgp"><p class="pxlabel">📒 The Ledger · PSAT 8/9</p><h2>'+n[3]+' locked · '+n[2]+' solid · '+n[1]+' shaky · '+n[0]+' new</h2>'+bar+paceHollowHTML()+
     '<p class="pxsmall">Reading & Writing ready: <b>'+Math.round(lgReady("rw")*100)+'%</b> · Math ready: <b>'+Math.round(lgReady("m")*100)+'%</b></p>'+
     '<div class="lgtabs" role="tablist">'+["Zones","Shaky","Mistakes","Lock-ins"].map(function(t){ return '<button class="pxbtn'+(t===LGTAB?' on':'')+'" data-lgtab="'+t+'" role="tab" aria-selected="'+(t===LGTAB)+'">'+t+(t==="Shaky"&&sh.length+bms.length?' ('+(sh.length+bms.length)+')':t==="Lock-ins"&&due.length?' ('+due.length+')':'')+'</button>'; }).join("")+'</div>'+
     '<div class="lgbody">'+body+'</div><button class="pxbtn go" data-close>▶ Back to the cave</button></div>'); }
@@ -13910,6 +14035,7 @@ function caveHowTo(){ if(HOWTO["The Hollow"]||!caveS().found) return;
     "Solid concepts get a surprise <b>lock-in check</b> 2+ days later.",
     "🔮 <b>Delves</b>: every zone has a sealed rune door. Solve its puzzle (echo sequence, rune lights, sentence bridge, light the crystal, or balance the equation) to break the seal, then go in alone: monster rooms, a boulder puzzle, a riddle stone with that zone's PSAT questions, the Guardian, then treasure. It resets 10 minutes after you clear it.",
     "Bump into a crystal to make it ring. Every crystal plays a note.",
+    "⏱ <b>Pace</b>: the Ledger (L) shows your average time per PSAT question. If you're slower than the real test (1:11 for Reading & Writing, 1:35 for Math), every question in that section gets a clock, and running out counts as wrong. It turns off once you're back on pace.",
     "<b>Wardens</b> guard each zone and only fight you when every concept there is Solid. The <b>Proctor</b> at the very bottom wants everything Locked in.",
     "The Summit and the Magma Core run on real test time: about <b>71 s</b> per Reading & Writing question and <b>95 s</b> per Math question. Some questions are typed, like the real test."];
 }
