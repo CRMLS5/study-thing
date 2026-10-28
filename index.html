@@ -11006,7 +11006,7 @@ var AREA_NAMES={forest:["Fern Meadows","Riverwood","Old Pines","Misty Heights","
 var LK=4/3, LW=320, LH=240, AREA_LV=[[1,8],[9,17],[18,26],[27,36],[40,40]], AREA_REQ=[1,9,18,27,40], AREA_TOP=[171,117,69,40], BOSS_LV=40, MAX_LV=40;
 var AREA_OVR=null;
 function areaIdx(y){ if(AREA_OVR) return AREA_OVR(y); return y>=171?0:y>=117?1:y>=69?2:y>=40?3:4; }
-function monDmg(lv){ return 10+3*(lv-1); }
+function monDmg(lv){ return 10+.35*(lv-1); }
 var KEEPSAKES=["silver locket","lucky compass","pocket watch","old harmonica","golden spoon","lucky marble"];
 function vnoise(r,W,H,cell){ var gw=Math.ceil(W/cell)+2, gh=Math.ceil(H/cell)+2, g=[]; for(var i=0;i<gw*gh;i++) g.push(r());
   return function(x,y){ var fx=x/cell, fy=y/cell, x0=Math.floor(fx), y0=Math.floor(fy), tx=fx-x0, ty=fy-y0; tx=tx*tx*(3-2*tx); ty=ty*ty*(3-2*ty);
@@ -11533,14 +11533,16 @@ function QS(){
   var s=ST.quest2, d={name:"Hero",look:{o:0,s:0},lvl:1,xp:0,coins:0,potions:2,sword:0,armor:0,kills:{},badges:{},chests:{},dead:{},ach:{},combo:0,bestCombo:0,map:"village",x:16,y:9,music:true,created:false,met:false,wins:0,champ:false,cls:null,pw:0,inv:{},eq:{w:null,a:null,c1:null,c2:null},sq:{},ways:{},lore:{},found:{},disc:{},elite:{},pitSeen:{},scroll:{},lastWay:{},questsDone:0,wv:0,lands:{},cur:null,mast:{}};
   Object.keys(d).forEach(function(k){ if(s[k]==null) s[k]=d[k]; });
   if(!(s.wv>=2)){ s.wv=2; s.dead={}; if(s.map!=="village"){ s.x=-1; s.y=-1; } }
+  if(!(s.wv>=4)&&s.wv>=3){ s.wv=4; var rfd=20*(s.sword||0)*((s.sword||0)+1)+30*(s.armor||0)*((s.armor||0)+1); s.sword=0; s.armor=0;
+    if(rfd>0){ s.coins=(s.coins||0)+rfd; setTimeout(function(){ toast("Training refunded: +"+rfd+" coins. Damage and hearts now come from gear!"); },1800); } }
   if(!(s.wv>=3)){ s.wv=3; s.lands={}; s.cur=null; var best=null,bk=-1; Object.keys(s.kills||{}).forEach(function(k){ if(s.kills[k]>bk){ bk=s.kills[k]; best=k; } }); if(!best&&s.map&&s.map!=="village") best=s.map;
     if(best) s.lands[best]={lvl:s.lvl,xp:s.xp,hp:s.hp,pw:s.pw||0,potions:s.potions,inv:s.inv||{},eq:s.eq||{w:null,a:null,c1:null,c2:null}}; if(s.map!=="village"){ s.x=-1; s.y=-1; } }
   if(s.cls&&s.look&&s.look.c!==s.cls) s.look.c=s.cls;
   if(s.hp==null) s.hp=qwMaxHp(s); if(s.hp>qwMaxHp(s)) s.hp=qwMaxHp(s);
   return s;
 }
-function qwMaxHp(s){ return Math.max(3,Math.min(40,6+Math.floor((s.lvl-1)/2)+s.armor+(CLASSES[s.cls]?CLASSES[s.cls].hp:0)+gsum(s,"hp"))); }
-function qwDmg(s){ return Math.round((8+2.4*(s.lvl-1)+3*s.sword+gsum(s,"dmg"))*clsOf(s).dmg); }
+function qwMaxHp(s){ return Math.max(3,Math.min(40,6+(CLASSES[s.cls]?CLASSES[s.cls].hp:0)+gsum(s,"hp"))); }
+function qwDmg(s){ return Math.round((10+gsum(s,"dmg"))*clsOf(s).dmg); }
 function qwNeed(l){ return 20+12*l; }
 function qwBadges(s){ return LANDS.filter(function(L){ return s.badges[L.id]; }).length; }
 var ACH={first:"First Victory",combo10:"On Fire: 10 combo",combo25:"Legendary: 25 combo",lv5:"Reached level 5",lv10:"Reached level 10",chests:"Treasure Hunter",badge1:"First Badge",badges:"Badge Master",flawless:"Flawless Boss",ninja:"Ninja: perfect dodge",hollow:"Found The Hollow",psat50:"LV 50 in The Hollow",psatLocked:"Every PSAT concept Locked in",psat:"Beat the Proctor",explorer:"Explorer: every waystone in a land",questor:"Hero for Hire: 5 side quests",geared:"Collector: 8 gear items",trapped:"Oops: fell for a trap",mimic:"Mimic Slayer",supercrit:"Bullseye: super crit",total20:"Total level 20",master:"Mastered a land: LV 25"};
@@ -12119,7 +12121,7 @@ function trapSeen(t){ var s=QS(); return !!(s.pitSeen[t.id]||s.scroll[MAP.id]||g
 function spikeUp(t,now){ return ((now+t.off)%2600)<1000; }
 function qwTrapCheck(now){
   if(!MAP.trap||QMODE!=="walk") return; var t=MAP.trap[QP.y*MAP.W+QP.x]; if(!t) return;
-  if(t.spike){ if(spikeUp(t,now)&&now-(QP.spikeT||0)>1100){ QP.spikeT=now; if(ghas(QS(),"iron")){ qwText(QP.x,QP.y,"IRON BOOTS!","#c3c6ce"); snd(1400,0,.05,"triangle",.03); return; } qwHurt(3+(MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(QS().lvl/10)):areaIdx(QP.y)),"Spike trap!"); } return; }
+  if(t.spike){ if(spikeUp(t,now)&&now-(QP.spikeT||0)>1100){ QP.spikeT=now; if(ghas(QS(),"iron")){ qwText(QP.x,QP.y,"IRON BOOTS!","#c3c6ce"); snd(1400,0,.05,"triangle",.03); return; } qwHurt(1+Math.floor((MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(QS().lvl/10)):areaIdx(QP.y))/2),"Spike trap!"); } return; }
   qwFall(t);
 }
 function qwHurt(n,why){ var s=QS(); n=cutHit(s,n); s.hp=Math.max(0,s.hp-n); save(); qwHud(); sfx("wrong"); qwShakeT=performance.now();
@@ -12129,7 +12131,7 @@ function qwFall(t){
   var s=QS(); QMODE="busy"; qwDirs=[]; qwPad=null; QP.fall=performance.now(); s.pitSeen[t.id]=1; save();
   snd(700,0,.5,"triangle",.04); snd(350,.2,.5,"triangle",.04); snd(160,.45,.4,"square",.04);
   setTimeout(function(){
-    var n=cutHit(s,3+(MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(s.lvl/10)):areaIdx(QP.y))); s.hp=Math.max(0,s.hp-n); QP.fall=0; save(); qwAch("trapped");
+    var n=cutHit(s,1+Math.floor((MAP.cave?Math.min(caveTier(caveArea(QP.y)),1+Math.floor(s.lvl/10)):areaIdx(QP.y))/2)); s.hp=Math.max(0,s.hp-n); QP.fall=0; save(); qwAch("trapped");
     if(s.hp<=0){ QMODE="walk"; qwWorldFaint(); return; }
     var w=MAP.ways.filter(function(x){ return x.id===s.lastWay[MAP.id]&&s.ways[x.id]; })[0], pos=w?[w.x,w.y+1]:MAP.spawn;
     qwFade={t0:performance.now(),dur:260,out:true,col:"#000000",cb:function(){ qwEnterMap(MAP.id,pos,true); qwHud(); qwShakeT=performance.now();
@@ -12184,8 +12186,8 @@ function qwBag(tab){ if(!MAP.big&&!MAP.dungeon) return qwLandsPanel(); if(tab) B
 var SHOPKIND="mo";
 function shopRows(list){ var s=QS(); return '<div class="shop-list">'+list.map(function(it){ var dis=s.coins<it[4]||it[5]; return '<button class="si" data-buy="'+it[0]+'" data-price="'+it[4]+'"'+(dis?' disabled':'')+'>'+it[1]+'<span><b>'+it[2]+'</b><span>'+it[3]+'</span></span><span class="price">'+(it[5]&&it[6]?it[6]:icon("coin")+' '+it[4])+'</span></button>'; }).join("")+'</div>'; }
 function qwShop(){ SHOPKIND="mo"; var s=QS();
-  var list=[["sword",icon("sword","big"),"Sword training Lv "+(s.sword+1),"+3 damage in EVERY land",40*(s.sword+1)],["armor",icon("shield","big"),"Armor training Lv "+(s.armor+1),"+1 max heart in EVERY land",60*(s.armor+1),s.armor>=5,"MAX"],["stars",icon("star","big"),"Star pack","+5 stars for themes",60]];
-  qwPanel('<div class="shop-head"><img class="pxport" src="'+bake("merchant",SPR.merchant,SPAL.merchant).toDataURL()+'" alt=""><div><p class="pxlabel">Mo the Merchant</p><h2>“Training for every land!”</h2><p class="pxsmall">'+icon("coin")+' '+s.coins+' coins</p></div></div><p class="pxsmall">Potions and gear only work in the land where you get them. Each land’s trader sells them!</p>'+shopRows(list)+'<button class="pxbtn go" data-close>▶ Bye!</button>'); }
+  var list=[["stars",icon("star","big"),"Star pack","+5 stars for themes",60]];
+  qwPanel('<div class="shop-head"><img class="pxport" src="'+bake("merchant",SPR.merchant,SPAL.merchant).toDataURL()+'" alt=""><div><p class="pxlabel">Mo the Merchant</p><h2>“Want to get stronger? Get gear!”</h2><p class="pxsmall">'+icon("coin")+' '+s.coins+' coins</p></div></div><p class="pxsmall">Your damage and hearts come only from your gear (and your class). Find weapons and armor in chests, or buy them from each land’s trader. Gear only works in the land where you get it.</p>'+shopRows(list)+'<button class="pxbtn go" data-close>▶ Bye!</button>'); }
 function qwTrader(){ SHOPKIND="zed"; var s=QS(), r=rng(hstr(MAP.id+"trader")), pool=LOOT.common.concat(LOOT.rare,LOOT.epic).filter(function(id){ return ITEMS[id].p&&ITEMS[id].r!=="common"; }), picks=[];
   while(picks.length<4){ var id=pool[Math.floor(r()*pool.length)]; if(picks.indexOf(id)<0) picks.push(id); }
   var list=picks.map(function(id){ var it=ITEMS[id]; return [id,itemIcon(id,"big"),iname(id)+' <em class="r-'+it.r+'">'+it.r+'</em>',it.d,it.p,!!s.inv[id],"OWNED"]; }).concat([["potion",itemIcon("potion","big"),"Potion","Heals 3 hearts",18],["mega",itemIcon("mega","big"),"Mega Potion","Heals ALL hearts",50],["scroll",itemIcon("scroll","big"),"Trap Scroll","Mark pits and mimics on your minimap",20]]);
@@ -12281,11 +12283,11 @@ function qbNextIndex(pool){ if(!pool.recent) pool.recent=[];
   return took(pool.queue.shift()); }
 function qwEncounter(m){ if(QMODE!=="walk"||QB) return; if(MAP.cave&&caveGuard(m)) return; qwBattle(m,false); }
 /* every boss has its own way of hurting you, even when you answer right */
-var BOSS_MECH={thorns:{n:"Spiky Hide",d:"Every hit you land costs you 2 hearts, unless it’s a SUPER CRIT."},breath:{n:"Fire Breath",d:"Every 2nd turn it breathes fire, even if you were right. Dodge it!"},
-  squeeze:{n:"Tentacle Squeeze",d:"Take longer than 6 seconds to answer and it squeezes you for 4 hearts, even if you’re right."},sunbeam:{n:"Sunbeam",d:"Every 3rd turn a sunbeam burns you for 4 hearts. Land a SUPER CRIT right before it to blind the boss."},
+var BOSS_MECH={thorns:{n:"Spiky Hide",d:"Every hit you land costs you 1 heart, unless it’s a SUPER CRIT."},breath:{n:"Fire Breath",d:"Every 2nd turn it breathes fire, even if you were right. Dodge it!"},
+  squeeze:{n:"Tentacle Squeeze",d:"Take longer than 6 seconds to answer and it squeezes you for 2 hearts, even if you’re right."},sunbeam:{n:"Sunbeam",d:"Every 3rd turn a sunbeam burns you for 2 hearts. Land a SUPER CRIT right before it to blind the boss."},
   pounce:{n:"Pounce",d:"After your attack it often pounces back. Dodge it!"}};
 var BOSS_OF={"grammar-1-2":"thorns","spanish2":"breath","bio-energy-3":"squeeze","history-absolutism":"sunbeam","born-a-crime-5-6":"pounce"};
-function monHit(lv,foe,boss){ return 3+Math.floor((lv-1)/5)+(boss?2:foe.elite||foe.mimic||foe.mini?1:0); }
+function monHit(lv,foe,boss){ return 1+Math.floor((lv-1)/14)+(boss?1:foe.elite||foe.mimic||foe.mini?1:0); }
 function cutHit(s,n){ return ghas(s,"tough")?Math.max(1,n-1):n; }
 function qbHitDmg(){ return cutHit(QS(),QB.hit); }
 function bossMech(land){ return BOSS_OF[land]||["thorns","breath","squeeze","sunbeam","pounce"][hstr(land)%5]; }
@@ -12295,10 +12297,10 @@ function qbHurtHero(n,label){ var s=QS(), now=performance.now(); n=cutHit(s,n); 
   qwHud(); qbBar(); save();
   if(s.hp<=0){ QB.done=true; setTimeout(function(){ if(QB) qbFaint(); },900); return true; } return false; }
 function qbBossTurn(){ if(!QB||QB.done) return; var m=QB.mech;
-  if(m==="breath"&&QB.qn%2===0) return qbDodgeStart({dmg:5,label:"FIRE BREATH!",zone:1});
-  if(m==="pounce"&&Math.random()<.5) return qbDodgeStart({dmg:5,label:"POUNCE!",zone:1.3});
+  if(m==="breath"&&QB.qn%2===0) return qbDodgeStart({dmg:3,label:"FIRE BREATH!",zone:1});
+  if(m==="pounce"&&Math.random()<.5) return qbDodgeStart({dmg:3,label:"POUNCE!",zone:1.3});
   if(m==="sunbeam"&&QB.qn%3===0){ if(QB.lastRes==="super"){ bsCall("BLINDED! THE SUNBEAM MISSED","#ffd43b"); return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1000); }
-    bsFx("storm","#ffe066"); if(qbHurtHero(4,"SUNBEAM")) return; return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1100); }
+    bsFx("storm","#ffe066"); if(qbHurtHero(2,"SUNBEAM")) return; return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1100); }
   qbNext(); }
 function qwBattle(foe,boss){ duoWalkIn(foe,boss);
   var s=QS(), region=foe.final?"all":boss?foe.land:(MAP.land||MAP.id), pool=(MAP.cave||MAP.hdg)&&!foe.final?lgPool():qbPool(region), lv=foe.final?MAX_LV:boss?(foe.lv||BOSS_LV):foe.mimic?(MAP.cave?caveTierLv(Math.max(1,caveTier(caveArea(foe.y))))[1]:Math.min(MAX_LV-1,AREA_LV[areaIdx(foe.y)][1]+1)):(foe.lv||1); if((MAP.cave||MAP.hdg)&&!foe.final) lv=Math.min(lv,Math.max(1,s.lvl+(foe.proctor||foe.warden||foe.dgBoss||foe.elite?2:1))); var mb=monDmg(lv);
@@ -12397,7 +12399,7 @@ function qbAnswer(k){
   else { var mk=mastOf(QB.region), kk=qKey(q), was=mk[kk]||0, cap0=QB.region!=="all"?lvCap(QB.region):0; mk[kk]=ok?Math.min(3,was+1):0;
     QB.mnote=ok&&was<2&&mk[kk]>=2?"mastered":ok&&mk[kk]===1?"once":!ok&&was>=2?"lost":null; bmResult(kk,ok);
     if(QB.region!=="all"){ var cap1=lvCap(QB.region); if(cap1>cap0) setTimeout(function(){ toast("📖 Level cap is now LV "+cap1+"! Keep mastering questions to grow."); },400); } }
-  if(QB.mech==="squeeze"&&now-QB.t0>6000){ if(qbHurtHero(4,"TENTACLE SQUEEZE")){ qbDraw(); return; } }
+  if(QB.mech==="squeeze"&&now-QB.t0>6000){ if(qbHurtHero(2,"TENTACLE SQUEEZE")){ qbDraw(); return; } }
   if(ok){
     QB.hits++; s.combo++; s.bestCombo=Math.max(s.bestCombo,s.combo); QB.fast=fast; questStat("combo",s.combo,true); if(fast) questStat("speed",1);
     s.pw=Math.min(PW_MAX,(s.pw||0)+(fast?2:1));
@@ -12458,7 +12460,7 @@ function qbAttackHit(A,res){
   $("#bs-live").textContent=A.n+(d?" hits for "+d+(crit?", a critical hit":"")+".":".");
   qbDraw(); qwHud(); qbBar(); save();
   if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,700+delay); }
-  else { if(QB.mech==="thorns"&&d>0&&res!=="super") setTimeout(function(){ if(QB&&!QB.done) qbHurtHero(2,"SPIKY HIDE"); },delay+350);
+  else { if(QB.mech==="thorns"&&d>0&&res!=="super") setTimeout(function(){ if(QB&&!QB.done) qbHurtHero(1,"SPIKY HIDE"); },delay+350);
     setTimeout(function(){ if(QB&&!QB.done&&QB.pick!==null&&!QB.choosing&&!QB.dodging&&!QB.striking) qbBossTurn(); },1150+delay); }
 }
 function qbDodgeStart(F){
@@ -13315,7 +13317,7 @@ var HOWTO={
     "<b>Wrong answer</b>: the monster attacks for 3+ hearts. Press Space in the green zone to dodge. The yellow center counterattacks!",
     "Battles go through <b>every question and flashcard</b> in the guide before any repeat. Questions you miss come back sooner.",
     "Every <b>boss</b> has its own power that can hurt you even when you answer right. Read it when the fight starts."],
-  "Levels":["Every land has its <b>own level</b> (max 25), hearts, potions and gear. Items stay in the land where you found them.",
+  "Levels":["Every land has its <b>own level</b> (max 40), potions and gear. Levels unlock attacks. Your <b>damage and hearts come only from gear</b> (and your class), so equip the best weapon and armor you find.",
     "Your <b>Total LV</b> adds up everything you’ve earned in all the lands.",
     "Each land has 5 areas that need <b>LV 1, 6, 12, 18 and 25</b>. Glowing walls block areas you’re not ready for.",
     "To go past low levels you have to <b>master</b> the guide: answer each question right twice in a row. LV 25 means you really know the class.",
@@ -13720,7 +13722,7 @@ function mLv(m){ var lv=m.lv||1; if(MAP&&(MAP.cave||MAP.hdg)&&!m.final) lv=Math.
    is fighting joins their battle. With 2+ heroes on a map, monsters have ×N health (heroes' hearts don't change).
    Dungeons and Delves get 2-hero rooms: the Oracle (one hero reads the riddle on the plate, the other pulls the matching
    lever) and the Gate (one hero holds the plate open while the other solves the boulders). Alone in there? They still work. */
-var GAME_VER="e78f350f";
+var GAME_VER="722fed6c";
 var DUO={dead:{},busy:{},fights:{},sendT:0,kaT:0,oth:null,othT:0,oracle:null};
 var DUO_COL=["#ff6b6b","#4dabf7","#69db7c","#ffd43b"], DUO_CN=["RED","BLUE","GREEN","GOLD"], DUO_EM=["🟥","🟦","🟩","🟨"];
 /* ---------- who else is on this map ---------- */
