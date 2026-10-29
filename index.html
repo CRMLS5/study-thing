@@ -12100,7 +12100,7 @@ function qwBossTalk(b){
   var k=s.kills[b.land]||0;
   if(k<KILLS_FOR_BOSS) return qwSay(b.name,face,["Zzz… a magic seal surrounds the boss. Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" in this land to break it ("+k+"/"+KILLS_FOR_BOSS+")."]);
   var mc=mastCount(b.land); if(mc.have<mc.n) return qwSay(b.name,face,["Zzz… This boss only wakes up for someone who knows the WHOLE study guide.","Master every question in this land first: "+mc.have+"/"+mc.n+" so far, "+(mc.n-mc.have)+" to go. Battle monsters, or tap ⚡ QUICK 10 at the top to drill 10 at a time!"]);
-  var BM=BOSS_MECH[bossMech(b.land)]; qwSay(b.name,face,["You dare wake me? I am "+b.name+", LV "+(b.lv||BOSS_LV)+"! Let's see what you really know.","BOSS POWER · "+BM.n+": "+BM.d],[["Fight!",function(){ qwBattle(b,true); }],["Not yet",null]]);
+  mobVoice(b.def[1]==="lion"?"lion":b.def[0],"cry",{boss:true,v:.7}); var BM=BOSS_MECH[bossMech(b.land)]; qwSay(b.name,face,["You dare wake me? I am "+b.name+", LV "+(b.lv||BOSS_LV)+"! Let's see what you really know.","BOSS POWER · "+BM.n+": "+BM.d],[["Fight!",function(){ qwBattle(b,true); }],["Not yet",null]]);
 }
 function qwRoll(){ var r=Math.random(); return r<.5?"common":r<.8?"rare":r<.95?"epic":"legendary"; }
 function qwChest(c){
@@ -12477,7 +12477,7 @@ function qbBossTurn(){ if(!QB||QB.done) return; var m=QB.mech;
   if(m==="sunbeam"&&QB.qn%3===0){ if(QB.lastRes==="super"){ bsCall("BLINDED! THE SUNBEAM MISSED","#ffd43b"); return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1000); }
     bsFx("storm","#ffe066"); if(qbHurtHero(2,"SUNBEAM")) return; return setTimeout(function(){ if(QB&&!QB.done) qbNext(); },1100); }
   qbNext(); }
-function qwBattle(foe,boss){ duoWalkIn(foe,boss);
+function qwBattle(foe,boss){ duoWalkIn(foe,boss); setTimeout(function(){ if(QB&&QB.foe===foe){ qbVoice("cry"); if(QB.boss||QB.final) qwShakeT=performance.now(); } },520);
   var s=QS(), region=foe.final?"all":boss?foe.land:(MAP.land||MAP.id), pool=(MAP.cave||MAP.hdg)&&!foe.final?lgPool():qbPool(region), lv=foe.final?MAX_LV:boss?(foe.lv||BOSS_LV):foe.mimic?(MAP.cave?caveTierLv(Math.max(1,caveTier(caveArea(foe.y))))[1]:Math.min(MAX_LV-1,AREA_LV[areaIdx(foe.y)][1]+1)):(foe.lv||1); if((MAP.cave||MAP.hdg)&&!foe.final) lv=Math.min(lv,Math.max(1,s.lvl+(foe.proctor||foe.warden||foe.dgBoss||foe.elite?2:1))); var mb=monDmg(lv);
   var hp=foe.final?mb*16:foe.proctor?mb*12:foe.echo?Math.round(mb*2.5):boss?mb*8:foe.dgBoss?mb*8:foe.elite?mb*7:foe.mini?mb*6:foe.mimic?mb*5:mb*4; var hp0=hp, hpN=duoHpMult(); hp=Math.round(hp*hpN);
   var def=boss?foe.def:foe.mimic?["mimic","mimic","Mimic Lv"+lv]:[foe.kind,foe.pal,foe.name+" Lv"+lv];
@@ -12630,7 +12630,7 @@ function qbAttackHit(A,res){
   if(A.steal){ var gc=coinGain(s,10+Math.floor(Math.random()*16)); s.coins+=gc; setTimeout(function(){ if(BS) bsFloat("+"+gc+" COINS","#ffd43b"); },delay+260); }
   bsFx(A.fx,A.col); if(A.fx==="heal") bsFx("heal");
   if(["slash","bash","whirl","shadow"].indexOf(A.fx)>=0){ BS.atk=now; BS.slashCol=A.col; }
-  if(d){ QB.hp=Math.max(0,QB.hp-d); BS.hit=now+delay; setTimeout(function(){ if(!BS) return; bsFloat("-"+d,crit?"#ffd43b":burn?"#ff922b":"#ffffff",crit||A.c>=5); if(crit||A.c>=5){ BS.shake=performance.now(); bsBurst(176,40,["#ffd43b","#ffffff",A.col],18); } },delay); }
+  if(d){ QB.hp=Math.max(0,QB.hp-d); BS.hit=now+delay; setTimeout(function(){ if(!BS) return; if(QB&&QB.hp>0) qbVoice("hurt"); bsFloat("-"+d,crit?"#ffd43b":burn?"#ff922b":"#ffffff",crit||A.c>=5); if(crit||A.c>=5){ BS.shake=performance.now(); bsBurst(176,40,["#ffd43b","#ffffff",A.col],18); } },delay); }
   bsCall(res==="super"?"SUPER CRIT!":res==="crit"?"CRITICAL HIT!":A.n.toUpperCase()+(crit&&d?" · CRIT!":"")+(burn?" · BURN!":""),res==="super"?"#ffd43b":res==="crit"?"#ff922b":A.col==="#ffffff"?"#ffd43b":A.col);
   var f0=A.c>=5?220:A.c?330:440; snd(f0*2,0,.1,"square",.05); snd(f0*3,.07,.14,"square",.05); if(A.c>=5){ snd(f0*4,.14,.2,"triangle",.05); snd(70,.2,.2,"square",.06); } snd(120,delay/1000,.08,"square",.05);
   $("#bs-live").textContent=A.n+(d?" hits for "+d+(crit?", a critical hit":"")+".":".");
@@ -12639,7 +12639,7 @@ function qbAttackHit(A,res){
   else { if(QB.mech==="thorns"&&d>0&&res!=="super") setTimeout(function(){ if(QB&&!QB.done) qbHurtHero(1,"SPIKY HIDE"); },delay+350);
     setTimeout(function(){ if(QB&&!QB.done&&QB.pick!==null&&!QB.choosing&&!QB.dodging&&!QB.striking) qbBossTurn(); },1150+delay); }
 }
-function qbDodgeStart(F){
+function qbDodgeStart(F){ qbVoice("atk");
   var s=QS(), now=performance.now(), hard=QB.final?2:QB.boss||QB.elite||QB.lv>=s.lvl+3?1:0, dur=[900,760,640][hard], w=[.12,.09,.075][hard]*(F&&F.zone||1);
   QB.forced=F||null;
   dur*=1-Math.min(.3,(QB.lv-1)*.012); w*=clsOf(s).dodge; if(ghas(s,"slow")) dur*=1.35; if(QB.freeze){ dur*=1.6; w*=1.8; QB.freeze=0; }
@@ -12668,7 +12668,7 @@ function qbDodgeResolve(res,p){
   if(QB.hp<=0&&s.hp>0){ QB.done=true; setTimeout(qbWin,1000); return; }
   setTimeout(function(){ if(QB&&!QB.dodging){ qbDraw(); var g=$("#bs-go"); if(g) g.focus({preventScroll:true}); } },700);
 }
-function qbWin(){
+function qbWin(){ qbVoice("die");
   var s=QS(), f=QB.foe, lv=QB.lv, L0=s.lvl, dm=lv>=L0?1+(lv-L0)*.15:Math.max(.25,1-(L0-lv)*.25), el=QB.elite?3:QB.mini?2.4:QB.mimic?2.5:1, drops=[], ar=MAP.cave?Math.max(0,Math.min(4,caveTier(caveArea(f.y!=null?f.y:QP.y))-1)):f.dgA!=null?f.dgA:areaIdx(f.y!=null?f.y:LH);
   var xp=xpGain(s,QB.final?250:QB.boss?140:Math.round((10+5*lv)*dm*el)), coins=coinGain(s,QB.final?250:QB.boss?60:Math.round((5+2*lv+Math.random()*6)*el)), stars=QB.final?20:QB.boss?5:QB.elite||QB.mini?3:QB.mimic?2:1;
   if(QB.boss&&!QB.lost) stars+=5;
@@ -13607,7 +13607,7 @@ function monUpdate(m,dt,now){
   var same=MAP.areas?areaIdx(QP.y)===areaIdx(m.hy):MAP.roomOf?MAP.roomOf[QP.y*MAP.W+QP.x]===m.room:true;
   var home=Math.hypot(m.hx-m.fx,m.hy-m.fy), leash=m.mini?22:10;
   var spot=dist<=(m.mini?7:5.5)&&now>QP.safe&&same&&home<leash;
-  if(spot&&!m.chase) snd(880,0,.06,"square",.03); m.chase=spot;
+  if(spot&&!m.chase) mobVoice(m.kind,"cry",{v:.55,big:!!m.mini}); m.chase=spot;
   var vx=0, vy=0, sp;
   if(spot){ sp=3.3*mobSpd(m); vx=dx/dist; vy=dy/dist; }
   else { if(now>(m.wt||0)){ if(home>(m.mini?14:4.5)){ var a=Math.atan2(m.hy-m.fy,m.hx-m.fx); m.wvx=Math.cos(a); m.wvy=Math.sin(a); m.wt=now+700; }
@@ -13899,7 +13899,7 @@ function mLv(m){ var lv=m.lv||1; if(MAP&&(MAP.cave||MAP.hdg)&&!m.final) lv=Math.
    is fighting joins their battle. With 2+ heroes on a map, monsters have ×N health (heroes' hearts don't change).
    Dungeons and Delves get 2-hero rooms: the Oracle (one hero reads the riddle on the plate, the other pulls the matching
    lever) and the Gate (one hero holds the plate open while the other solves the boulders). Alone in there? They still work. */
-var GAME_VER="5e763503";
+var GAME_VER="fe7d9d5f";
 var DUO={dead:{},busy:{},fights:{},sendT:0,kaT:0,oth:null,othT:0,oracle:null};
 var DUO_COL=["#ff6b6b","#4dabf7","#69db7c","#ffd43b"], DUO_CN=["RED","BLUE","GREEN","GOLD"], DUO_EM=["🟥","🟦","🟩","🟨"];
 /* ---------- who else is on this map ---------- */
@@ -14260,6 +14260,126 @@ document.addEventListener("click",function(e){ var t;
 document.addEventListener("keydown",function(e){ if(!QK||QMODE!=="panel"||$("#qw-panel").hidden) return;
   if(/^Digit[1-4]$/.test(e.code)&&!QK.done){ e.preventDefault(); var b=document.querySelectorAll("[data-qk]")[+e.code.slice(5)-1]; if(b) qkAnswer(+b.dataset.qk); }
   else if((e.code==="Enter"||e.code==="Space")&&QK.done){ e.preventDefault(); qkNext(); } });
+/* ================= 🔊 every monster has its own voice: a cry when it spots you or a fight starts, an attack sound,
+   a hurt sound and a death sound. Bosses roar louder and lower, and the ground shakes. All synthesized, no files. ================= */
+function mvAC(){ if(!ST.sound) return null; try{ if(typeof OfflineAudioContext!=="undefined"&&AC instanceof OfflineAudioContext) return AC; if(!AC){ var C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=new C(); } if(AC.state==="suspended") AC.resume(); return AC; }catch(e){ return null; } }
+var MV_OUT=null;
+function mvOut(A){ return A.destination; }
+/* a tone that slides from f0 to f1, with optional wobble [speed, depth] */
+function mvT(f0,f1,at,dur,type,vol,vib){ var A=mvAC(); if(!A) return; try{ var t=A.currentTime+Math.max(0,at), o=A.createOscillator(), g=A.createGain(); o.type=type||"square";
+  o.frequency.value=Math.max(20,f0); g.gain.value=.0001; o.frequency.setValueAtTime(Math.max(20,f0),t); if(f1&&f1!==f0) o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  if(vib){ var l=A.createOscillator(), lg=A.createGain(); l.frequency.value=vib[0]; lg.gain.value=vib[1]; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t+dur+.05); }
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+Math.min(.03,dur*.3)); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(mvOut(A)); o.start(t); o.stop(t+dur+.06); }catch(e){} }
+/* filtered noise: hisses, roars, splashes, thuds */
+var MV_NZ=null;
+function mvN(at,dur,vol,ft,f0,f1,q){ var A=mvAC(); if(!A) return; try{ if(!MV_NZ||MV_NZ.sampleRate!==A.sampleRate){ var n=A.sampleRate*1.5|0; MV_NZ=A.createBuffer(1,n,A.sampleRate); var d=MV_NZ.getChannelData(0); for(var i=0;i<n;i++) d[i]=Math.random()*2-1; }
+  var t=A.currentTime+Math.max(0,at), s=A.createBufferSource(), f=A.createBiquadFilter(), g=A.createGain(); s.buffer=MV_NZ; s.loop=true;
+  f.type=ft||"lowpass"; f.frequency.value=Math.max(30,f0); g.gain.value=.0001; f.frequency.setValueAtTime(Math.max(30,f0),t); if(f1) f.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur); f.Q.value=q||1;
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+Math.min(.04,dur*.3)); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f); f.connect(g); g.connect(mvOut(A)); s.start(t,Math.random()); s.stop(t+dur+.06); }catch(e){} }
+/* voices: e = cry | atk | hurt | die, p = pitch (bosses are lower), v = volume */
+var MVOX={
+  slime:function(e,p,v){ if(e==="cry"){ mvT(260*p,520*p,0,.14,"sine",.09*v); mvT(500*p,240*p,.12,.18,"sine",.08*v); mvN(0,.22,.03*v,"lowpass",900,250); }
+    else if(e==="atk"){ mvT(200*p,90*p,0,.22,"sine",.1*v); mvN(.02,.18,.05*v,"lowpass",700,180); }
+    else if(e==="hurt"){ mvT(640*p,300*p,0,.12,"sine",.08*v); mvN(0,.1,.03*v,"bandpass",1400,500,2); }
+    else { mvT(520*p,70*p,0,.5,"sine",.09*v); mvN(.06,.4,.05*v,"lowpass",1400,120); for(var i=0;i<3;i++) mvT(900*p,1300*p,.3+i*.07,.05,"sine",.03*v); } },
+  bat:function(e,p,v){ if(e==="cry"){ for(var i=0;i<3;i++) mvT(1800*p,2700*p,i*.07,.05,"square",.035*v); }
+    else if(e==="atk"){ mvT(1300*p,2300*p,0,.18,"sawtooth",.04*v); mvN(0,.16,.03*v,"highpass",3000,5000); }
+    else if(e==="hurt"){ mvT(2600*p,1500*p,0,.09,"square",.04*v); }
+    else { for(var j=0;j<4;j++) mvT((2400-j*350)*p,(1700-j*300)*p,j*.08,.07,"square",.035*v); } },
+  ghost:function(e,p,v){ if(e==="cry"){ mvT(380*p,720*p,0,.6,"sine",.08*v,[6,22*p]); mvT(570*p,1080*p,.05,.5,"sine",.03*v,[7,30*p]); }
+    else if(e==="atk"){ mvT(760*p,280*p,0,.4,"triangle",.08*v,[9,30*p]); mvN(0,.35,.025*v,"bandpass",1800,600,3); }
+    else if(e==="hurt"){ mvT(880*p,620*p,0,.16,"sine",.07*v,[14,40*p]); }
+    else { mvT(700*p,120*p,0,1,"sine",.08*v,[5,30*p]); mvN(.1,.8,.02*v,"bandpass",2000,300,4); } },
+  golem:function(e,p,v){ if(e==="cry"){ mvT(75*p,55*p,0,.5,"sawtooth",.07*v); mvN(0,.5,.08*v,"lowpass",320,90); }
+    else if(e==="atk"){ mvN(0,.3,.12*v,"lowpass",500,70); mvT(70*p,40*p,0,.3,"square",.08*v); }
+    else if(e==="hurt"){ mvN(0,.08,.06*v,"bandpass",2200,900,3); mvT(130*p,90*p,0,.12,"square",.05*v); }
+    else { for(var i=0;i<5;i++) mvN(i*.1,.18,.09*v,"lowpass",600-i*80,90); mvT(90*p,35*p,0,.8,"sawtooth",.06*v); } },
+  shroom:function(e,p,v){ if(e==="cry"){ mvN(0,.18,.05*v,"bandpass",3200,1400,2); mvT(900*p,1300*p,.02,.08,"sine",.05*v); }
+    else if(e==="atk"){ mvN(0,.35,.06*v,"highpass",2500,6000); mvT(500*p,800*p,0,.12,"triangle",.04*v); }
+    else if(e==="hurt"){ mvT(1200*p,700*p,0,.07,"sine",.06*v); mvN(0,.06,.03*v,"bandpass",3000,1500,2); }
+    else { mvT(800*p,90*p,0,.5,"sine",.07*v); mvN(0,.5,.05*v,"bandpass",2500,300,1.5); } },
+  dragon:function(e,p,v){ if(e==="cry"){ mvT(130*p,70*p,0,.9,"sawtooth",.08*v,[8,10*p]); mvN(0,.9,.1*v,"lowpass",1600,250); mvT(260*p,140*p,.05,.7,"square",.03*v); }
+    else if(e==="atk"){ mvN(0,.6,.1*v,"bandpass",700,3200,1.2); mvT(110*p,70*p,0,.4,"sawtooth",.05*v); }
+    else if(e==="hurt"){ mvT(220*p,120*p,0,.22,"sawtooth",.07*v); mvN(0,.18,.05*v,"lowpass",1200,300); }
+    else { mvT(160*p,40*p,0,1.4,"sawtooth",.09*v,[6,14*p]); mvN(0,1.3,.1*v,"lowpass",2000,90); } },
+  kraken:function(e,p,v){ if(e==="cry"){ for(var i=0;i<6;i++) mvT((220+Math.random()*320)*p,(400+Math.random()*400)*p,i*.06,.06,"sine",.06*v); mvT(60*p,48*p,0,.6,"sawtooth",.06*v); }
+    else if(e==="atk"){ mvN(0,.45,.1*v,"lowpass",2400,180); mvT(95*p,60*p,0,.35,"sine",.1*v); }
+    else if(e==="hurt"){ mvT(300*p,180*p,0,.1,"sine",.07*v); mvT(420*p,700*p,.07,.06,"sine",.04*v); }
+    else { for(var j=0;j<10;j++) mvT((700-j*55)*p,(900-j*60)*p,j*.08,.07,"sine",.05*v); mvT(70*p,30*p,0,1.1,"sawtooth",.07*v); } },
+  king:function(e,p,v){ if(e==="cry"){ [196,247,294,392].forEach(function(f,i){ mvT(f*p,f*p,i*.11,.22,"sawtooth",.05*v); }); }
+    else if(e==="atk"){ mvT(330*p,220*p,0,.12,"square",.06*v); mvT(330*p,220*p,.14,.16,"square",.06*v); mvN(0,.1,.04*v,"highpass",4000,6000); }
+    else if(e==="hurt"){ mvT(280*p,170*p,0,.18,"square",.06*v); }
+    else { [392,330,262,196,131].forEach(function(f,i){ mvT(f*p,f*.97*p,i*.16,.3,"sawtooth",.05*v); }); } },
+  knight:function(e,p,v){ if(e==="cry"){ mvN(0,.12,.05*v,"bandpass",4200,3000,6); mvT(150*p,110*p,.08,.4,"sawtooth",.06*v); }
+    else if(e==="atk"){ mvN(0,.08,.22*v,"bandpass",5000,2500,5); mvT(2000*p,1200*p,0,.12,"square",.04*v); }
+    else if(e==="hurt"){ mvN(0,.12,.22*v,"bandpass",3500,2800,6); mvT(240*p,170*p,0,.12,"square",.04*v); }
+    else { for(var i=0;i<4;i++) mvN(i*.09,.12,.06*v,"bandpass",4000-i*600,2000,8); mvT(160*p,60*p,0,.7,"sawtooth",.05*v); } },
+  wolf:function(e,p,v){ if(e==="cry"){ mvT(420*p,820*p,0,.35,"triangle",.07*v,[5,8*p]); mvT(820*p,520*p,.35,.45,"triangle",.06*v,[5,12*p]); }
+    else if(e==="atk"){ mvN(0,.25,.07*v,"bandpass",700,400,2); mvT(170*p,120*p,0,.25,"sawtooth",.05*v); }
+    else if(e==="hurt"){ mvT(1000*p,620*p,0,.12,"triangle",.07*v); }
+    else { mvT(700*p,300*p,0,.7,"triangle",.06*v,[4,10*p]); } },
+  lion:function(e,p,v){ if(e==="cry"){ mvT(170*p,110*p,0,.8,"sawtooth",.08*v,[7,9*p]); mvN(0,.8,.09*v,"lowpass",1300,280); }
+    else if(e==="atk"){ mvN(0,.3,.09*v,"bandpass",900,500,2); mvT(200*p,130*p,0,.3,"sawtooth",.06*v); }
+    else if(e==="hurt"){ mvT(300*p,180*p,0,.18,"sawtooth",.06*v); }
+    else { mvT(200*p,60*p,0,1.2,"sawtooth",.08*v,[5,10*p]); mvN(0,1.1,.08*v,"lowpass",1500,100); } },
+  snake:function(e,p,v){ if(e==="cry"){ mvN(0,.55,.06*v,"highpass",3800,5200); }
+    else if(e==="atk"){ mvN(0,.2,.08*v,"highpass",3000,6000); mvT(500*p,200*p,.15,.08,"square",.04*v); }
+    else if(e==="hurt"){ mvN(0,.14,.05*v,"highpass",4000,3000); }
+    else { mvN(0,.9,.06*v,"highpass",5000,1800); } },
+  bug:function(e,p,v){ if(e==="cry"){ for(var i=0;i<6;i++) mvN(i*.04,.03,.28*v,"bandpass",3200*p,3200*p,4); }
+    else if(e==="atk"){ for(var j=0;j<3;j++) mvN(j*.05,.03,.2*v,"bandpass",2400*p,2400*p,5); mvN(.15,.2,.05*v,"highpass",3000,5000); }
+    else if(e==="hurt"){ mvN(0,.05,.25*v,"bandpass",1800*p,1800*p,4); mvT(900*p,600*p,0,.06,"square",.04*v); }
+    else { for(var k=0;k<5;k++) mvN(k*.06,.04,.22*v,"bandpass",(3000-k*400)*p,1500,4); } },
+  cactus:function(e,p,v){ if(e==="cry"){ mvT(700*p,700*p,0,.25,"triangle",.07*v); mvT(1050*p,1050*p,.1,.2,"triangle",.04*v); }
+    else if(e==="atk"){ for(var i=0;i<4;i++){ mvN(i*.05,.03,.05*v,"highpass",5000,6000); mvT(2400*p,1800*p,i*.05,.03,"square",.03*v); } }
+    else if(e==="hurt"){ mvN(0,.08,.12*v,"bandpass",1600,800,2); mvT(700*p,450*p,0,.07,"triangle",.05*v); }
+    else { mvT(500*p,120*p,0,.4,"triangle",.07*v); mvN(.1,.2,.06*v,"lowpass",600,120); } },
+  frog:function(e,p,v){ if(e==="cry"){ mvT(180*p,260*p,0,.08,"square",.06*v); mvT(180*p,260*p,.12,.08,"square",.06*v); }
+    else if(e==="atk"){ mvT(900*p,300*p,0,.12,"sine",.07*v); mvN(0,.08,.04*v,"lowpass",1500,500); }
+    else if(e==="hurt"){ mvT(300*p,200*p,0,.1,"square",.06*v); }
+    else { mvT(260*p,80*p,0,.45,"square",.05*v); } },
+  imp:function(e,p,v){ if(e==="cry"){ [900,1200,1000,1400,1100].forEach(function(f,i){ mvT(f*p,f*1.2*p,i*.06,.05,"square",.035*v); }); }
+    else if(e==="atk"){ mvT(600*p,1800*p,0,.2,"sawtooth",.04*v); mvN(0,.15,.04*v,"bandpass",2000,4000,2); }
+    else if(e==="hurt"){ mvT(1500*p,900*p,0,.08,"square",.04*v); }
+    else { [1400,1100,900,700,500].forEach(function(f,i){ mvT(f*p,f*.8*p,i*.07,.06,"square",.035*v); }); } },
+  mummy:function(e,p,v){ if(e==="cry"){ mvT(110*p,85*p,0,.8,"sawtooth",.06*v,[3,6*p]); mvN(0,.8,.03*v,"bandpass",500,300,3); }
+    else if(e==="atk"){ mvT(140*p,90*p,0,.35,"sawtooth",.07*v); mvN(0,.3,.05*v,"lowpass",600,200); }
+    else if(e==="hurt"){ mvT(160*p,120*p,0,.18,"sawtooth",.06*v); }
+    else { mvT(130*p,45*p,0,1.1,"sawtooth",.07*v,[3,8*p]); } },
+  rat:function(e,p,v){ if(e==="cry"){ mvT(2200*p,2800*p,0,.06,"square",.035*v); mvT(2400*p,3000*p,.09,.06,"square",.035*v); }
+    else if(e==="atk"){ mvN(0,.1,.12*v,"bandpass",2500,3500,3); mvT(2600*p,1800*p,0,.08,"square",.045*v); }
+    else if(e==="hurt"){ mvT(3000*p,2000*p,0,.07,"square",.04*v); }
+    else { mvT(2600*p,900*p,0,.3,"square",.035*v); } },
+  skeleton:function(e,p,v){ if(e==="cry"){ for(var i=0;i<7;i++) mvN(i*.045,.03,.22*v,"bandpass",1700+(i%3)*500,1500,4); }
+    else if(e==="atk"){ mvN(0,.07,.22*v,"bandpass",2500,1500,4); mvT(600*p,300*p,0,.1,"square",.05*v); }
+    else if(e==="hurt"){ mvN(0,.06,.25*v,"bandpass",2000,2000,4); mvT(500*p,350*p,0,.06,"square",.04*v); }
+    else { for(var j=0;j<10;j++) mvN(j*.05,.04,.2*v,"bandpass",2600-j*120,1200,4); } },
+  eye:function(e,p,v){ if(e==="cry"){ mvT(1200*p,1600*p,0,.5,"sine",.05*v,[11,60*p]); mvT(600*p,800*p,0,.5,"triangle",.03*v); }
+    else if(e==="atk"){ mvT(2000*p,400*p,0,.3,"sawtooth",.04*v); }
+    else if(e==="hurt"){ mvT(1500*p,1000*p,0,.1,"sine",.06*v); }
+    else { mvT(1400*p,200*p,0,.7,"sine",.06*v,[9,50*p]); } },
+  yeti:function(e,p,v){ if(e==="cry"){ mvT(150*p,260*p,0,.3,"sawtooth",.07*v); mvT(260*p,120*p,.3,.5,"sawtooth",.07*v,[6,8*p]); mvN(0,.8,.06*v,"lowpass",900,200); }
+    else if(e==="atk"){ mvN(0,.3,.1*v,"lowpass",500,80); mvT(90*p,50*p,0,.3,"square",.07*v); }
+    else if(e==="hurt"){ mvT(240*p,160*p,0,.2,"sawtooth",.06*v); }
+    else { mvT(220*p,50*p,0,1,"sawtooth",.07*v,[5,10*p]); mvN(0,.9,.06*v,"lowpass",900,90); } },
+  mimic:function(e,p,v){ if(e==="cry"||e==="atk"){ for(var i=0;i<(e==="cry"?2:3);i++){ mvN(i*.14,.06,.1*v,"lowpass",1800,300); mvT(160*p,90*p,i*.14,.07,"square",.07*v); } }
+    else if(e==="hurt"){ mvN(0,.06,.2*v,"bandpass",1200,600,2); mvT(300*p,200*p,0,.07,"square",.04*v); }
+    else { mvN(0,.4,.08*v,"lowpass",1500,120); [500,400,300].forEach(function(f,i){ mvT(f*p,f*.7*p,.1+i*.09,.08,"square",.04*v); }); } }
+};
+var MV_KIND={slime:"slime",hornslime:"slime",bat:"bat",ghost:"ghost",wraith:"ghost",wisp:"ghost",golem:"golem",shroom:"shroom",dragon:"dragon",kraken:"kraken",king:"king",darkknight:"knight",
+  wolf:"wolf",snake:"snake",scorpion:"bug",spider:"bug",beetle:"bug",cactusM:"cactus",frog:"frog",imp:"imp",mummy:"mummy",rat:"rat",skeleton:"skeleton",eyeball:"eye",yeti:"yeti",mimic:"mimic"};
+var MV_LAST={};
+/* o: {boss, big, v (volume), p (pitch)} */
+function mobVoice(kind,e,o){ o=o||{}; if(!ST.sound) return; var now=performance.now(), key=kind+e; if(now-(MV_LAST[key]||0)<(e==="hurt"?90:180)) return; MV_LAST[key]=now;
+  var vx=MVOX[MV_KIND[kind]]||MVOX[Object.keys(MVOX)[hstr(String(kind))%Object.keys(MVOX).length]], p=o.p||(o.boss?.6:o.big?.8:1), v=(o.v==null?1:o.v)*(o.boss?1.5:o.big?1.2:1);
+  try{ vx(e,p,v); }catch(err){}
+  if(o.boss&&e==="cry"){ mvT(55,45,0,1.2,"sawtooth",.05); mvN(0,1.2,.06,"lowpass",220,60); } }
+/* who are we fighting? (a mimic chest has no kind, and the lion boss uses the wolf sprite) */
+function qbKind(){ if(!QB) return "slime"; if(QB.mimic) return "mimic"; var d=QB.def||[]; if(d[1]==="lion") return "lion"; return d[0]||"slime"; }
+function qbVoice(e,o){ if(!QB) return; mobVoice(qbKind()==="lion"?"lion":qbKind(),e,Object.assign({boss:!!(QB.boss||QB.final),big:!!(QB.elite||QB.mini)},o||{})); }
+MVOX.lion=MVOX.lion; MV_KIND.lion="lion";
 /* ================= chiptune soundtrack ================= */
 var QM={timer:0,step:0,song:null};
 var NOTE=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
