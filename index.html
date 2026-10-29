@@ -950,6 +950,12 @@ em.locked{color:#ffd43b}em.solid{color:#69db7c}em.shaky{color:#ff8787}em.new{col
 .lgtimer.pace i{background:linear-gradient(90deg,#e8590c,#fcc419)}
 .lgtimer.hurry i{filter:brightness(1.25)}
 
+/* ⚡ Quick 10 */
+.qkbar{height:12px;margin:8px 0;background:#3a3f5c;border:2px solid #0a0c18;border-radius:3px;overflow:hidden}
+.qkbar i{display:block;height:100%;background:linear-gradient(90deg,#51cf66,#94d82d)}
+.qk h2{margin:4px 0 6px}
+.qh-pill.qkpill{color:#ffe066;cursor:pointer}
+
 .duo-msg{margin:0;font:700 14px/1.4 "Pixelify Sans",monospace;color:#ffe08a}
 .duo-opts{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}
 .duo-o{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:8px 10px;border:2px solid var(--c);border-left-width:8px;border-radius:6px;background:rgba(255,255,255,.06);color:#f4f1e8;font:14.5px/1.4 var(--font-body,system-ui),sans-serif}
@@ -12010,7 +12016,7 @@ function qwHud(){
         '<div class="qh-pw" title="Power for special attacks" aria-label="Power '+(s.pw||0)+' of '+PW_MAX+'">'+pips(s.pw||0,PW_MAX)+'<span class="qh-tot">TOTAL LV '+totalLvl()+'</span></div>':'<div class="qh-sub">'+(s.cls?'<span style="color:'+C.col+'">'+C.n+'</span> · ':'')+'each land has its own level</div>')+'</div></div>'+
     (qs.length?'<div class="pxwin qh-quests">'+qs.slice(0,3).map(function(q){ var p=qProgress(q), r=p[0]>=p[1]; return '<div class="'+(r?'qdone':'')+'">'+(r?'✔ ':'◆ ')+esc(q.title)+' <b>'+p[0]+'/'+p[1]+'</b></div>'; }).join("")+'</div>':'')+'</div>'+
     '<div class="qh-right"><span class="pxwin qh-pill">'+icon("coin")+' <b>'+s.coins+'</b></span>'+
-      (big?'<button class="pxwin qh-pill" id="qh-potion" '+(s.potions&&s.hp<max?'':'disabled')+' aria-label="Drink a potion">'+icon("potion")+' '+s.potions+'</button>'+(MAP&&MAP.cave?'<button class="pxwin qh-pill lgpill" id="qh-ledger" title="Your Ledger: how many PSAT concepts are Solid" aria-label="Open the Ledger">📒 '+mp+'% Solid</button>':'<span class="pxwin qh-pill" title="Mastered: right the first time, or twice in a row after a miss. Master every question to wake the boss.">📖 '+(function(){ var c=mastCount(MAP.land||MAP.id); return c.have+'/'+c.n; })()+' mastered</span>')+'':'')+
+      (big?'<button class="pxwin qh-pill" id="qh-potion" '+(s.potions&&s.hp<max?'':'disabled')+' aria-label="Drink a potion">'+icon("potion")+' '+s.potions+'</button>'+(MAP&&MAP.cave?'<button class="pxwin qh-pill lgpill" id="qh-ledger" title="Your Ledger: how many PSAT concepts are Solid" aria-label="Open the Ledger">📒 '+mp+'% Solid</button>':'<span class="pxwin qh-pill" title="Mastered: right the first time, or right when it comes back after a miss. Master every question to wake the boss.">📖 '+(function(){ var c=mastCount(MAP.land||MAP.id); return c.have+'/'+c.n; })()+' mastered</span>'+(mastLand()?'<button class="pxwin qh-pill qkpill" id="qh-quick" title="Quick 10: ten questions you still need, no battle">⚡ QUICK 10</button>':'')+'')+'':'')+
       '<span class="pxwin qh-pill">'+icon("badge")+' '+qwBadges(s)+'/'+LANDS.length+'</span>'+
       (s.combo>=2?'<span class="pxwin qh-pill hot">COMBO ×'+s.combo+'</span>':'')+
       '<button class="pxwin qh-pill" id="qh-bag">'+icon("bag")+' BAG</button><button class="pxwin qh-pill" id="qh-log">LOG</button><button class="pxwin qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'">MAP</button>'+
@@ -12093,7 +12099,7 @@ function qwBossTalk(b){
   if(s.badges[b.land]) return qwSay("Badge pedestal",null,["You already beat "+b.name+". The badge glows proudly."]);
   var k=s.kills[b.land]||0;
   if(k<KILLS_FOR_BOSS) return qwSay(b.name,face,["Zzz… a magic seal surrounds the boss. Beat "+(KILLS_FOR_BOSS-k)+" more monster"+(KILLS_FOR_BOSS-k===1?"":"s")+" in this land to break it ("+k+"/"+KILLS_FOR_BOSS+")."]);
-  var mc=mastCount(b.land); if(mc.have<mc.n) return qwSay(b.name,face,["Zzz… This boss only wakes up for someone who knows the WHOLE study guide.","Master every question in this land first: "+mc.have+"/"+mc.n+" so far, "+(mc.n-mc.have)+" to go. The monsters ask the ones you still need, so keep battling!"]);
+  var mc=mastCount(b.land); if(mc.have<mc.n) return qwSay(b.name,face,["Zzz… This boss only wakes up for someone who knows the WHOLE study guide.","Master every question in this land first: "+mc.have+"/"+mc.n+" so far, "+(mc.n-mc.have)+" to go. Battle monsters, or tap ⚡ QUICK 10 at the top to drill 10 at a time!"]);
   var BM=BOSS_MECH[bossMech(b.land)]; qwSay(b.name,face,["You dare wake me? I am "+b.name+", LV "+(b.lv||BOSS_LV)+"! Let's see what you really know.","BOSS POWER · "+BM.n+": "+BM.d],[["Fight!",function(){ qwBattle(b,true); }],["Not yet",null]]);
 }
 function qwRoll(){ var r=Math.random(); return r<.5?"common":r<.8?"rare":r<.95?"epic":"legendary"; }
@@ -12534,7 +12540,7 @@ function qbNext(){ if(!QB||QB.done) return;
   if(QB.poison>0&&QB.qn>0){ QB.poison--; var pd=QB.pdmg||5; QB.hp=Math.max(0,QB.hp-pd); BS.hit=performance.now(); bsFx("poison"); bsFloat("-"+pd+" POISON","#69db7c"); if(QB.hp<=0){ QB.done=true; setTimeout(qbWin,700); return; } }
   QB.cur=QB.pool.cave?lgNext(QB):qbNextIndex(QB.pool); QB.timeout=false; QB.typedRaw=null; QB.lensUsed=QB.lensUsed||false; QB.lensOut=-1; QB.pick=null; QB.dodgeRes=null; QB.choosing=false; QB.qn++; QB.opts=shuffle(QB.pool.qs[QB.cur].opts); QB.t0=performance.now(); QB.pt0=paceNow(); paceQbPrep(); qbDraw(); qbBar(); lgTimerStart(); if(QB.pool.cave){ var ti=$("#bs-tin"); if(ti) setTimeout(function(){ ti.focus({preventScroll:true}); },80); } }
 function qbMastNote(){ if(!QB||QB.region==="all"||!QB.mnote) return "";
-  var t=QB.mnote==="first"?'📖 <b class="okc">Mastered!</b> Right the first time.':QB.mnote==="mastered"?'📖 <b class="okc">Mastered!</b> Right twice in a row.':QB.mnote==="once"?'📖 Right once. It’ll come back soon: get it right again to master it.':QB.mnote==="miss"?'📖 It’ll come back in a few questions. Get it right twice in a row to master it.':'📖 This one was mastered. Get it right twice in a row again.';
+  var t=QB.mnote==="first"?'📖 <b class="okc">Mastered!</b> Right the first time.':QB.mnote==="mastered"?'📖 <b class="okc">Mastered!</b> Right twice in a row.':QB.mnote==="once"?'📖 Right once. It’ll come back soon: get it right again to master it.':QB.mnote==="miss"?'📖 It’ll come back in a few questions. Get it right then to master it.':'📖 This one was mastered. Get it right when it comes back.';
   var c=mastCount(QB.region), left=c.n-c.have, tail=QB.boss?'':left?' <b>'+left+'</b> left to master in this land.':' <b class="okc">Every question mastered. The boss is awake!</b>';
   return '<p class="pxsmall mnote">'+t+tail+'</p>'; }
 function pips(n,count){ var h=''; for(var i=0;i<count;i++) h+='<i class="pip'+(i<n?' on':'')+'"></i>'; return '<span class="pips">'+h+'</span>'; }
@@ -13490,7 +13496,7 @@ var HOWTO={
   "Levels":["Every land has its <b>own level</b> (max 40), potions and gear. Levels unlock attacks. Your <b>damage and hearts come only from gear</b> (and your class), so equip the best weapon and armor you find.",
     "Your <b>Total LV</b> adds up everything you’ve earned in all the lands.",
     "Each land has 5 areas. A glowing wall opens when you reach its level (<b>9, 18, 27, 40</b>) <b>or</b> master enough of the land: <b>25%, 50%, 75%, all</b>.",
-    "A question is <b>mastered</b> when you get it right the first time, or right twice in a row after a miss. Monsters ask the ones you still need.",
+    "A question is <b>mastered</b> when you get it right the first time, or right when it comes back after a miss. Monsters ask the ones you still need, and <b>⚡ QUICK 10</b> (top bar) drills 10 of them with no battle.",
     "The <b>boss only wakes up once you’ve mastered every question</b> in its land. Beat it and you know the whole study guide.",
     "Mo in the village sells star packs. Traders in each land sell potions and gear."],
   "Danger":["Monsters that <b>spot you chase you</b>. Ones above your level are super fast. Ones far below you are slow, so run!",
@@ -13893,7 +13899,7 @@ function mLv(m){ var lv=m.lv||1; if(MAP&&(MAP.cave||MAP.hdg)&&!m.final) lv=Math.
    is fighting joins their battle. With 2+ heroes on a map, monsters have ×N health (heroes' hearts don't change).
    Dungeons and Delves get 2-hero rooms: the Oracle (one hero reads the riddle on the plate, the other pulls the matching
    lever) and the Gate (one hero holds the plate open while the other solves the boulders). Alone in there? They still work. */
-var GAME_VER="831dc90b";
+var GAME_VER="5e763503";
 var DUO={dead:{},busy:{},fights:{},sendT:0,kaT:0,oth:null,othT:0,oracle:null};
 var DUO_COL=["#ff6b6b","#4dabf7","#69db7c","#ffd43b"], DUO_CN=["RED","BLUE","GREEN","GOLD"], DUO_EM=["🟥","🟦","🟩","🟨"];
 /* ---------- who else is on this map ---------- */
@@ -14187,17 +14193,18 @@ function deepDrawTab(o,now){ var X=o.x*16, Y=o.y*16, s=QS(), read=s.deep&&s.deep
   shadow(X+8,Y+15,7); wrect(X+2,Y-2,12,17,"#4a4458"); wrect(X+3,Y-1,10,15,"#6e6880"); for(var i=0;i<4;i++) wrect(X+5,Y+2+i*3,6,1,"#3b3552");
   if(!read&&Math.floor(now/450)%2) drawBubble(X+11,Y-12,now,"!"); }
 /* ================= 📖 the land IS the study guide: master every question to wake the boss =================
-   A question is mastered when you get it right the first time you see it, or right twice in a row after a miss.
+   A question is mastered when you get it right the first time you see it, or right when it comes back after a miss.
+   Only the real quiz questions count (the flashcard versions are extra review), and ⚡ Quick 10 drills them with no battle.
    Monsters ask what you still need: missed ones come back a few questions later, then ones you haven't seen yet,
    with an occasional mastered one for review. Gates open at their level OR at 25/50/75% mastered, and the boss
    only wakes once every question in its land is mastered, so beating the boss means you're ready for the test. */
 var GATE_MAST=[0,.25,.5,.75,1], MASTV=0, MASTC=MASTC||{};
 function mastNew(land,k,ok){ var m=mastOf(land), was=m[k];
-  if(ok) m[k]=was==null?2:Math.min(3,was+1);
+  if(ok) m[k]=was>=2?Math.min(3,was+1):2;
   else { m[k]=0; var s=QS(); if(!s.mmiss) s.mmiss={}; var mm=s.mmiss[land]||(s.mmiss[land]={}); mm[k]=(mm[k]||0)+1; }
   MASTV++; MASTC={}; return m[k]; }
 function mastCount(id){ if(!MASTC) MASTC={}; var c=MASTC[id], now=performance.now(); if(c&&now-c.t<5000) return c;
-  var ks=worldQuestions(id).map(qKey), m=mastOf(id), have=0, seen={}; ks.forEach(function(k){ if(seen[k]) return; seen[k]=1; if((m[k]||0)>=2) have++; });
+  var qs=worldQuestions(id), hasQ=qs.some(function(q){ return !q.card; }), ks=qs.filter(function(q){ return !hasQ||!q.card; }).map(qKey), m=mastOf(id), have=0, seen={}; ks.forEach(function(k){ if(seen[k]) return; seen[k]=1; if((m[k]||0)>=2) have++; });
   c=MASTC[id]={n:Object.keys(seen).length,have:have,t:now}; return c; }
 function masteryPct(id){ if(id===CAVE_ID) return lgSolidFrac(); var c=mastCount(id); return c.n?c.have/c.n:0; }
 function mastDone(id){ var c=mastCount(id); return c.have>=c.n; }
@@ -14208,15 +14215,51 @@ function gateOpenR(req){ var s=QS(); if(s.lvl>=req) return true; var id=mastLand
 function gateLabel(req){ var a=AREA_REQ.indexOf(req); return mastLand()&&a>0?"SEALED · LV "+req+" OR "+(a>=4?"ALL":Math.round(GATE_MAST[a]*100)+"%")+" MASTERED":"SEALED · LV "+req; }
 /* what to ask next in a land */
 function mastPick(pool){ var m=mastOf(pool.region), rec=pool.recent||[], fix=[], unseen=[], done=[], hard=[], miss=(QS().mmiss||{})[pool.region]||{};
-  pool.keys.forEach(function(k,i){ if(rec.indexOf(i)>=0) return; var v=m[k]; if(v==null) unseen.push(i); else if(v<2) fix.push(i); else { done.push(i); if(miss[k]) hard.push(i); } });
+  var hasQ=pool.qs.some(function(q){ return !q.card; });
+  pool.keys.forEach(function(k,i){ if(rec.indexOf(i)>=0) return; var v=m[k]; if(hasQ&&pool.qs[i].card){ done.push(i); return; } if(v==null) unseen.push(i); else if(v<2) fix.push(i); else { done.push(i); if(miss[k]) hard.push(i); } });
   function one(a){ return a[Math.floor(Math.random()*a.length)]; }
   var p=Math.random();
   /* the boss is your final exam: anything from the land, with extra weight on the ones you used to miss */
   if(QB&&QB.boss&&!QB.final){ if(fix.length&&p<.5) return one(fix); if(hard.length&&p<.55) return one(hard); return -1; }
   if(fix.length&&(p<.4||!unseen.length&&p<.93)) return one(fix);
-  if(unseen.length&&p<.93) return one(unseen);
+  if(unseen.length&&p<.92) return one(unseen);
   if(done.length) return one(done);
   return fix.length?one(fix):unseen.length?one(unseen):-1; }
+/* ⚡ Quick 10: ten questions you still need, no battle. Missed ones first, then ones you haven't seen. */
+var QK=null;
+function mastNeed(pool,n){ var m=mastOf(pool.region), hasQ=pool.qs.some(function(q){ return !q.card; }), fix=[], unseen=[], seen={};
+  pool.keys.forEach(function(k,i){ if(seen[k]||(hasQ&&pool.qs[i].card)) return; seen[k]=1; var v=m[k]; if(v==null) unseen.push(i); else if(v<2) fix.push(i); });
+  return shuffle(fix).concat(shuffle(unseen)).slice(0,n); }
+function qkStart(){ var id=mastLand(); if(!id) return; var pool=qbPool(id), list=mastNeed(pool,10); sfx("blip");
+  if(!list.length) return qwPanel('<div class="qk"><p class="pxlabel">⚡ Quick 10</p><h2>Every question is mastered!</h2><p>The boss is awake. Go get it.</p><button class="pxbtn go" data-qkx>Back to the land</button></div>');
+  QK={id:id,pool:pool,list:list,i:0,right:0,newM:0,xp:0,done:false}; qkShow(); }
+function qkShow(){ var q=QK.pool.qs[QK.list[QK.i]], c=mastCount(QK.id); QK.q=q; QK.opts=shuffle(q.opts.slice()); QK.done=false; QK.hold=false; clearTimeout(QK.tm);
+  qwPanel('<div class="qk cq"><div class="cq-top"><span class="pxlabel">⚡ Quick 10 · '+(QK.i+1)+'/'+QK.list.length+'</span><span class="pxsmall">📖 '+c.have+'/'+c.n+' mastered</span></div><div class="bsq">'+q.q+'</div>'+
+    '<div class="bsopts">'+QK.opts.map(function(o,k){ return '<button class="bsopt" data-qk="'+k+'"><span class="kn">'+(k+1)+'</span><span>'+o+'</span></button>'; }).join("")+'</div><div id="qk-fb"></div><div class="cq-bot"><button class="pxbtn" data-qkx>Stop for now</button></div></div>'); }
+function qkAnswer(k){ if(!QK||QK.done) return; QK.done=true; var q=QK.q, ok=QK.opts[k]===q.right, kk=qKey(q), was=mastOf(QK.id)[kk], s=QS();
+  mastNew(QK.id,kk,ok); bmResult(kk,ok);
+  if(ok){ QK.right++; if(!(was>=2)) QK.newM++; var xp=xpGain(s,Math.round((2+s.lvl)*.6)); QK.xp+=xp; qwXp(xp); save(); sfx("right"); } else { save(); sfx("wrong"); }
+  document.querySelectorAll("[data-qk]").forEach(function(b){ var o=QK.opts[+b.dataset.qk]; b.disabled=true; if(o===q.right) b.classList.add("right"); else if(+b.dataset.qk===k) b.classList.add("wrong"); else b.classList.add("dim"); });
+  var last=QK.i+1>=QK.list.length;
+  $("#qk-fb").innerHTML='<div class="bsfb '+(ok?'ok':'no')+'"><b>'+(ok?(was>=2?'✓ Right!':'✓ Mastered!'):'✗ Not quite.')+'</b>'+(ok?' '+q.why:explHTML(q,QK.opts[k],{})+'<p class="pxsmall mnote">📖 It’ll come back in your next Quick 10 or battle. Get it right then to master it.</p>')+'</div>'+
+    bmBtn(kk,QK.id,ok)+'<button class="pxbtn go" data-qknext>▶ '+(last?'Finish':'Next')+'</button>';
+  var nb=$("[data-qknext]"); if(nb) nb.focus({preventScroll:true});
+  if(ok) QK.tm=setTimeout(function(){ if(QK&&QK.done&&!QK.hold&&QMODE==="panel") qkNext(); },1300); }
+function qkNext(){ if(!QK) return; clearTimeout(QK.tm); QK.i++; if(QK.i<QK.list.length) return qkShow();
+  var c=mastCount(QK.id), all=c.have>=c.n, R=QK; QK=null; qwHud();
+  qwPanel('<div class="qk"><p class="pxlabel">⚡ Quick 10 done</p><h2>+'+R.newM+' mastered</h2><p>'+R.right+'/'+R.list.length+' right · +'+R.xp+' XP</p>'+
+    '<div class="qkbar"><i style="width:'+Math.round(c.have/Math.max(1,c.n)*100)+'%"></i></div><p>📖 <b>'+c.have+'/'+c.n+'</b> mastered in this land'+(all?'. <b class="okc">Every question mastered. The boss is awake!</b>':', '+(c.n-c.have)+' to go.')+'</p>'+
+    (all?'':'<button class="pxbtn go" data-qkgo>⚡ Another 10</button> ')+'<button class="pxbtn" data-qkx>Back to the land</button></div>'); }
+document.addEventListener("click",function(e){ var t;
+  if(QK&&e.target.closest(".qk [data-bm]")){ QK.hold=true; return; }
+  if((t=e.target.closest("[data-qk]"))&&!t.disabled){ qkAnswer(+t.dataset.qk); return; }
+  if(e.target.closest("[data-qknext]")){ qkNext(); return; }
+  if(e.target.closest("[data-qkgo]")){ qkStart(); return; }
+  if(e.target.closest("[data-qkx]")){ if(QK) clearTimeout(QK.tm); QK=null; qwPanelClose(); return; }
+  if(e.target.closest("#qh-quick")&&QMODE==="walk"){ qkStart(); } },true);
+document.addEventListener("keydown",function(e){ if(!QK||QMODE!=="panel"||$("#qw-panel").hidden) return;
+  if(/^Digit[1-4]$/.test(e.code)&&!QK.done){ e.preventDefault(); var b=document.querySelectorAll("[data-qk]")[+e.code.slice(5)-1]; if(b) qkAnswer(+b.dataset.qk); }
+  else if((e.code==="Enter"||e.code==="Space")&&QK.done){ e.preventDefault(); qkNext(); } });
 /* ================= chiptune soundtrack ================= */
 var QM={timer:0,step:0,song:null};
 var NOTE=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
