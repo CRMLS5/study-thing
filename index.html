@@ -11001,6 +11001,7 @@ function tex(name,v,frame){
     var C=TEXC[name], B=TEXB[name], i;
     if((name==="wood"||name==="lwall")&&libTex(name,v,p,r)) return;
     if(typeof ATX!=="undefined"&&ATX[name]&&areaTex(name,v,p,r)) return;
+    if(name==="ice"){ iceTex(v,p,r); return; }
     if(name==="cwall"||name==="chasm"||name==="lava"||name==="crys"||name==="mine"){ caveTex(name,v,frame,x,p,r); return; }
     if(C){ p(0,0,C[0],16,16); for(i=0;i<22;i++) p(r()*16|0,r()*16|0,C[1+(r()*2|0)]); for(i=0;i<10;i++) p(r()*16|0,r()*16|0,C[3]);
       if(name==="sand"){ var yy=3+v*3+(r()*3|0); for(i=0;i<16;i++) p(i,yy+Math.round(Math.sin(i/2.5)),C[4]); }
@@ -11021,6 +11022,7 @@ function decorPx(p,kind,x,y,r){
   else if(kind==="pebble"){ p(x,y,"#8a7a6a",3,2); p(x,y,"#b8a890",2,1); }
   else if(kind==="bone"){ p(x,y,"#f2ead8",5,1); p(x-1,y-1,"#f2ead8",1,1); p(x-1,y+1,"#f2ead8",1,1); p(x+5,y-1,"#f2ead8",1,1); p(x+5,y+1,"#f2ead8",1,1); }
   else if(kind==="mini"){ p(x,y,"#e0453d",3,1); p(x-1,y+1,"#e0453d",5,1); p(x,y+1,"#f4f4f4",1,1); p(x+1,y+2,"#f2e2c0",1,2); }
+  else if(kind==="shell"){ p(x,y,"#fff0f6",3,2); p(x+1,y-1,"#ffdeeb",1,1); p(x,y+1,"#f783ac",1,1); }
   else if(kind==="lily"){ p(x,y,"#3fae5a",4,2); p(x+1,y-1,"#3fae5a",2,1); p(x+2,y,"#ff9fc0",1,1); }
 }
 /* ---------- maps ---------- */
@@ -11726,7 +11728,7 @@ var MAPS={}, MAP=null, QP=null, QMODE="walk", SC=3, QDPR=1, qwCv=null, qwCx=null
 function getMap(id){
   if(MAPS[id]) return MAPS[id];
   var sv=AREA_OVR; AREA_OVR=null;
-  var m=id==="village"?genVillage():id==="library"?genLibrary():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):deepIsId(id)?genDeep(id):hdIsId(id)?genDelve(id):dgIsId(id)?genDungeon(id):dgAddToLand(genLand(landById(id)));
+  var m=id==="village"?genVillage():id==="library"?genLibrary():id==="final"?genTower():id===CAVE_ID?genCave(caveLand()):deepIsId(id)?genDeep(id):hdIsId(id)?genDelve(id):grIsId(id)?genGrotto(id):dgIsId(id)?genDungeon(id):isAddToLand(grAddToLand(dgAddToLand(genLand(landById(id)))));
   AREA_OVR=sv;
   if(m.quests) m.quests.forEach(function(q){ q.land=m.id; });
   MAPS[id]=m; return m;
@@ -11758,6 +11760,7 @@ function qwEnterMap(id,pos,quiet){
   qwMiniBuild();
   if(!quiet){ qwBanner(); qwMusicFor(); }
   if(MAP.dungeon) dgOnEnter();
+  if(MAP.grotto) grOnEnter();
   if(MAP.deep) deepOnEnter();
   if(MAP.cave){ caveOnEnter(); if(QP.y!=null){ caveS().vis[caveArea(QP.y)]=1; } }
   if(MAP.id==="village") caveVillageHint();
@@ -11809,6 +11812,7 @@ function qwStep(d){ QP.dir=d==="left"||d==="right"?"side":d; QP.flip=d==="left";
   /* a quick tap toward something next to you still opens it, just like walking into it */
   var v=DIRV[d], tx=Math.floor(pcx()+v[0]*.75), ty=Math.floor(pcy()+v[1]*.75); if((tx!==QP.x||ty!==QP.y)&&(pSolid(tx,ty,QP.y)||(MAP.blocks&&dgBlockAt(tx,ty)))) pBump(tx,ty,v); }
 function qwInteract(th){
+  if(GR_INT[th.k]) return GR_INT[th.k](th.v);
   if(th.k==="deepgate") return deepGate(th.v);
   if(th.k==="dbeacon") return deepBeacon(th.v);
   if(th.k==="dtab") return deepTablet(th.v);
@@ -11834,7 +11838,8 @@ function qwFacing(){ var v=DIRV[QP.face||"up"], fx=Math.floor(pcx()+v[0]*.75), f
 function qwArrive(){
   var s=QS(); s.x=QP.x; s.y=QP.y; if(MAP.deep&&deepEdge()) return; qwSteps++; if(qwSteps%8===0) save();
   for(var i=0;i<2;i++) qwParts.push({x:QP.x*16+6+Math.random()*4,y:QP.y*16+15,vx:(Math.random()-.5)*.3,vy:-.15,life:350,max:350,s:1,col:"rgba(255,255,255,.5)"});
-  if(MAP.big){ qwPickup(); qwTrapCheck(performance.now()); }
+  if(MAP.big){ qwPickup(); qwTrapCheck(performance.now()); if(MAP.grots) grSpot(); }
+  if(MAP.grotto) grArrive();
 }
 /* ---------- drawing ---------- */
 function W2S(v){ return v*SC; }
@@ -11856,6 +11861,7 @@ function qwDraw(now){
   function add(by,fn){ list.push([by,fn]); }
   if(MAP.big) qwDrawGround(now,vw,vh);
   if(MAP.dungeon) dgDrawFloor(now);
+  if(MAP.grotto) grDrawFloor(now);
   MAP.objs.forEach(function(o){
     if(o.x*16+(o.bw||1)*16<qwCam.x-48||o.x*16>qwCam.x+vw+64||o.y*16<qwCam.y-16||o.y*16>qwCam.y+vh+112) return;
     add(o.y*16+15,function(){
@@ -11868,6 +11874,7 @@ function qwDraw(now){
       else if(o.k==="lore"){ var lrd=s.lore[o.id], lsp=bake(lrd?"lore-off":"lore-on",SPR.lore,lrd?SPAL.loreOff:SPAL.loreOn); shadow(o.x*16+8,o.y*16+15,7); drawSpr(lsp,o.x*16+8-lsp.width/2,o.y*16+16-lsp.height); if(!lrd&&Math.random()<.08) qwParts.push({x:o.x*16+4+Math.random()*8,y:o.y*16+6,vx:0,vy:-.25,life:700,max:700,s:1,col:"#ffd43b"}); }
       else if(o.k==="shrine"){ var shs=bake("shrine",SPR.shrine,SPAL.shrine); shadow(o.x*16+8,o.y*16+15,8); drawSpr(shs,o.x*16+8-shs.width/2,o.y*16+16-shs.height); if(Math.random()<.12) qwParts.push({x:o.x*16+8,y:o.y*16-10,vx:(Math.random()-.5)*.3,vy:-.25,life:900,max:900,s:1,col:"#ff8fab"}); }
       else if(o.k==="fire"){ var fx0=o.x*16, fy0=o.y*16; wrect(fx0+2,fy0+12,12,3,"#6b4226"); wrect(fx0+4,fy0+10,8,2,"#8b5a2b"); for(var fl=0;fl<6;fl++){ var fh=4+((now/80+fl*5)%6|0); wrect(fx0+4+fl*1.5,fy0+11-fh,2,fh,fl%2?"#ff922b":"#ffd43b"); } if(Math.random()<.3) qwParts.push({x:fx0+8,y:fy0+3,vx:(Math.random()-.5)*.3,vy:-.5,life:600,max:600,s:1,col:"#ff922b"}); }
+      else if(GR_DRAW[o.k]){ GR_DRAW[o.k](o,now,s); }
       else if(o.k==="dgate"){ dgDrawGate(o,now,s); }
       else if(o.k==="hdgate"){ hdDrawGate(o,now,s); }
       else if(o.k==="deepgate"){ deepDrawGate(o,now); }
@@ -11879,6 +11886,7 @@ function qwDraw(now){
     });
   });
   MAP.portals.forEach(function(p){ add(p.y*16+15,function(){ drawPortal(p,now,s); }); });
+  if(MAP.grotto) grDrawObjs(add,now,s);
   MAP.chests.forEach(function(ch){ if(s.chests[ch.id]) return; add(ch.y*16+15,function(){ var cs=bake("chest",SPR.chest,SPAL.chest); shadow(ch.x*16+8,ch.y*16+15,7); var bob=Math.sin(now/300+ch.x)>0.9?-1:0; var jig=ch.mimic&&((now+ch.x*311)%3400)<260?(Math.floor(now/45)%2?1:-1):0; drawSpr(cs,ch.x*16+jig,ch.y*16+5+bob); if(ch.mimic&&(ghas(s,"owl")||s.scroll[MAP.id])){ wrect(ch.x*16+4,ch.y*16+8+bob,2,2,"#ff2d2d"); wrect(ch.x*16+10,ch.y*16+8+bob,2,2,"#ff2d2d"); } if(ch.min==="legendary"&&Math.random()<.15) qwParts.push({x:ch.x*16+2+Math.random()*12,y:ch.y*16+4,vx:0,vy:-.3,life:600,max:600,s:1,col:"#ffa94d"});
     if(Math.floor(now/180+ch.x)%9===0) wrect(ch.x*16+12,ch.y*16+3,1,1,"#fff8c0"); }); });
   MAP.npcs.forEach(function(n){ var nx=(n.moving?lerp(n.x,n.tx,n.t):n.x)*16, ny=(n.moving?lerp(n.y,n.ty,n.t):n.y)*16;
@@ -11994,6 +12002,8 @@ function qwMiniBuild(){ var mc=$("#qw-mini"); if(!mc) return; mc.hidden=!qwMiniO
 function qwMiniDot(now){ var mc=$("#qw-mini"); if(!mc||mc.hidden||!qwMiniBase) return; var m=mc.getContext("2d"), sc=MAP.big?1:2, s=QS(); m.drawImage(qwMiniBase,0,0);
   function dot(x,y,col,sz){ m.fillStyle=col; m.fillRect(Math.round(x*sc+sc/2-sz/2),Math.round(y*sc+sc/2-sz/2),sz,sz); }
   if(MAP.dgs) MAP.dgs.forEach(function(g){ dot(g.x,g.y,"#b197fc",4); });
+  if(MAP.isles) MAP.isles.forEach(function(I){ dot(I.b1.x,I.b1.y,"#a5d8ff",4); if((s.isles||{})[I.id]) dot(I.x,I.y,"#ffd43b",3); });
+  if(MAP.grots) MAP.grots.forEach(function(g){ if((s.grSeen||{})[g.gr]) dot(g.x,g.y,((s.grot||{})[g.gr]||{}).r?"#69db7c":"#e599f7",5); });
   if(MP.on) mpMiniDots(dot);
   MAP.portals.forEach(function(p){ dot(p.x,p.y,p.color,4); });
   if(MAP.ways) MAP.ways.forEach(function(w){ dot(w.x,w.y,s.ways[w.id]?"#3bc9db":"#868e96",3); });
@@ -12022,7 +12032,7 @@ function qwHud(){
       '<button class="pxwin qh-pill" id="qh-bag">'+icon("bag")+' BAG</button><button class="pxwin qh-pill" id="qh-log">LOG</button><button class="pxwin qh-pill" id="qh-map" aria-pressed="'+qwMiniOn+'">MAP</button>'+
       mpPill()+'<button class="pxwin qh-pill" id="qh-set" aria-label="Settings">⚙</button></div>';
 }
-function mapTitle(){ if(MAP.deep) return [esc(MAP.name),"The Endless Deep · sector ("+MAP.sx+", "+MAP.sy+") · "+deepDist(MAP.sx,MAP.sy)+" from the stairs"]; if(MAP.hdg) return [esc(MAP.name),"Hollow Delve · "+CZ[MAP.z].n+" · 1 player · LV "+hdLv(MAP.z)]; if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.library) return ["The Library","Every test you’ve already taken. Step into a portal to review anytime."]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
+function mapTitle(){ if(MAP.grotto) return [esc(MAP.name),grSub()]; if(MAP.deep) return [esc(MAP.name),"The Endless Deep · sector ("+MAP.sx+", "+MAP.sy+") · "+deepDist(MAP.sx,MAP.sy)+" from the stairs"]; if(MAP.hdg) return [esc(MAP.name),"Hollow Delve · "+CZ[MAP.z].n+" · 1 player · LV "+hdLv(MAP.z)]; if(MAP.dungeon) return [esc(MAP.name),"Dungeon · LV "+dgLv(MAP.a)+" · clear every room, then beat the boss"]; if(MAP.library) return ["The Library","Every test you’ve already taken. Step into a portal to review anytime."]; if(MAP.id==="village") return ["Hidden Village","Step into a portal to choose what to study"]; if(MAP.id==="final") return ["Final Exam Tower","Questions from every subject"];
   if(MAP.cave){ var a0=caveArea(QP?QP.y:MAP.spawn[1]); return ["The Hollow",CZ[a0].n+" · "+CZ[a0].sub+" · press L for your Ledger"]; }
   var L=landById(MAP.id), s=QS(), k=s.kills[L.id]||0; return [L.name,L.guide.title+" · "+L.guide.sub+" · "+(s.badges[L.id]?"Badge earned!":k>=KILLS_FOR_BOSS?(mastDone(L.id)?"The boss awaits at the top!":"Master every question to wake the boss ("+mastCount(L.id).have+"/"+mastCount(L.id).n+")"):"Monsters beaten "+k+"/"+KILLS_FOR_BOSS)]; }
 function qwBanner(){ var b=$("#qw-banner"), t=mapTitle(); b.classList.remove("danger"); b.innerHTML='<b>'+t[0]+'</b><span>'+t[1]+'</span>'; b.hidden=false; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(qwBannerT); qwBannerT=setTimeout(function(){ b.hidden=true; },2800); }
@@ -12077,6 +12087,7 @@ function qwFountain(){
 }
 function qwPortal(p){
   var s=QS();
+  if(p.grExit) return grExit(p);
   if(p.dgExit) return dgExit(p);
   if(p.door&&!p.ret) return qwTravel("library",null,"#ffd97a");
   if(p.ret){ var L0=MAP.cave?null:landById(MAP.id); return qwTravel(L0&&isArchived(L0.guide)?"library":"village",null,p.color); }
@@ -12167,7 +12178,7 @@ function lvS(lv,id){ id=id||(MAP&&(MAP.land||MAP.id)); var mx=id===CAVE_ID?CAVE_
 function landLvl(id){ var s=QS(); return id===s.cur?s.lvl:(s.lands[id]&&s.lands[id].lvl)||1; }
 function totalLvl(){ return 1+GUIDES.reduce(function(n,g){ return n+Math.max(0,landLvl(g.id)-1); },0); }
 function landSwap(id){
-  var P0=dgParse(id); if(P0) id=P0.L.id; if(hdIsId(id)||deepIsId(id)) id=CAVE_ID;
+  var P0=dgParse(id)||grParse(id); if(P0) id=P0.L.id; if(hdIsId(id)||deepIsId(id)) id=CAVE_ID;
   var s=QS(), isLand=!!landById(id);
   if(s.cur&&landById(s.cur)){ var r=landRec(s.cur); LFIELDS.forEach(function(k){ r[k]=s[k]; }); }
   s.cur=id;
@@ -13550,7 +13561,7 @@ function pSolid(tx,ty,fromY){
   return false; }
 function pBox(cx,cy,fn){ var x0=Math.floor(cx-MV.hw), x1=Math.floor(cx+MV.hw-1e-4), y0=Math.floor(cy-MV.top), y1=Math.floor(cy+MV.bot-1e-4);
   for(var y=y0;y<=y1;y++) for(var x=x0;x<=x1;x++){ var r=fn(x,y); if(r) return r; } return null; }
-function pBump(tx,ty,v){ var now=performance.now(), key=tx+","+ty; if(MAP.cave||MAP.hdg) hdChime(tx,ty);
+function pBump(tx,ty,v){ var now=performance.now(), key=tx+","+ty; if(MAP.grotto&&grBump(tx,ty,v)) return; if(MAP.cave||MAP.hdg) hdChime(tx,ty);
   if(MAP.blocks&&MAP.blocks.length&&dgBlockAt(tx,ty)){ if(now-MV.pushT>230&&(v[0]===0||v[1]===0)){ MV.pushT=now; dgPush(tx,ty,v); } return; }
   var th=thingAt(tx,ty); if(!th||th.k==="mon") return;
   if(MV.bumpK===key&&now-MV.bumpT<900) return; MV.bumpK=key; MV.bumpT=now;
@@ -13576,6 +13587,7 @@ function pInput(){ var vx=0, vy=0, ds=qwPad?[qwPad]:qwDirs;
   if(!vx&&!vy) return null; var l=Math.hypot(vx,vy); return [vx/l,vy/l]; }
 function pUpdate(dt,now){
   if(QP.fx==null){ QP.fx=QP.x; QP.fy=QP.y; }
+  if(MAP.grotto&&MAP.type==="ice"&&grIce(dt,now)) return;
   var v=QMODE==="walk"&&!QP.fall?pInput():null;
   if(!v){ if(QP.moving){ QP.moving=false; if(MP.on) mpPos(); } QP.frame=0; return; }
   QP.moving=true; QP.walked=(QP.walked||0)+dt; QP.frame=Math.floor(QP.walked/110)%4;
@@ -13899,7 +13911,7 @@ function mLv(m){ var lv=m.lv||1; if(MAP&&(MAP.cave||MAP.hdg)&&!m.final) lv=Math.
    is fighting joins their battle. With 2+ heroes on a map, monsters have ×N health (heroes' hearts don't change).
    Dungeons and Delves get 2-hero rooms: the Oracle (one hero reads the riddle on the plate, the other pulls the matching
    lever) and the Gate (one hero holds the plate open while the other solves the boulders). Alone in there? They still work. */
-var GAME_VER="fe7d9d5f";
+var GAME_VER="b72402ac";
 var DUO={dead:{},busy:{},fights:{},sendT:0,kaT:0,oth:null,othT:0,oracle:null};
 var DUO_COL=["#ff6b6b","#4dabf7","#69db7c","#ffd43b"], DUO_CN=["RED","BLUE","GREEN","GOLD"], DUO_EM=["🟥","🟦","🟩","🟨"];
 /* ---------- who else is on this map ---------- */
@@ -14380,6 +14392,325 @@ function mobVoice(kind,e,o){ o=o||{}; if(!ST.sound) return; var now=performance.
 function qbKind(){ if(!QB) return "slime"; if(QB.mimic) return "mimic"; var d=QB.def||[]; if(d[1]==="lion") return "lion"; return d[0]||"slime"; }
 function qbVoice(e,o){ if(!QB) return; mobVoice(qbKind()==="lion"?"lion":qbKind(),e,Object.assign({boss:!!(QB.boss||QB.final),big:!!(QB.elite||QB.mini)},o||{})); }
 MVOX.lion=MVOX.lion; MV_KIND.lion="lion";
+/* ================= 🕳️ GROTTOS: hidden puzzle caves in every land =================
+   Each land hides 3 grottos (one in each of the first three areas). Walk near one to discover it.
+   Inside: an entry hall, a puzzle room, then a treasure room with an epic chest and a Relic.
+     • Rune Grotto: step on a rune to flip it AND its neighbors. Light all 9.
+     • Ice Grotto: on ice you slide until you hit something. Slide your way to the door.
+     • Boulder Vault: push all 3 boulders onto the glowing plates.
+   Every puzzle is generated from the grotto's id, checked by a solver, and can't leave you stuck. */
+["ice"].forEach(function(n){ if(GI[n]==null){ GI[n]=GT.length; GT.push(n); } }); TEXC.ice=["#bfe3f2","#d6eef8","#a8d4ea","#ffffff","#9ccbe0"];
+var GR_TYPES=["runes","ice","push"], GR_DRAW={}, GR_INT={}, GR_W=21, GR_ROW={E:7,T:8,P:{runes:11,ice:13,push:11}};
+var GR_NAMES={runes:["Glimmer Grotto","Rune Hollow","Starlight Den"],ice:["Frostbite Grotto","Slippery Hollow","Icicle Den"],push:["Boulder Vault","Rumble Cellar","Stonebound Den"]};
+var GR_RELIC={runes:["Rune Shard","#e599f7"],ice:["Frost Crystal","#74c0fc"],push:["Stone Heart","#ffa94d"]};
+function grIsId(id){ return typeof id==="string"&&id.indexOf("gr|")===0; }
+function grParse(id){ if(!grIsId(id)) return null; var p=id.split("|"), L=landById(p[1]); return L?{L:L,n:+p[2]||0}:null; }
+function grType(id){ var P=grParse(id); return GR_TYPES[(P?P.n:0)%3]; }
+function grName(id){ var t=grType(id); return GR_NAMES[t][hstr(id)%3]; }
+function grS(){ var s=QS(); if(!s.grot) s.grot={}; return s.grot; }
+function grRec(id){ var g=grS(); return g[id]||(g[id]={}); }
+function grSnd(kind){ if(!ST.sound) return;
+  if(kind==="rune"){ mvT(880,1320,0,.12,"triangle",.06); mvT(1320,1760,.06,.12,"sine",.04); }
+  else if(kind==="runeOff"){ mvT(660,440,0,.12,"triangle",.05); }
+  else if(kind==="slide"){ mvN(0,.35,.05,"highpass",2500,5000); mvT(1500,2200,0,.1,"sine",.02); }
+  else if(kind==="thud"){ mvN(0,.12,.07,"lowpass",500,90); }
+  else if(kind==="push"){ mvN(0,.22,.08,"lowpass",420,120); mvT(70,55,0,.18,"square",.04); }
+  else if(kind==="open"){ [523,659,784,1047,1319].forEach(function(f,i){ mvT(f,f,i*.08,.2,"square",.045); }); mvN(.1,.6,.05,"lowpass",600,120); }
+  else if(kind==="relic"){ [784,988,1175,1568,1976].forEach(function(f,i){ mvT(f,f*1.01,i*.09,.3,"triangle",.05); }); } }
+/* ---------- building a grotto ---------- */
+function genGrotto(id){
+  var P=grParse(id), L=P.L, type=grType(id), r=rng(hstr(id+"#gr1")), W=GR_W, hE=GR_ROW.E, hT=GR_ROW.T, hP=GR_ROW.P[type], H=1+hT+1+hP+1+hE+1, i, x, y;
+  var m=newMap(id,W,H,"tower","twall"); m.grotto=true; m.land=L.id; m.gr=id; m.name=grName(id); m.type=type; m.inter={}; m.lampsAt=[]; m.runes=[]; m.gblocks=[]; m.gplates=[]; m.doors=[];
+  for(i=0;i<W*H;i++) m.blk[i]=1;
+  var yT0=1, yT1=yT0+hT-1, yP0=yT1+2, yP1=yP0+hP-1, yE0=yP1+2, yE1=yE0+hE-1; m.yP0=yP0; m.yP1=yP1; m.yT1=yT1;
+  function room(y0,y1){ for(y=y0;y<=y1;y++) for(x=1;x<W-1;x++){ setG(m,x,y,"stone"); m.blk[y*W+x]=0; } }
+  room(yT0,yT1); room(yP0,yP1); room(yE0,yE1);
+  function open(x0,y0){ setG(m,x0,y0,"stone"); m.blk[y0*W+x0]=0; }
+  function sign(x0,y0,txt){ var o=addObj(m,"sign",x0,y0,{txt:txt}); m.inter[y0*W+x0]=o; }
+  [9,10,11].forEach(function(dx){ open(dx,yE0-1); });
+  /* entry hall */
+  m.spawn=[10,yE1-1];
+  m.portals.push({x:10,y:yE1,land:L.id,color:"#e599f7",label:"EXIT",ret:true,grExit:true}); m.blk[yE1*W+10]=1;
+  [[2,yE0],[18,yE0]].forEach(function(b){ addObj(m,"brazier",b[0],b[1]); });
+  [[3,yE1],[17,yE1-2],[5,yE0+2]].forEach(function(c){ addObj(m,"gcrys",c[0],c[1],{col:GR_RELIC[type][1]}); });
+  sign(14,yE1,[m.name+": a hidden grotto in "+L.name+".",{runes:"Up ahead: a floor of runes. Light them all to open the treasure door.",ice:"Up ahead: a floor of slippery ice. Slide your way to the door at the top.",push:"Up ahead: boulders and glowing plates. Push every boulder onto a plate."}[type],"Treasure and a Relic wait at the end!"]);
+  /* treasure room */
+  m.chests.push({id:id+"-chest",x:6,y:yT0+4,min:P.n>=2?"epic":r()<.5?"epic":"rare"}); m.blk[(yT0+4)*W+6]=1;
+  var rel=addObj(m,"relic",10,yT0+2,{gr:id}); m.inter[(yT0+2)*W+10]=rel;
+  m.portals.push({x:15,y:yT1,land:L.id,color:"#e599f7",label:"EXIT",ret:true,grExit:true}); m.blk[yT1*W+15]=1;
+  [[2,yT0],[18,yT0]].forEach(function(b){ addObj(m,"brazier",b[0],b[1]); });
+  for(y=yT0+3;y<=yT1;y++) setG(m,10,y,"carpet");
+  /* the puzzle room */
+  if(type==="runes") grGenRunes(m,r); else if(type==="ice") grGenIce(m,r); else grGenPush(m,r);
+  return m;
+}
+/* rune lights: a 3x3 grid. Stepping on one flips it and the ones next to it (up, down, left, right). */
+function grGenRunes(m,r){ var W=m.W, y0=m.yP0, xs=[6,10,14], ys=[y0+1,y0+4,y0+7], k, i;
+  [9,10,11].forEach(function(dx){ setG(m,dx,y0-1,"stone"); m.blk[(y0-1)*W+dx]=1; }); m.doors.push({y:y0-1,xs:[9,10,11]});
+  for(i=0;i<9;i++) m.runes.push({i:i,x:xs[i%3],y:ys[i/3|0],on:true});
+  var presses=[], tries=0; while(tries++<50){ presses=[]; var n=4+(r()*2|0); while(presses.length<n){ k=r()*9|0; if(presses.indexOf(k)<0) presses.push(k); }
+    var st=[1,1,1,1,1,1,1,1,1]; presses.forEach(function(p){ grRuneFlip(st,p); }); if(st.some(function(v){ return !v; })) break; }
+  var st0=[1,1,1,1,1,1,1,1,1]; presses.forEach(function(p){ grRuneFlip(st0,p); }); m.rune0=st0; m.runeSol=presses.length;
+  var o=addObj(m,"greset",2,m.yP1,{}); m.inter[m.yP1*W+2]=o;
+  var sg=addObj(m,"sign",18,m.yP1,{txt:["Step on a rune to flip it AND the runes right next to it (up, down, left, right).","Light all 9 runes to open the treasure door.","Stuck? Touch the crystal to reset the runes. (It can be done in "+presses.length+" steps!)"]}); m.inter[m.yP1*W+18]=sg; }
+function grRuneFlip(st,i){ var x=i%3, y=i/3|0; [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var X=x+d[0], Y=y+d[1]; if(X<0||Y<0||X>2||Y>2) return; st[Y*3+X]=st[Y*3+X]?0:1; }); }
+/* ice: you slide until something stops you. The solver makes sure the door can be reached and that you can never get stuck. */
+function grGenIce(m,r){ var W=m.W, y0=m.yP0, y1=m.yP1, x, y, best=null;
+  setG(m,9,y0-1,"twall"); m.blk[(y0-1)*W+9]=1; setG(m,11,y0-1,"twall"); m.blk[(y0-1)*W+11]=1; setG(m,10,y0-1,"stone"); m.blk[(y0-1)*W+10]=0;
+  for(var att=0;att<700;att++){ var rocks={}, nR=16+(r()*10|0), k=0;
+    while(k<nR){ x=1+(r()*19|0); y=y0+(r()*(y1-y0)|0); var key=x+","+y; if(rocks[key]) continue; if(y===y0&&x===10) continue; rocks[key]=1; k++; }
+    var res=grIceSolve(rocks,y0,y1); if(!res) continue;
+    var sc=res.d>=6&&res.d<=12?100-Math.abs(res.d-8):res.d;
+    if(!best||sc>best.sc) best={rocks:rocks,d:res.d,sc:sc,path:res.path}; if(best.sc>=99) break; }
+  if(!best) best={rocks:{},d:1};
+  for(y=y0;y<y1;y++) for(x=1;x<W-1;x++) setG(m,x,y,"ice");
+  Object.keys(best.rocks).forEach(function(kk){ var p=kk.split(","); addObj(m,"icerock",+p[0],+p[1]); });
+  m.iceMoves=best.d; m.icePath=best.path||[]; m.ice=true;
+  var sg=addObj(m,"sign",18,y1,{txt:["On ice you slide until you hit something. You can’t stop halfway!","Slide your way to the door at the top. Land back on the stone floor down here to start over.","It can be done in "+best.d+" slides."]}); m.inter[y1*W+18]=sg; }
+function grIceSolve(rocks,y0,y1){
+  function blocked(x,y){ if(x<1||x>19||y>y1) return true; if(y<y0) return !(x===10&&y===y0-1); return !!rocks[x+","+y]; }
+  function slide(x,y,dx,dy){ for(var n=0;n<60;n++){ var nx=x+dx, ny=y+dy; if(blocked(nx,ny)) return [x,y]; x=nx; y=ny; if(y===y0-1) return "G"; if(y===y1) return "B"; } return [x,y]; }
+  var D={B:0}, q=["B"], E={}, h=0;
+  function nb(node){ var out=[], c;
+    if(node==="G"){ var tg=slide(10,y0-1,0,1); out.push([tg,"D"]); }
+    else if(node==="B"){ for(c=1;c<=19;c++){ if(rocks[c+","+(y1-1)]) continue; var t=slide(c,y1,0,-1); if(t!=="B") out.push([t,"c"+c]); } }
+    else { var p=node.split(",").map(Number); [[1,0,"R"],[-1,0,"L"],[0,1,"D"],[0,-1,"U"]].forEach(function(d){ var t=slide(p[0],p[1],d[0],d[1]); if(t==="G"||t==="B"||t[0]!==p[0]||t[1]!==p[1]) out.push([t,d[2]]); }); }
+    return out.map(function(t){ return [typeof t[0]==="string"?t[0]:t[0][0]+","+t[0][1],t[1]]; }); }
+  var PAR={};
+  while(h<q.length){ var u=q[h++]; var ns=nb(u); E[u]=ns.map(function(e){ return e[0]; }); ns.forEach(function(e){ var v=e[0]; if(D[v]==null){ D[v]=D[u]+1; PAR[v]=[u,e[1]]; q.push(v); } }); }
+  if(D.G==null) return null;
+  /* no traps: every spot you can reach must still lead back to the floor or to the door */
+  var good={G:1,B:1}, changed=true; while(changed){ changed=false; Object.keys(E).forEach(function(u){ if(good[u]) return; if(E[u].some(function(v){ return good[v]; })){ good[u]=1; changed=true; } }); }
+  if(Object.keys(D).some(function(u){ return !good[u]; })) return null;
+  var path=[], cur="G"; while(cur!=="B"&&PAR[cur]){ path.unshift(PAR[cur][1]); cur=PAR[cur][0]; }
+  return {d:D.G,path:path}; }
+/* boulders: made backwards. Start solved, then a pretend hero PULLS the boulders around, so pushing them back always works. */
+function grGenPush(m,r){ var W=m.W, y0=m.yP0, y1=m.yP1, best=null, x, y;
+  [9,10,11].forEach(function(dx){ setG(m,dx,y0-1,"stone"); m.blk[(y0-1)*W+dx]=1; }); m.doors.push({y:y0-1,xs:[9,10,11]});
+  function inRoom(x0,y0b){ return x0>=1&&x0<=19&&y0b>=y0&&y0b<=y1; }
+  for(var att=0;att<400;att++){ var rocks={}, nR=6+(r()*6|0), k=0, tries=0;
+    while(k<nR&&tries++<200){ x=2+(r()*17|0); y=y0+1+(r()*(y1-y0-2)|0); if(Math.abs(x-10)<=2&&y>=y1-2) continue; if(x<=3&&y>=y1-1) continue; if(rocks[x+","+y]) continue; rocks[x+","+y]=1; k++; }
+    var free=function(x0,y0b,bs){ return inRoom(x0,y0b)&&!rocks[x0+","+y0b]&&!(x0===2&&y0b===y1)&&!(x0===18&&y0b===y1)&&!(bs&&bs.some(function(b){ return b[0]===x0&&b[1]===y0b; })); };
+    var plates=[]; tries=0; while(plates.length<3&&tries++<200){ x=3+(r()*15|0); y=y0+1+(r()*5|0); if(!free(x,y)) continue; if(plates.some(function(p){ return Math.abs(p[0]-x)+Math.abs(p[1]-y)<3; })) continue; plates.push([x,y]); }
+    if(plates.length<3) continue;
+    var bs=plates.map(function(p){ return [p[0],p[1]]; }), pl=null, dd=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(var t0=0;t0<20&&!pl;t0++){ var b0=bs[r()*3|0], d0=dd[r()*4|0]; if(free(b0[0]+d0[0],b0[1]+d0[1],bs)) pl=[b0[0]+d0[0],b0[1]+d0[1]]; }
+    if(!pl) continue;
+    var log=[];
+    for(var st=0;st<220;st++){ var d=dd[r()*4|0], nx=pl[0]+d[0], ny=pl[1]+d[1]; if(!free(nx,ny,bs)) continue;
+      var bi=-1; bs.forEach(function(b,j){ if(b[0]===pl[0]-d[0]&&b[1]===pl[1]-d[1]) bi=j; });
+      var pull=bi>=0&&r()<.7; if(pull){ bs[bi]=[pl[0],pl[1]]; }
+      log.push([d[0],d[1],pull?1:0]); pl=[nx,ny]; }
+    if(bs.some(function(b,j){ return plates.some(function(p){ return p[0]===b[0]&&p[1]===b[1]; }); })) continue;
+    if(bs.some(function(b){ return b[1]>=y1-1&&Math.abs(b[0]-10)<=1; })) continue;
+    var moved=bs.reduce(function(a,b,j){ return a+Math.abs(b[0]-plates[j][0])+Math.abs(b[1]-plates[j][1]); },0); if(moved<10) continue;
+    /* the real hero walks in from the bottom door: can they get to where the pretend hero ended up, and to the reset crystal? */
+    var seen={}, q=[[10,y1]], h=0; seen[10+","+y1]=1;
+    while(h<q.length){ var c=q[h++]; dd.forEach(function(d2){ var X=c[0]+d2[0], Y=c[1]+d2[1], key=X+","+Y; if(seen[key]||!free(X,Y,bs)) return; seen[key]=1; q.push([X,Y]); }); }
+    if(!seen[pl[0]+","+pl[1]]||!seen[3+","+y1]) continue;
+    var sc=Math.min(moved,24); if(!best||sc>best.sc) best={rocks:rocks,plates:plates,bs:bs,sc:sc,log:log,pl:pl}; if(sc>=20) break; }
+  if(!best) best={rocks:{},plates:[[7,y0+2],[10,y0+2],[13,y0+2]],bs:[[7,y0+5],[10,y0+5],[13,y0+5]]};
+  Object.keys(best.rocks).forEach(function(kk){ var p=kk.split(","); addObj(m,"rock",+p[0],+p[1]); });
+  best.plates.forEach(function(p){ m.gplates.push({x:p[0],y:p[1]}); });
+  best.bs.forEach(function(b,j){ m.gblocks.push({id:"gb"+j,x:b[0],y:b[1],x0:b[0],y0:b[1]}); m.blk[b[1]*W+b[0]]=1; });
+  m.pushLog=best.log||[]; m.pushStart=best.pl||null;
+  var o=addObj(m,"greset",2,y1,{}); m.inter[y1*W+2]=o;
+  var sg=addObj(m,"sign",18,y1,{txt:["Push all 3 boulders onto the glowing plates to open the treasure door.","Walk into a boulder to push it. You can’t pull, so watch out for corners!","Stuck? Touch the crystal to put the boulders back."]}); m.inter[y1*W+18]=sg; }
+/* ---------- playing ---------- */
+function grSolved(){ return !!(MAP&&MAP.grotto&&grRec(MAP.gr).s); }
+function grApply(){ if(!MAP||!MAP.grotto) return; var W=MAP.W, solved=grSolved();
+  MAP.doors.forEach(function(d){ d.xs.forEach(function(x){ MAP.blk[d.y*W+x]=solved?0:1; }); });
+  if(MAP.type==="runes") MAP.runes.forEach(function(rn,i){ rn.on=solved?true:!!MAP.rune0[i]; });
+  if(MAP.type==="push") MAP.gblocks.forEach(function(b,j){ var t=solved?MAP.gplates[j]:{x:b.x0,y:b.y0}; MAP.blk[b.y*W+b.x]=0; b.x=t.x; b.y=t.y; MAP.blk[t.y*W+t.x]=1; }); }
+function grOnEnter(){ var R=grRec(MAP.gr); if(!R.in){ R.in=Date.now(); save(); } QP.slide=null; grApply(); }
+function grSolve(){ var R=grRec(MAP.gr); if(R.s) return; R.s=Date.now(); save(); grApply(); grSnd("open"); sfx("fanfare"); qwShakeT=performance.now();
+  var d=MAP.doors[0], dy=d?d.y:MAP.yP0-1; qwText(10,dy,"THE DOOR OPENS!","#ffd43b"); qwBurst(10,dy,["#e599f7","#ffd43b","#ffffff"],40); qwAch("grotto");
+  var xp=xpGain(QS(),60); qwXp(xp); toast("🧩 Puzzle solved! +"+xp+" XP"); qwHud(); }
+function grRuneAt(x,y){ for(var i=0;i<MAP.runes.length;i++){ var rn=MAP.runes[i]; if(rn.x===x&&rn.y===y) return rn; } return null; }
+function grArrive(){ if(MAP.type==="ice"){ if(!grSolved()&&QP.x===10&&QP.y===MAP.yP0-1) grSolve(); return; }
+  if(MAP.type!=="runes"||grSolved()) return; var rn=grRuneAt(QP.x,QP.y); if(!rn) return;
+  var st=MAP.runes.map(function(o){ return o.on?1:0; }); grRuneFlip(st,rn.i); MAP.runes.forEach(function(o,i){ o.on=!!st[i]; });
+  grSnd(rn.on?"rune":"runeOff"); qwBurst(rn.x,rn.y,rn.on?["#e599f7","#ffffff"]:["#5e5870"],10);
+  if(st.every(function(v){ return v; })) setTimeout(grSolve,250); }
+function grBlockAt(x,y){ var bs=MAP.gblocks||[]; for(var i=0;i<bs.length;i++) if(bs[i].x===x&&bs[i].y===y) return bs[i]; return null; }
+var grPushT=0;
+function grBump(tx,ty,v){ var b=grBlockAt(tx,ty); if(!b) return false; var now=performance.now(); if(now-grPushT<220||(v[0]&&v[1])) return true; grPushT=now;
+  if(grSolved()) return true; var nx=tx+v[0], ny=ty+v[1], W=MAP.W, i=ny*W+nx;
+  if(nx<1||nx>19||ny<MAP.yP0||ny>MAP.yP1||MAP.blk[i]||!walkable(MAP,i)){ grSnd("thud"); return true; }
+  MAP.blk[ty*W+tx]=0; b.x=nx; b.y=ny; MAP.blk[i]=1; grSnd("push");
+  var onP=MAP.gplates.some(function(p){ return p.x===nx&&p.y===ny; }); if(onP){ qwText(nx,ny,"CLICK!","#69db7c"); sfx("streak"); }
+  if(MAP.gplates.every(function(p){ return grBlockAt(p.x,p.y); })) setTimeout(grSolve,300);
+  return true; }
+/* sliding on ice */
+function grIce(dt,now){ var S=QP.slide;
+  if(S){ var sp=11*Math.min(dt,50)/1000, dx=S.tx+.5-pcx(), dy=S.ty+.5-pcy(), d=Math.hypot(dx,dy);
+    if(d<=sp){ QP.fx=S.tx; QP.fy=S.ty+.5-MV.oy; QP.slide=null; grSnd("thud"); } else { QP.fx+=dx/d*sp; QP.fy+=dy/d*sp; }
+    QP.moving=true; QP.frame=0; var tx=Math.floor(pcx()), ty=Math.floor(pcy()); if(tx!==QP.x||ty!==QP.y){ QP.x=QP.tx=tx; QP.y=QP.ty=ty; qwArrive(); }
+    if(MP.on&&now-MV.posT>90){ MV.posT=now; mpPos(); } return true; }
+  var tx0=Math.floor(pcx()), ty0=Math.floor(pcy()); if(getG(MAP,tx0,ty0)!==GI.ice) return false;
+  var v=QMODE==="walk"&&!QP.fall?pInput():null; if(!v){ if(QP.moving){ QP.moving=false; if(MP.on) mpPos(); } QP.frame=0; return true; }
+  var dir=Math.abs(v[0])>Math.abs(v[1])?[Math.sign(v[0]),0]:[0,Math.sign(v[1])];
+  if(dir[0]){ QP.dir="side"; QP.flip=dir[0]<0; QP.face=dir[0]<0?"left":"right"; } else { QP.dir=dir[1]<0?"up":"down"; QP.flip=false; QP.face=QP.dir; }
+  var x=tx0, y=ty0; for(var n=0;n<60;n++){ var nx=x+dir[0], ny=y+dir[1]; if(pSolid(nx,ny,y)) break; x=nx; y=ny; if(getG(MAP,x,y)!==GI.ice) break; }
+  if(x===tx0&&y===ty0){ var th=thingAt(tx0+dir[0],ty0+dir[1]); if(th&&th.k!=="mon") pBump(tx0+dir[0],ty0+dir[1],dir); QP.fx=tx0; QP.fy=ty0+.5-MV.oy; return true; }
+  if(dir[0]) QP.fy=ty0+.5-MV.oy; else QP.fx=tx0;
+  QP.slide={tx:x,ty:y}; grSnd("slide"); return true; }
+/* ---------- on the land: finding grottos ---------- */
+function grAddToLand(m){ var L=landById(m.id); if(!L||m.grots) return m; m.grots=[];
+  var r=rng(hstr(L.id+"#grp1")), W=m.W, H=m.H, reach=bfs(m,m.spawn), x, y;
+  var others=[].concat((m.dgs||[]).map(function(o){ return [o.x,o.y]; }),m.npcs.map(function(n){ return [n.x,n.y]; }),m.portals.map(function(p){ return [p.x,p.y]; }),m.chests.map(function(c){ return [c.x,c.y]; }),(m.ways||[]).map(function(w){ return [w.x,w.y]; }));
+  function ok(x0,y0,loose){ if(x0<4||x0>W-5||y0<4||y0>H-5) return false; var a=areaIdx(y0);
+    for(var t=0;t<AREA_TOP.length;t++) if(Math.abs(y0-AREA_TOP[t])<4) return false;
+    for(var dy=-2;dy<=1;dy++) for(var dx=-2;dx<=2;dx++){ var X=x0+dx, Y=y0+dy, i=Y*W+X; if(!reach[i]&&dy===1) return false; if(m.blk[i]||(m.res&&m.res[i])||(m.trap&&m.trap[i])||areaIdx(Y)!==a||(m.sea&&m.sea[i])) return false; var g=m.g[i]; if(g===GI.water||g===GI.bridge||g===GI.arena||g===GI.path) return false; }
+    if(!reach[(y0+1)*W+x0]) return false;
+    if(m.boss&&Math.hypot(m.boss.x-x0,m.boss.y-y0)<14) return false;
+    if(others.some(function(b){ return Math.abs(b[0]-x0)+Math.abs(b[1]-y0)<(loose?6:9); })) return false;
+    if(m.grots.some(function(g){ return Math.hypot(g.x-x0,g.y-y0)<30; })) return false;
+    if(!loose){ var near=false; for(var yy=-8;yy<=8&&!near;yy++) for(var xx=-8;xx<=8;xx++){ if(getG(m,x0+xx,y0+yy)===GI.path){ near=true; break; } } if(!near) return false;
+      for(yy=-3;yy<=3;yy++) for(xx=-3;xx<=3;xx++){ if(getG(m,x0+xx,y0+yy)===GI.path) return false; } }
+    return true; }
+  for(var a=0;a<3;a++){ var cand=[]; for(y=4;y<H-4;y++){ if(areaIdx(y)!==a) continue; for(x=4;x<W-4;x+=2) cand.push([x,y,r()]); }
+    cand.sort(function(p,q){ return p[2]-q[2]; }); var put=null;
+    for(var pass=0;pass<2&&!put;pass++) for(var c=0;c<cand.length;c++){ if(ok(cand[c][0],cand[c][1],pass===1)){ put=cand[c]; break; } }
+    if(!put) continue; var X0=put[0], Y0=put[1], gid="gr|"+L.id+"|"+a;
+    var o=addObj(m,"grot",X0-1,Y0,{bw:3,bh:2,gr:gid,cx:X0,cy:Y0,name:grName(gid),type:GR_TYPES[a]}); o.x=X0-1;
+    [-1,0,1].forEach(function(dx){ m.inter[Y0*W+X0+dx]=o; });
+    m.grots.push({x:X0,y:Y0,gr:gid,o:o});
+    m.mons=m.mons.filter(function(mn){ return mn.elite||mn.mini||Math.abs(mn.hx-X0)>4||Math.abs(mn.hy-Y0)>4; }); }
+  return m; }
+function grSpot(){ var s=QS(); if(!s.grSeen) s.grSeen={};
+  MAP.grots.forEach(function(g){ if(s.grSeen[g.gr]) return; if(Math.abs(QP.x-g.x)<=7&&Math.abs(QP.y-g.y)<=6){ s.grSeen[g.gr]=1; save(); toast("🕳️ You found a hidden grotto: "+grName(g.gr)+"!"); sfx("streak"); qwBurst(g.x,g.y-1,["#e599f7","#ffffff"],20); } }); }
+function grMouth(o){ var id=o.gr, R=grRec(id), t=grType(id), L=landById(MAP.id), relic=GR_RELIC[t];
+  var desc={runes:"Faint purple runes flicker on the walls inside.",ice:"A freezing wind blows out. Is that ice in there?",push:"You hear stone grinding against stone deep inside."}[t];
+  var st=R.r?"You already cleared it and took the "+relic[0]+". You can still go back in.":R.s?"You solved the puzzle! The "+relic[0]+" is still waiting in the treasure room.":"Inside: a "+{runes:"rune lights",ice:"sliding ice",push:"boulder"}[t]+" puzzle, an epic chest, and a "+relic[0]+".";
+  qwSay(o.name,null,[desc,st],[["Go in!",function(){ grEnter(id); }],["Not now",null]]); }
+function grEnter(id){ var s=QS(); if(!s.grSeen) s.grSeen={}; s.grSeen[id]=1; qwTravel(id,null,"#e599f7"); }
+function grExit(p){ var P=grParse(MAP.id); if(!P) return qwTravel("village",null,p.color); var g=(getMap(P.L.id).grots||[]).filter(function(x){ return x.gr===MAP.id; })[0]; qwTravel(P.L.id,g?[g.x,g.y+1]:null,"#e599f7"); }
+function grRelic(o){ var R=grRec(o.gr), t=grType(o.gr), rel=GR_RELIC[t], P=grParse(o.gr), s=QS();
+  if(R.r) return qwSay("Relic pedestal",null,["The pedestal is empty. You already have the "+rel[0]+"."]);
+  R.r=Date.now(); s.relics=(s.relics||0)+1; addStars(5); grSnd("relic"); confetti(120); qwBurst(o.x,o.y-1,[rel[1],"#ffffff","#ffd43b"],50); save();
+  var got=[0,1,2].filter(function(n){ var r2=grS()["gr|"+P.L.id+"|"+n]; return r2&&r2.r; }).length;
+  if(got>=3){ addStars(15); qwAch("relics"); }
+  qwSay("Relic found!",null,["You got the "+rel[0]+"! +5 ⭐","Relics in "+P.L.name+": "+got+"/3."+(got>=3?" You found them all! +15 ⭐ bonus!":" Find the other grottos in this land.")]); qwHud(); }
+function grReset(o){ if(grSolved()) return qwSay("Blue crystal",null,["The puzzle is already solved."]);
+  if(MAP.type==="push"&&MAP.gblocks.some(function(b){ return QP.x===b.x0&&QP.y===b.y0; })) return toast("Step off the spot where a boulder goes back first!");
+  grApply(); sfx("blip"); qwText(o.x,o.y,"RESET!","#74c0fc"); }
+GR_INT.grot=grMouth; GR_INT.relic=grRelic; GR_INT.greset=grReset;
+function grSub(){ var t=MAP.type, R=grRec(MAP.gr); return R.s?"Puzzle solved! Grab the treasure.":{runes:"Light all 9 runes",ice:"Slide across the ice to the door",push:"Push the boulders onto the plates"}[t]; }
+/* ---------- drawing ---------- */
+GR_DRAW.grot=function(o,now,s){ var X=o.cx*16, Y=o.cy*16, R=(s.grot||{})[o.gr]||{}, col=GR_RELIC[o.type][1];
+  shadow(X+8,Y+15,22);
+  wrect(X-20,Y-10,56,26,"#4a4250"); wrect(X-16,Y-16,48,10,"#5a5260"); wrect(X-10,Y-20,36,6,"#6a6270"); wrect(X-18,Y-6,52,4,"#5e5664");
+  wrect(X-14,Y-14,8,3,"#7a7280"); wrect(X+20,Y-12,8,3,"#7a7280"); wrect(X-4,Y-19,10,2,"#8a8290");
+  wrect(X-6,Y-6,28,22,"#14101c"); wrect(X-3,Y-9,22,4,"#14101c"); wrect(X+1,Y-11,14,3,"#14101c");
+  var p=.35+Math.sin(now/280)*.25; qwCx.globalAlpha=R.r?.25:p; for(var i=0;i<5;i++){ var yy=Y+((now/70+i*9)%18|0)-4; wrect(X-2+((i*7)%22),yy,2,2,col); } qwCx.globalAlpha=1;
+  if(R.r){ wrect(X+5,Y-16,6,6,"#69db7c"); wrect(X+6,Y-15,4,4,"#ffffff"); }
+  if(Math.abs(QP.x-o.cx)+Math.abs(QP.y-o.cy)<=9){ label(o.name,X+8,Y-26,"#f3d9fa"); label(R.r?"★ Cleared":R.s?"Relic waiting!":"🧩 Puzzle grotto",X+8,Y-34,R.r?"#69db7c":col); } };
+GR_DRAW.relic=function(o,now,s){ var X=o.x*16, Y=o.y*16, R=(s.grot||{})[o.gr]||{}, col=GR_RELIC[grType(o.gr)][1];
+  shadow(X+8,Y+15,8); wrect(X+2,Y+6,12,10,"#4a4458"); wrect(X+1,Y+5,14,2,"#6e6880"); wrect(X+3,Y+14,10,2,"#3a3448");
+  if(!R.r){ var b=Math.sin(now/300)*2; wrect(X+5,Y-6+b,6,8,col); wrect(X+4,Y-4+b,8,4,col); wrect(X+6,Y-5+b,2,3,"#ffffff");
+    var g=.25+Math.sin(now/200)*.15; qwCx.globalAlpha=g; wrect(X,Y-10+b,16,16,col); qwCx.globalAlpha=1;
+    if(Math.random()<.2) qwParts.push({x:X+4+Math.random()*8,y:Y-4,vx:0,vy:-.3,life:700,max:700,s:1,col:col}); } };
+GR_DRAW.greset=function(o,now){ var X=o.x*16, Y=o.y*16; shadow(X+8,Y+15,6); wrect(X+5,Y+2,6,12,"#4dabf7"); wrect(X+4,Y+5,8,6,"#74c0fc"); wrect(X+6,Y+3,2,6,"#d0ebff"); if(Math.floor(now/500)%2) wrect(X+11,Y+1,1,1,"#ffffff"); };
+GR_DRAW.gcrys=function(o,now){ var X=o.x*16, Y=o.y*16, c=o.col||"#e599f7"; wrect(X+4,Y+6,4,10,c); wrect(X+9,Y+3,4,13,c); wrect(X+10,Y+4,1,8,"#ffffff"); qwCx.globalAlpha=.25+Math.sin(now/400+o.x)*.15; wrect(X+1,Y+1,14,15,c); qwCx.globalAlpha=1; };
+GR_DRAW.icerock=function(o){ var X=o.x*16, Y=o.y*16; shadow(X+8,Y+15,7); wrect(X+2,Y+4,12,11,"#5c7c94"); wrect(X+3,Y+2,9,4,"#7c9cb4"); wrect(X+4,Y+3,4,2,"#d0ebff"); wrect(X+2,Y+13,12,2,"#3c5468"); };
+function grDrawFloor(now){ var s=QS(), solved=grSolved();
+  (MAP.runes||[]).forEach(function(rn){ var X=rn.x*16, Y=rn.y*16, on=rn.on, pulse=.5+Math.sin(now/260+rn.i)*.3;
+    wrect(X+1,Y+1,14,14,"#1a1424"); wrect(X+2,Y+2,12,12,on?"#9c36b5":"#3a3448"); wrect(X+4,Y+4,8,8,on?"#e599f7":"#4a4458");
+    wrect(X+7,Y+3,2,10,on?"#ffffff":"#5e5870"); wrect(X+3,Y+7,10,2,on?"#ffffff":"#5e5870");
+    if(on){ qwCx.globalAlpha=pulse*.5; wrect(X-2,Y-2,20,20,"#e599f7"); qwCx.globalAlpha=1; } });
+  (MAP.gplates||[]).forEach(function(p){ var X=p.x*16, Y=p.y*16, on=!!grBlockAt(p.x,p.y); wrect(X+1,Y+1,14,14,"#1a1424"); wrect(X+2,Y+2,12,12,on?"#69db7c":"#2f6b45"); wrect(X+4,Y+4,8,8,on?"#ffffff":"#3f8a5a"); if(!on&&Math.floor(now/400)%2){ qwCx.globalAlpha=.4; wrect(X,Y,16,16,"#69db7c"); qwCx.globalAlpha=1; } });
+  if(!solved) (MAP.doors||[]).forEach(function(d){ d.xs.forEach(function(x){ var X=x*16, Y=d.y*16; wrect(X,Y,16,16,"#2a2436"); for(var b=0;b<3;b++) wrect(X+2+b*5,Y,2,16,"#6e6880");
+    var g=.4+Math.sin(now/240+x)*.3; qwCx.globalAlpha=g; wrect(X+1,Y+5,14,4,"#e599f7"); qwCx.globalAlpha=1; }); }); }
+function grDrawObjs(add,now,s){ (MAP.gblocks||[]).forEach(function(b){ add(b.y*16+15,function(){ var X=b.x*16, Y=b.y*16, onP=MAP.gplates.some(function(p){ return p.x===b.x&&p.y===b.y; });
+  shadow(X+8,Y+15,8); wrect(X+1,Y+3,14,12,"#1a1424"); wrect(X+2,Y+2,12,12,onP?"#8a7a6a":"#7a6e66"); wrect(X+3,Y+3,6,4,"#a8988a"); wrect(X+9,Y+9,4,4,"#5a5048"); if(onP){ wrect(X+6,Y+6,4,4,"#69db7c"); } }); }); }
+/* the ice tile */
+function iceTex(v,p,r){ p(0,0,"#bfe3f2",16,16); for(var i=0;i<10;i++) p(r()*16|0,r()*16|0,"#d6eef8"); for(i=0;i<6;i++) p(r()*16|0,r()*16|0,"#a8d4ea");
+  var x=r()*10|0, y=r()*10|0; p(x,y,"#ffffff",3,1); p(x+1,y+1,"#ffffff",1,1); if(v%2){ p(2,12,"#9ccbe0",5,1); p(6,11,"#9ccbe0",3,1); } }
+if(typeof ACH!=="undefined"){ ACH.grotto="Grotto Explorer: solve a grotto puzzle"; ACH.relics="Relic Hunter: all 3 relics in one land"; }
+if(typeof HOWTO!=="undefined") HOWTO["Grottos"]=["Every land hides <b>3 puzzle grottos</b>, one in each of the first three areas. Walk near one to find it, then walk into it to go in.",
+  "<b>Rune Grotto</b>: stepping on a rune flips it and the runes next to it. Light all 9. <b>Ice Grotto</b>: on ice you slide until you hit something, so plan your slides. <b>Boulder Vault</b>: push all 3 boulders onto the plates.",
+  "Stuck? Touch the blue crystal to reset. The ice can’t trap you: land on the stone floor to start over.",
+  "Solve the puzzle to open the treasure room: an <b>epic chest</b> and a <b>Relic</b> (+5 ⭐). Find all 3 Relics in a land for a +15 ⭐ bonus."];
+/* ================= 🏝️ ISLANDS: the sea around every land now has islands to sail to =================
+   Each land gets up to 2 islands out in the open water. A little boat on the shore sails you there.
+   Islands have palm trees, sandy beaches, a healing shrine, a message in a bottle (a fact from your study guide)
+   and an epic treasure chest. */
+var ISLE_NAMES=["Palm Isle","Turtle Isle","Lantern Isle","Coral Isle","Gull Isle","Driftwood Isle","Sunfish Isle","Starfruit Isle"];
+function isAddToLand(m){ var L=landById(m.id); if(!L||!m.sea||m.isles) return m; m.isles=[];
+  var W=m.W, H=m.H, r=rng(hstr(L.id+"#isle1")), GR=m.B.ground, i, x, y, reach=bfs(m,m.spawn);
+  /* how far each sea tile is from land */
+  var dist=new Int16Array(W*H).fill(-1), q=[], h=0;
+  for(i=0;i<W*H;i++) if(!m.sea[i]){ dist[i]=0; q.push(i); }
+  while(h<q.length){ var c=q[h++], cx=c%W, cy=(c-cx)/W; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var X=cx+d[0], Y=cy+d[1]; if(X<0||Y<0||X>=W||Y>=H) return; var j=Y*W+X; if(dist[j]<0){ dist[j]=dist[c]+1; q.push(j); } }); }
+  for(i=0;i<W*H;i++) if(dist[i]<0) dist[i]=99;
+  var cand=[]; for(y=14;y<H-14;y++) for(x=14;x<W-14;x+=2){ i=y*W+x; if(dist[i]<14) continue; var a=areaIdx(y); if(a>=4||areaIdx(y-10)!==a||areaIdx(y+10)!==a) continue; cand.push([x,y,r()+(dist[i]>=18?0:1)]); }
+  cand.sort(function(p,q2){ return p[2]-q2[2]; });
+  var names=ISLE_NAMES.slice(), nn=hstr(L.id)%names.length;
+  for(var c2=0;c2<cand.length&&m.isles.length<2;c2++){ var X0=cand[c2][0], Y0=cand[c2][1];
+    if(m.isles.some(function(I){ return Math.hypot(I.x-X0,I.y-Y0)<45; })) continue;
+    /* a shore spot on the mainland, close to the island and in the same area */
+    var best=null, bd=1e9;
+    for(y=Math.max(2,Y0-40);y<Math.min(H-2,Y0+40);y++) for(x=Math.max(2,X0-50);x<Math.min(W-2,X0+50);x++){ i=y*W+x;
+      if(m.sea[i]||!reach[i]||m.blk[i]||(m.res&&m.res[i])||(m.trap&&m.trap[i])||areaIdx(y)!==areaIdx(Y0)) continue; var g=m.g[i]; if(g===GI.water||g===GI.bridge||g===GI.arena) continue;
+      var sd=null; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var j=(y+d[1])*W+x+d[0]; if(m.sea[j]&&dist[j]>=1) sd=d; }); if(!sd) continue;
+      var near=false; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var j=(y-d[1])*W+x-d[0]; if(!m.sea[j]&&reach[j]&&!m.blk[j]) near=true; }); if(!near) continue;
+      var dd=Math.hypot(x-X0,y-Y0); if(dd<bd){ bd=dd; best=[x,y,sd]; } }
+    if(!best||bd>60) continue;
+    /* carve the island */
+    var big=dist[Y0*W+X0]>=18, rx=(big?8:6.5)+r()*2.5, ry=(big?6:5)+r()*2, ph=r()*6.28, k2=2+(r()*3|0), land=[];
+    for(y=Math.floor(Y0-ry-3);y<=Y0+ry+3;y++) for(x=Math.floor(X0-rx-3);x<=X0+rx+3;x++){ var dx=(x-X0)/rx, dy=(y-Y0)/ry, ang=Math.atan2(dy,dx), rad=1+.18*Math.sin(k2*ang+ph)+.08*Math.sin(5*ang+ph*2), d=Math.hypot(dx,dy)/rad;
+      if(d>1) continue; i=y*W+x; m.sea[i]=0; m.blk[i]=0; setG(m,x,y,d>.72?"sand":GR); land.push([x,y,d]); }
+    var used={};
+    var put=function(x1,y1){ used[x1+","+y1]=1; };
+    var free=function(x1,y1){ var ii=y1*W+x1; if(used[x1+","+y1]||m.blk[ii]||m.sea[ii]||m.g[ii]===GI.water) return false; return true; };
+    var inter2=function(o){ m.inter[o.y*W+o.x]=o; return o; };
+    put(X0,Y0); m.chests.push({id:L.id+"-isle"+m.isles.length,x:X0,y:Y0,min:"epic"}); m.blk[Y0*W+X0]=1;
+    /* the island boat sits on the beach facing the mainland */
+    var ib=null, ibd=1e9; land.forEach(function(t){ if(t[2]<.72) return; var dd2=Math.hypot(t[0]-best[0],t[1]-best[1]); if(dd2<ibd&&free(t[0],t[1])){ ibd=dd2; ib=t; } });
+    if(!ib) continue;
+    var isd=[Math.sign(best[0]-ib[0]),0]; if(Math.abs(best[1]-ib[1])>Math.abs(best[0]-ib[0])) isd=[0,Math.sign(best[1]-ib[1])];
+    var name=names[(nn+m.isles.length)%names.length], iid=L.id+"-isle"+m.isles.length;
+    var b1=addObj(m,"boat",best[0],best[1],{to:null,face:best[2],isle:iid,name:name,main:true}); m.inter[best[1]*W+best[0]]=b1;
+    var b2=addObj(m,"boat",ib[0],ib[1],{to:null,face:isd,isle:iid,name:L.name,main:false}); m.inter[ib[1]*W+ib[0]]=b2; put(ib[0],ib[1]);
+    var landAt=function(b){ var o2=null; [[0,1],[1,0],[-1,0],[0,-1]].forEach(function(d){ if(o2) return; var X=b.x+d[0], Y=b.y+d[1], ii=Y*W+X; if(!m.sea[ii]&&!m.blk[ii]&&m.g[ii]!==GI.water) o2=[X,Y]; }); return o2||[b.x,b.y+1]; };
+    b1.to=landAt(b2); b2.to=landAt(b1); put(b1.to[0],b1.to[1]); put(b2.to[0],b2.to[1]);
+    /* shrine, bottle, palm trees */
+    var spots=land.filter(function(t){ return t[2]<.66&&free(t[0],t[1]); }).map(function(t){ return [t[0],t[1],r()]; }).sort(function(p,q2){ return p[2]-q2[2]; });
+    var nextSpot=function(minD){ for(var s1=0;s1<spots.length;s1++){ var p=spots[s1]; if(!free(p[0],p[1])) continue; if(Math.abs(p[0]-X0)+Math.abs(p[1]-Y0)<minD) continue; spots.splice(s1,1); return p; } return null; };
+    var sp=nextSpot(3); if(sp){ inter2(addObj(m,"shrine",sp[0],sp[1],{id:iid+"-sh"})); put(sp[0],sp[1]); }
+    var bt=nextSpot(2); if(bt){ inter2(addObj(m,"bottle",bt[0],bt[1],{id:iid+"-bt"})); put(bt[0],bt[1]); }
+    var np=3+(r()*4|0); for(var pp=0;pp<np;pp++){ var ps=nextSpot(2); if(!ps) break; addObj(m,"palm",ps[0],ps[1],{v:pp%2}); put(ps[0],ps[1]); }
+    m.decor=m.decor.filter(function(d){ var tx=Math.floor(d.x/16), ty=Math.floor(d.y/16); return !land.some(function(t){ return t[0]===tx&&t[1]===ty; }); });
+    for(var sh=0;sh<8;sh++){ var t3=land[(r()*land.length)|0]; if(t3&&t3[2]>.75) m.decor.push({k:"shell",x:t3[0]*16+4+(r()*8|0),y:t3[1]*16+6+(r()*6|0)}); }
+    m.isles.push({id:iid,name:name,x:X0,y:Y0,b1:b1,b2:b2}); }
+  return m; }
+function isBoat(o){ var s=QS(), I=(MAP.isles||[]).filter(function(x){ return x.id===o.isle; })[0]; if(!I) return;
+  var to=o.main?I.name:o.name, seen=s.isles&&s.isles[I.id];
+  qwSay(o.main?"A little boat":"Your boat",null,[o.main?(seen?"Sail back to "+I.name+"?":"A little boat bobs in the water. Far out to sea you can see an island!"):"Sail back to the mainland?"],[["⛵ Sail to "+to+"!",function(){ isSail(o,I); }],["Not now",null]]); }
+function isSail(o,I){ if(qwFade) return; QMODE="busy"; qwDirs=[]; qwPad=null;
+  if(ST.sound){ mvN(0,1,.05,"lowpass",900,300); mvT(392,523,0,.25,"triangle",.04); mvT(523,659,.2,.3,"triangle",.04); }
+  qwFade={t0:performance.now(),dur:520,out:true,col:"#74c0fc",cb:function(){ var t=o.to; QP.x=QP.tx=t[0]; QP.y=QP.ty=t[1]; QP.fx=t[0]; QP.fy=t[1]+.5-MV.oy; QP.slide=null; qwCam.ix=null; var s=QS(); s.x=QP.x; s.y=QP.y;
+    if(o.main){ if(!s.isles) s.isles={}; if(!s.isles[I.id]){ s.isles[I.id]=Date.now(); addStars(2); setTimeout(function(){ toast("🏝️ You discovered "+I.name+"! +2 ⭐"); sfx("fanfare"); },500); if(Object.keys(s.isles).length>=4) qwAch("sailor"); } }
+    save(); if(MP.on) mpPos();
+    qwFade={t0:performance.now(),dur:520,out:false,col:"#74c0fc",cb:function(){ QMODE="walk"; }}; }}; }
+function isBottle(o){ var s=QS(), L=landById(MAP.id), cards=L?guideCards(L.guide):[], c=cards.length?cards[(hstr(o.id)+Math.floor(Date.now()/864e5))%cards.length]:null, first=!(s.bottles&&s.bottles[o.id]);
+  if(!s.bottles) s.bottles={}; s.bottles[o.id]=1; var ups=first?qwXp(xpGain(s,25)):0; save(); qwHud(); if(first){ sfx("streak"); qwBurst(o.x,o.y,["#a5d8ff","#ffffff"],16); }
+  qwSay("Message in a bottle",null,["You uncork the bottle and unroll a soggy note…",c?(c[1]+"  →  "+c[2]):"The ink has washed away.",(first?"+XP for reading! ":"")+"(A new note washes up every day.)"+(ups?" LEVEL UP!":"")]); }
+GR_INT.boat=isBoat; GR_INT.bottle=isBottle;
+GR_DRAW.boat=function(o,now){ var X=o.x*16+o.face[0]*14, Y=o.y*16+o.face[1]*12, bob=Math.round(Math.sin(now/400+o.x)*1.2);
+  qwCx.globalAlpha=.35; wrect(X-2,Y+13+bob,20,3,"#ffffff"); qwCx.globalAlpha=1;
+  wrect(X-2,Y+8+bob,20,6,"#6b4226"); wrect(X,Y+13+bob,16,2,"#4a2f1a"); wrect(X-2,Y+8+bob,20,2,"#8b5a2b");
+  wrect(X+7,Y-10+bob,2,19,"#4a2f1a"); wrect(X+9,Y-9+bob,8,12,"#f8f9fa"); wrect(X+9,Y-9+bob,8,2,"#ff6b6b"); wrect(X+10,Y-5+bob,5,1,"#dee2e6");
+  if(Math.abs(QP.x-o.x)+Math.abs(QP.y-o.y)<=6) label(o.main?"⛵ to "+((MAP.isles||[]).filter(function(I){ return I.id===o.isle; })[0]||{}).name:"⛵ back",o.x*16+8,o.y*16-14,"#a5d8ff"); };
+GR_DRAW.palm=function(o,now){ var X=o.x*16, Y=o.y*16, sway=Math.round(Math.sin(now/700+o.x)*1.5);
+  shadow(X+8,Y+15,7); for(var k=0;k<6;k++) wrect(X+7+Math.round(k*.6*(o.v?1:-1)*.5),Y+14-k*4,3,4,k%2?"#8b5a2b":"#a0522d");
+  var tx=X+8+(o.v?2:-2)+sway, ty=Y-10; [[-11,2],[-7,-1],[0,-3],[7,-1],[11,2]].forEach(function(f,i){ wrect(tx+f[0]-3,ty+f[1],7,3,i%2?"#2f9e44":"#40c057"); wrect(tx+f[0]*1.3-2,ty+f[1]+3,4,2,"#2b8a3e"); });
+  wrect(tx-2,ty+1,4,4,"#6b4226"); wrect(tx+1,ty+3,3,3,"#8b5a2b"); };
+GR_DRAW.bottle=function(o,now){ var s=QS(), X=o.x*16, Y=o.y*16, read=s.bottles&&s.bottles[o.id]; shadow(X+8,Y+15,5);
+  wrect(X+4,Y+8,9,5,"#a5d8ff"); wrect(X+12,Y+9,3,3,"#74c0fc"); wrect(X+14,Y+9,2,3,"#8b5a2b"); wrect(X+6,Y+9,4,2,"#fff3bf");
+  if(!read&&Math.floor(now/450)%2) wrect(X+8,Y+3,2,2,"#ffffff"); };
+if(typeof ACH!=="undefined") ACH.sailor="Sailor: discover 4 islands";
 /* ================= chiptune soundtrack ================= */
 var QM={timer:0,step:0,song:null};
 var NOTE=function(n){ return n?440*Math.pow(2,(n-69)/12):0; };
@@ -14390,7 +14721,7 @@ var SONGS={
   boss:{ms:120,lead:[57,0,60,57,63,62,60,0,57,0,60,57,64,63,62,60, 57,60,63,66,64,63,62,60,59,62,65,64,62,60,59,57],harm:[45,48,51,48,44,47,50,47],bass:[33,33,33,33,33,33,36,36,31,31,31,31,32,32,32,32],type:"sawtooth",v:.011,drum:true},
   final:{ms:115,lead:[62,65,69,74,72,69,65,69,60,64,67,72,70,67,64,67, 62,65,69,74,77,76,74,72,70,69,67,65,64,65,67,0],harm:[50,53,57,53,48,52,55,52],bass:[38,38,38,38,36,36,36,36,34,34,34,34,33,33,36,36],type:"sawtooth",v:.011,drum:true}
 };
-function qwMusicFor(){ if(!MAP) return; if(!MAP.big){ var v=MAP.id==="village"||MAP.library?"village":MAP.dungeon?dgSong():"final"; if(QM.song!==v||!QM.timer) qwMusic(v); return; }
+function qwMusicFor(){ if(!MAP) return; if(!MAP.big){ var v=MAP.id==="village"||MAP.library?"village":(MAP.dungeon||MAP.grotto)?dgSong():"final"; if(QM.song!==v||!QM.timer) qwMusic(v); return; }
   var key=qwSongKey(), sk="g:"+MAP.id+":"+key; if(!SONGS[sk]) SONGS[sk]=makeSong(hstr(sk),SONGDEF[key]||SONGDEF.ar_0); if(QM.song===sk&&QM.timer) return; qwMusic(sk); }
 function qwMusic(song){
   clearInterval(QM.timer); QM.timer=0; QM.song=song;
